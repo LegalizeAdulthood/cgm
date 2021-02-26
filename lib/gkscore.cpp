@@ -1199,3 +1199,4 @@ void gks_inq_fill_color_index(int *error, int *value)
 void gks_inq_fill_style_index(int *error, int *value)
 {
 }
+

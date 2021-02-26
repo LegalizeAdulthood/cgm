@@ -1975,13 +1975,13 @@ static void cgmb_mfellist(void)
 
 static void cgmb_fontlist(void)
 {
-  register int i, slen;
-  register char *s;
-  int font;
+    register int i, slen;
+    register char *s;
+    int font;
 
-  for (i = 0, slen = 0; i < max_std_textfont; i++)
+    for (i = 0, slen = 0; i < max_std_textfont; i++)
     {
-      slen += strlen(fonts[i]) + 1;
+        slen += (fonts[i] != nullptr ? strlen(fonts[i]) : 0) + 1;
     }
   s = (char *) gks_malloc(slen);
 
@@ -3109,15 +3109,13 @@ static void cgm_begin_page(void)
   p->begin_page = FALSE;
 }
 
-
-
-void gks_drv_cgm(int fctid, int dx, int dy, int dimx, int *ia,
+static void gks_drv_cgm(int fctid, int dx, int dy, int dimx, int *ia,
 		 int lr1, double *r1, int lr2, double *r2, int lc, char *chars,
 		 void **context)
 {
   char *buffer;
 
-  p = (cgm_context *) * context;
+  p = (cgm_context *) *context;
 
   switch (fctid)
     {
@@ -3347,4 +3345,63 @@ void gks_drv_cgm(int fctid, int dx, int dy, int dimx, int *ia,
       break;
 
     }
+}
+
+namespace cgm
+{
+
+enum Function
+{
+    OpenWorkstation = 2,
+    CloseWorkstation = 3,
+    ActivateWorkstation = 4,
+    DeactivateWorkstation = 5,
+    ClearWorkstation = 6,
+    Polyline = 12,
+    Polymarker = 13,
+    Text = 14,
+    FillArea = 15,
+    CellArray = 16,
+    SetColorRep = 48,
+    SetWorkstationWindow = 54,
+    SetWorkstationViewport = 55,
+};
+
+static cgm_context *g_context;
+
+void beginMetafile(FILE *file, Encoding enc)
+{
+    int dx{};
+    int dy{};
+    int dimx{};
+    int ia[100]{};
+    int lr1{};
+    double r1[100]{};
+    int lr2{};
+    double r2[100]{};
+    int lc{1};
+    char *chars = nullptr;
+    cgm_context *context = nullptr;
+    ia[1] = fileno(file);
+    ia[2] = static_cast<int>(enc);
+    gks_drv_cgm(OpenWorkstation, dx, dy, dimx, ia, lr1, r1, lr2, r2, lc, chars, reinterpret_cast<void **>(&context));
+    g_context = context;
+}
+
+void endMetafile(FILE *file)
+{
+    int dx{};
+    int dy{};
+    int dimx{};
+    int ia[100];
+    int lr1{};
+    double r1[100];
+    int lr2{};
+    double r2[100];
+    int lc{};
+    char *chars = nullptr;
+    ia[1] = fileno(file);
+    gks_drv_cgm(CloseWorkstation, dx, dy, dimx, ia, lr1, r1, lr2, r2, lc, chars, reinterpret_cast<void **>(&g_context));
+}
+
 }

@@ -103,3 +103,8 @@ int gks_close_file(int fd)
 
   return result;
 }
+
+const char *gks_getenv(const char *env)
+{
+    return nullptr;
+}
