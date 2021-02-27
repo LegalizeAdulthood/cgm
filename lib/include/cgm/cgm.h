@@ -47,6 +47,12 @@ enum class LineWidthMode
     Scaled
 };
 
+enum class MarkerSizeMode
+{
+    Absolute,
+    Scaled
+};
+
 class MetafileWriter
 {
 public:
@@ -71,6 +77,7 @@ public:
     virtual void scaleMode(ScaleMode mode, float value) = 0;
     virtual void colorMode(ColorMode mode) = 0;
     virtual void lineWidthMode(LineWidthMode mode) = 0;
+    virtual void markerSizeMode(MarkerSizeMode mode) = 0;
 };
 
 std::unique_ptr<MetafileWriter> create(std::ostream &stream, Encoding enc);

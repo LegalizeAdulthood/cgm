@@ -103,6 +103,7 @@ struct cgm_funcs
     void (*scalingMode)(cgm_context *p, int mode, double value);
     void (*colorMode)(cgm_context *p, int mode);
     void (*lineWidthMode)(cgm_context *p, int mode);
+    void (*markerSizeMode)(cgm_context *p, int mode);
 };
 
 struct cgm_context
@@ -3141,6 +3142,7 @@ static void setup_clear_text_context(cgm_context *ctx)
     ctx->funcs.scalingMode = cgmt_scalmode_p;
     ctx->funcs.colorMode = cgmt_colselmode_p;
     ctx->funcs.lineWidthMode = cgmt_lwsmode_p;
+    ctx->funcs.markerSizeMode = cgmt_msmode_p;
   ctx->cgm[begin] = CGM_FUNC cgmt_begin;
   ctx->cgm[end] = CGM_FUNC cgmt_end;
   ctx->cgm[bp] = CGM_FUNC cgmt_bp;
@@ -3568,6 +3570,7 @@ public:
     void scaleMode(ScaleMode mode, float value) override;
     void colorMode(ColorMode mode) override;
     void lineWidthMode(LineWidthMode mode) override;
+    void markerSizeMode(MarkerSizeMode mode) override;
 
 protected:
     std::ostream &m_stream;
@@ -3710,6 +3713,11 @@ void MetafileStreamWriter::colorMode(ColorMode mode)
 void MetafileStreamWriter::lineWidthMode(LineWidthMode mode)
 {
     m_context.funcs.lineWidthMode(&m_context, static_cast<int>(mode));
+}
+
+void MetafileStreamWriter::markerSizeMode(MarkerSizeMode mode)
+{
+    m_context.funcs.markerSizeMode(&m_context, static_cast<int>(mode));
 }
 
 void MetafileStreamWriter::flushBuffer()

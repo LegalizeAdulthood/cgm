@@ -167,6 +167,21 @@ TEST_CASE("clear text encoding")
             REQUIRE(stream.str() == "LineWidthMode Scaled;\n");
         }
     }
+    SECTION("marker size specification mode")
+    {
+        SECTION("absolute")
+        {
+            writer->markerSizeMode(cgm::MarkerSizeMode::Absolute);
+
+            REQUIRE(stream.str() == "MarkerSizeMode Absolute;\n");
+        }
+        SECTION("scaled")
+        {
+            writer->markerSizeMode(cgm::MarkerSizeMode::Scaled);
+
+            REQUIRE(stream.str() == "MarkerSizeMode Scaled;\n");
+        }
+    }
 }
 
 //TEST_CASE("begin binary, end")
