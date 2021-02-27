@@ -89,6 +89,7 @@ struct cgm_funcs
     void (*metafileDescription)(cgm_context *p, const char *value);
     void (*vdcType)(cgm_context *p, cgm::VdcType type);
     void (*intPrecision)(cgm_context *p, int min, int max);
+    void (*realPrecisionClearText)(cgm_context *p, double minReal, double maxReal, int digits);
 };
 
 struct cgm_context
@@ -337,13 +338,16 @@ static void cgmt_int(int xin)
 
 
 /* Write a real variable */
+static void cgmt_real(cgm_context *ctx, double xin)
+{
+    char buffer[max_str];
 
+    sprintf(buffer, " %.6f", xin);
+    cgmt_out_string(ctx, buffer);
+}
 static void cgmt_real(double xin)
 {
-  char buffer[max_str];
-
-  sprintf(buffer, " %.6f", xin);
-  cgmt_out_string(buffer);
+    cgmt_real(g_p, xin);
 }
 
 
@@ -512,7 +516,16 @@ static void cgmt_intprec()
 
 
 /* Real precision */
+static void cgmt_realprec_p(cgm_context *ctx, double minReal, double maxReal, int digits)
+{
+    cgmt_start_cmd(ctx, 1, (int) RealPrec);
 
+    cgmt_real(ctx, minReal);
+    cgmt_real(ctx, maxReal);
+    cgmt_int(ctx, digits);
+
+    cgmt_flush_cmd(ctx, final_flush);
+}
 static void cgmt_realprec(void)
 {
 
@@ -3036,6 +3049,7 @@ static void setup_clear_text_context(cgm_context *ctx)
     ctx->funcs.metafileDescription = cgmt_mfdescrip_p;
     ctx->funcs.vdcType = cgmt_vdctype_p;
     ctx->funcs.intPrecision = cgmt_intprec_p;
+    ctx->funcs.realPrecisionClearText = cgmt_realprec_p;
   ctx->cgm[begin] = CGM_FUNC cgmt_begin;
   ctx->cgm[end] = CGM_FUNC cgmt_end;
   ctx->cgm[bp] = CGM_FUNC cgmt_bp;
@@ -3449,6 +3463,7 @@ public:
     void metafileDescription(char const *value) override;
     void vdcType(VdcType type) override;
     void intPrecision(int min, int max) override;
+    void realPrecisionClearText(float minReal, float maxReal, int digits) override;
 
 protected:
     std::ostream &m_stream;
@@ -3519,6 +3534,11 @@ void MetafileStreamWriter::vdcType(VdcType type)
 void MetafileStreamWriter::intPrecision(int min, int max)
 {
     m_context.funcs.intPrecision(&m_context, min, max);
+}
+
+void MetafileStreamWriter::realPrecisionClearText(float minReal, float maxReal, int digits)
+{
+    m_context.funcs.realPrecisionClearText(&m_context, static_cast<double>(minReal), static_cast<double>(maxReal), digits);
 }
 
 void MetafileStreamWriter::flushBuffer()

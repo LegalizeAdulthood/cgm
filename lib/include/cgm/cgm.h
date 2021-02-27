@@ -35,6 +35,7 @@ public:
     virtual void metafileDescription(char const *value) = 0;
     virtual void vdcType(VdcType type) = 0;
     virtual void intPrecision(int min, int max) = 0;
+    virtual void realPrecisionClearText(float minReal, float maxReal, int digits) = 0;
 };
 
 std::unique_ptr<MetafileWriter> create(std::ostream &stream, Encoding enc);

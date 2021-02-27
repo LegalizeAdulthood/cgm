@@ -51,6 +51,12 @@ TEST_CASE("clear text encoding")
 
         REQUIRE(stream.str() == "IntegerPrec 1 32767;\n");
     }
+    SECTION("real precision")
+    {
+        writer->realPrecisionClearText(-32767, 32767, 4);
+
+        REQUIRE(stream.str() == "RealPrec -32767.000000 32767.000000 4;\n");
+    }
 }
 
 //TEST_CASE("begin binary, end")
