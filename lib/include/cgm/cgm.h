@@ -15,6 +15,12 @@ enum class Encoding
     Character = 9
 };
 
+enum class VdcType
+{
+    Integer = 1,
+    Real
+};
+
 void beginMetafile(FILE *file, Encoding enc);
 void endMetafile(FILE *file);
 
@@ -27,6 +33,7 @@ public:
     virtual void endMetafile() = 0;
     virtual void metafileVersion(int value) = 0;
     virtual void metafileDescription(char const *value) = 0;
+    virtual void vdcType(VdcType type) = 0;
 };
 
 std::unique_ptr<MetafileWriter> create(std::ostream &stream, Encoding enc);

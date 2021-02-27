@@ -87,6 +87,7 @@ struct cgm_funcs
     void (*end)(cgm_context *p);
     void (*metafileVersion)(cgm_context *p, int value);
     void (*metafileDescription)(cgm_context *p, const char *value);
+    void (*vdcType)(cgm_context *p, cgm::VdcType type);
 };
 
 struct cgm_context
@@ -470,14 +471,24 @@ static void cgmt_mfdescrip(void)
 
 
 /* VDC type */
+static void cgmt_vdctype_p(cgm_context *ctx, cgm::VdcType value)
+{
+    cgmt_start_cmd(ctx, 1, (int) vdcType);
 
+    if (value == cgm::VdcType::Integer)
+    {
+        cgmt_out_string(ctx, " Integer");
+    }
+    else if (value == cgm::VdcType::Real)
+    {
+        cgmt_out_string(ctx, " Real");
+    }
+
+    cgmt_flush_cmd(ctx, final_flush);
+}
 static void cgmt_vdctype(void)
 {
-  cgmt_start_cmd(1, (int) vdcType);
-
-  cgmt_out_string(" Integer");
-
-  cgmt_flush_cmd(final_flush);
+    cgmt_vdctype_p(g_p, cgm::VdcType::Integer);
 }
 
 
@@ -3019,6 +3030,7 @@ static void setup_clear_text_context(cgm_context *ctx)
     ctx->funcs.end = cgmt_end_p;
     ctx->funcs.metafileVersion = cgmt_mfversion_p;
     ctx->funcs.metafileDescription = cgmt_mfdescrip_p;
+    ctx->funcs.vdcType = cgmt_vdctype_p;
   ctx->cgm[begin] = CGM_FUNC cgmt_begin;
   ctx->cgm[end] = CGM_FUNC cgmt_end;
   ctx->cgm[bp] = CGM_FUNC cgmt_bp;
@@ -3430,6 +3442,7 @@ public:
     void endMetafile() override;
     void metafileVersion(int value) override;
     void metafileDescription(char const *value) override;
+    void vdcType(VdcType type) override;
 
 protected:
     std::ostream &m_stream;
@@ -3490,6 +3503,11 @@ void MetafileStreamWriter::metafileVersion(int value)
 void MetafileStreamWriter::metafileDescription(char const *value)
 {
     m_context.funcs.metafileDescription(&m_context, value);
+}
+
+void MetafileStreamWriter::vdcType(VdcType type)
+{
+    m_context.funcs.vdcType(&m_context, type);
 }
 
 void MetafileStreamWriter::flushBuffer()

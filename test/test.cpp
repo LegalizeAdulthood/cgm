@@ -33,6 +33,18 @@ TEST_CASE("clear text encoding")
 
         REQUIRE(stream.str() == "MFDesc \"this is a foo widget\";\n");
     }
+    SECTION("vdc type integer")
+    {
+        writer->vdcType(cgm::VdcType::Integer);
+
+        REQUIRE(stream.str() == "VDCType Integer;\n");
+    }
+    SECTION("vdc type real")
+    {
+        writer->vdcType(cgm::VdcType::Real);
+
+        REQUIRE(stream.str() == "VDCType Real;\n");
+    }
 }
 
 //TEST_CASE("begin binary, end")
