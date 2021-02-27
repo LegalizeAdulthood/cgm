@@ -75,7 +75,7 @@ int gks_read_file(int fd, void *buf, int count)
   return cc;
 }
 
-int gks_write_file(int fd, void *buf, int count)
+int gks_write_file(int fd, const void *buf, int count)
 {
   int cc;
 

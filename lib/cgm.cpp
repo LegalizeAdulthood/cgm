@@ -1,3 +1,8 @@
+#include <functional>
+#include <iostream>
+#include <memory>
+#include <stdexcept>
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -74,6 +79,14 @@ struct fill_attributes
   int color;
 };
 
+struct cgm_context;
+
+struct cgm_funcs
+{
+    int (*begin)(cgm_context *p, const char *comment);
+    void (*end)(cgm_context *p);
+};
+
 struct cgm_context
 {
   norm_xform xform;		/* internal transformation */
@@ -83,6 +96,8 @@ struct cgm_context
   fill_attributes fill;		/* current fill area attributes */
   int buffer_ind;		/* output buffer index */
   char buffer[max_buffer + 2];	/* output buffer */
+  void *flush_buffer_context;
+  int (*flush_buffer)(cgm_context *p, void *data);
   double color_t[MAX_COLOR * 3];	/* color table */
   int conid;			/* GKS connection id */
   unsigned active;		/* indicates active workstation */
@@ -98,6 +113,7 @@ struct cgm_context
   int bfr_index;		/* index into the buffer */
   int partition;		/* which partition in the output */
   enum encode_enum encode;	/* type of encoding */
+  cgm_funcs funcs;
 #if defined(__cplusplus) || defined(c_plusplus)
   void (*cgm[n_melements]) (...);	/* cgm functions and procedures */
 #else
@@ -105,7 +121,7 @@ struct cgm_context
 #endif
 };
 
-static cgm_context *p;
+static cgm_context *g_p;
 
 static char digits[10] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
 
@@ -138,8 +154,8 @@ static void WC_to_VDC(double xin, double yin, int *xout, int *yout)
 
 /* Normalization transformation */
 
-  x = p->xform.a * xin + p->xform.b;
-  y = p->xform.c * yin + p->xform.d;
+  x = g_p->xform.a * xin + g_p->xform.b;
+  y = g_p->xform.c * yin + g_p->xform.d;
 
 /* Segment transformation */
 
@@ -155,91 +171,113 @@ static void WC_to_VDC(double xin, double yin, int *xout, int *yout)
 
 /* Flush output buffer */
 
-static void cgmt_fb(void)
+static void cgmt_fb(cgm_context *ctx)
 {
-  if (p->buffer_ind != 0)
+  if (ctx->buffer_ind != 0)
     {
-      p->buffer[p->buffer_ind++] = '\n';
-      p->buffer[p->buffer_ind] = '\0';
-      gks_write_file(p->conid, p->buffer, p->buffer_ind);
+      ctx->buffer[ctx->buffer_ind++] = '\n';
+      ctx->buffer[ctx->buffer_ind] = '\0';
+      ctx->flush_buffer(ctx, ctx->flush_buffer_context);
 
-      p->buffer_ind = 0;
-      p->buffer[0] = '\0';
+      ctx->buffer_ind = 0;
+      ctx->buffer[0] = '\0';
     }
+}
+static void cgmt_fb()
+{
+    cgmt_fb(g_p);
 }
 
 
 
 /* Write a character to CGM clear text */
 
+static void cgmt_outc(cgm_context *ctx, char chr)
+{
+  if (ctx->buffer_ind >= cgmt_recl)
+    cgmt_fb(ctx);
+
+  ctx->buffer[ctx->buffer_ind++] = chr;
+  ctx->buffer[ctx->buffer_ind] = '\0';
+}
 static void cgmt_outc(char chr)
 {
-  if (p->buffer_ind >= cgmt_recl)
-    cgmt_fb();
-
-  p->buffer[p->buffer_ind++] = chr;
-  p->buffer[p->buffer_ind] = '\0';
+    cgmt_outc(g_p, chr);
 }
-
 
 
 /* Write string to CGM clear text */
 
-static void cgmt_out_string(char *string)
+static void cgmt_out_string(cgm_context *ctx, char *string)
 {
-  if ((int) (p->buffer_ind + strlen(string)) >= cgmt_recl)
+  if ((int) (ctx->buffer_ind + strlen(string)) >= cgmt_recl)
     {
       cgmt_fb();
-      strcpy(p->buffer, "   ");
-      p->buffer_ind = 3;
+      strcpy(ctx->buffer, "   ");
+      ctx->buffer_ind = 3;
     }
 
-  strcat(p->buffer, string);
-  p->buffer_ind = p->buffer_ind + static_cast<int>(strlen(string));
+  strcat(ctx->buffer, string);
+  ctx->buffer_ind = ctx->buffer_ind + static_cast<int>(strlen(string));
+}
+static void cgmt_out_string(char *string)
+{
+    cgmt_out_string(g_p, string);
 }
 
 
 
 /* Start output command */
+static void cgmt_start_cmd(cgm_context *p, int cl, int el)
+{
+    cgmt_out_string(p, cgmt_cptr[cl][el]);
+}
 
 static void cgmt_start_cmd(int cl, int el)
 {
-  cgmt_out_string(cgmt_cptr[cl][el]);
+    cgmt_start_cmd(g_p, cl, el);
 }
 
 
 
 /* Flush output command */
 
+static void cgmt_flush_cmd(cgm_context *ctx, int this_flush)
+{
+    cgmt_outc(ctx, term_char);
+    cgmt_fb(ctx);
+}
+
 static void cgmt_flush_cmd(int this_flush)
 {
-  cgmt_outc(term_char);
-
-  cgmt_fb();
+    cgmt_flush_cmd(g_p, this_flush);
 }
 
 
 
 /* Write a CGM clear text string */
-
-static void cgmt_string(char *cptr, int slen)
+static void cgmt_string(cgm_context *ctx, const char *cptr, int slen)
 {
-  int i;
+    int i;
 
-  cgmt_outc(' ');
-  cgmt_outc(quote_char);
+    cgmt_outc(ctx, ' ');
+    cgmt_outc(ctx, quote_char);
 
-  for (i = 0; i < slen; ++i)
+    for (i = 0; i < slen; ++i)
     {
-      if (cptr[i] == quote_char)
-	{
-	  cgmt_outc(quote_char);
-	}
+        if (cptr[i] == quote_char)
+        {
+            cgmt_outc(ctx, quote_char);
+        }
 
-      cgmt_outc(cptr[i]);
+        cgmt_outc(ctx, cptr[i]);
     }
 
-  cgmt_outc(quote_char);
+    cgmt_outc(ctx, quote_char);
+}
+static void cgmt_string(const char *cptr, int slen)
+{
+    cgmt_string(g_p, cptr, slen);
 }
 
 
@@ -267,7 +305,7 @@ static void cgmt_int(int xin)
     {
       *--cptr = digits[0];
 
-      if ((int) (p->buffer_ind + strlen(cptr)) < cgmt_recl)
+      if ((int) (g_p->buffer_ind + strlen(cptr)) < cgmt_recl)
 	cgmt_outc(' ');
 
       cgmt_out_string(cptr);	/* all done */
@@ -284,7 +322,7 @@ static void cgmt_int(int xin)
   if (is_neg)
     *--cptr = '-';
 
-  if ((int) (p->buffer_ind + strlen(cptr)) < cgmt_recl)
+  if ((int) (g_p->buffer_ind + strlen(cptr)) < cgmt_recl)
     cgmt_outc(' ');
 
   cgmt_out_string(cptr);
@@ -317,30 +355,41 @@ static void cgmt_ipoint(int x, int y)
 
 
 /* Begin metafile */
-
-static void cgmt_begin(char *comment)
+static int cgmt_begin_p(cgm_context *p, const char *comment)
 {
-  cgmt_start_cmd(0, (int) B_Mf);
+    cgmt_start_cmd(p, 0, (int) B_Mf);
 
-  if (*comment)
-    cgmt_string(comment, static_cast<int>(strlen(comment)));
-  else
-    cgmt_string(nullptr, 0);
+    if (*comment)
+        cgmt_string(p, comment, static_cast<int>(strlen(comment)));
+    else
+        cgmt_string(p, nullptr, 0);
 
-  cgmt_flush_cmd(final_flush);
+    cgmt_flush_cmd(p, final_flush);
+
+    return 0;
 }
+
+static void cgmt_begin(const char *comment)
+{
+    cgmt_begin_p(g_p, comment);
+}
+
 
 
 
 /* End metafile */
 
+static void cgmt_end_p(cgm_context *ctx)
+{
+  cgmt_start_cmd(ctx, 0, (int) E_Mf);
+
+  cgmt_flush_cmd(ctx, final_flush);
+
+  cgmt_fb(ctx);
+}
 static void cgmt_end(void)
 {
-  cgmt_start_cmd(0, (int) E_Mf);
-
-  cgmt_flush_cmd(final_flush);
-
-  cgmt_fb();
+    cgmt_end_p(g_p);
 }
 
 
@@ -599,10 +648,10 @@ static void cgmt_scalmode(void)
 {
   cgmt_start_cmd(2, (int) ScalMode);
 
-  if (p->mm > 0)
+  if (g_p->mm > 0)
     {
       cgmt_out_string(" Metric");
-      cgmt_real(p->mm);
+      cgmt_real(g_p->mm);
     }
   else
     cgmt_out_string(" Abstract");
@@ -658,7 +707,7 @@ static void cgmt_vdcextent(void)
   cgmt_start_cmd(2, (int) vdcExtent);
 
   cgmt_ipoint(0, 0);
-  cgmt_ipoint(p->xext, p->yext);
+  cgmt_ipoint(g_p->xext, g_p->yext);
 
   cgmt_flush_cmd(final_flush);
 }
@@ -1270,16 +1319,20 @@ static void cgmt_carray(int xmin, int xmax, int ymin, int ymax, int dx,
 
 /* Flush output buffer */
 
-static void cgmb_fb(void)
+static void cgmb_fb(cgm_context *ctx)
 {
-  if (p->buffer_ind != 0)
+  if (ctx->buffer_ind != 0)
     {
-      p->buffer[p->buffer_ind] = '\0';
-      gks_write_file(p->conid, p->buffer, p->buffer_ind);
+      ctx->buffer[ctx->buffer_ind] = '\0';
+      ctx->flush_buffer(ctx, ctx->flush_buffer_context);
 
-      p->buffer_ind = 0;
-      p->buffer[0] = '\0';
+      ctx->buffer_ind = 0;
+      ctx->buffer[0] = '\0';
     }
+}
+static void cgmb_fb()
+{
+    cgmb_fb(g_p);
 }
 
 
@@ -1287,10 +1340,10 @@ static void cgmb_fb(void)
 
 static void cgmb_outc(char chr)
 {
-  if (p->buffer_ind >= max_buffer)
+  if (g_p->buffer_ind >= max_buffer)
     cgmb_fb();
 
-  p->buffer[p->buffer_ind++] = chr;
+  g_p->buffer[g_p->buffer_ind++] = chr;
 }
 
 
@@ -1302,14 +1355,14 @@ static void cgmb_start_cmd(int cl, int el)
 #define cl_max 15
 #define el_max 127
 
-  p->cmd_hdr = p->cmd_buffer + p->bfr_index;
-  p->cmd_data = p->cmd_hdr + hdr_long;
-  p->bfr_index += hdr_long;
+  g_p->cmd_hdr = g_p->cmd_buffer + g_p->bfr_index;
+  g_p->cmd_data = g_p->cmd_hdr + hdr_long;
+  g_p->bfr_index += hdr_long;
 
-  p->cmd_hdr[0] = (cl << 4) | (el >> 3);
-  p->cmd_hdr[1] = el << 5;
-  p->cmd_index = 0;
-  p->partition = 1;
+  g_p->cmd_hdr[0] = (cl << 4) | (el >> 3);
+  g_p->cmd_hdr[1] = el << 5;
+  g_p->cmd_index = 0;
+  g_p->partition = 1;
 
 #undef cl_max
 #undef el_max
@@ -1323,16 +1376,16 @@ static void cgmb_flush_cmd(int this_flush)
 {
   int i;
 
-  if ((this_flush == final_flush) && (p->partition == 1) &&
-      (p->cmd_index <= max_short))
+  if ((this_flush == final_flush) && (g_p->partition == 1) &&
+      (g_p->cmd_index <= max_short))
     {
-      p->cmd_hdr[1] |= p->cmd_index;
+      g_p->cmd_hdr[1] |= g_p->cmd_index;
 
       /* flush out the header */
 
       for (i = 0; i < hdr_short; ++i)
 	{
-	  cgmb_outc(p->cmd_hdr[i]);
+	  cgmb_outc(g_p->cmd_hdr[i]);
 	}
 
     }
@@ -1340,50 +1393,50 @@ static void cgmb_flush_cmd(int this_flush)
     {
       /* need a long form */
 
-      if (p->partition == 1)
+      if (g_p->partition == 1)
 	{
 	  /* first one */
 
-	  p->cmd_hdr[1] |= 31;
+	  g_p->cmd_hdr[1] |= 31;
 
 	  for (i = 0; i < hdr_short; ++i)
 	    {
-	      cgmb_outc(p->cmd_hdr[i]);
+	      cgmb_outc(g_p->cmd_hdr[i]);
 	    }
 	}
 
-      p->cmd_hdr[2] = p->cmd_index >> 8;
-      p->cmd_hdr[3] = p->cmd_index & 255;
+      g_p->cmd_hdr[2] = g_p->cmd_index >> 8;
+      g_p->cmd_hdr[3] = g_p->cmd_index & 255;
 
       if (this_flush == int_flush)
 	{
-	  p->cmd_hdr[2] |= 1 << 7;	/* more come */
+	  g_p->cmd_hdr[2] |= 1 << 7;	/* more come */
 	}
 
       /* flush out the header */
 
       for (i = hdr_short; i < hdr_long; ++i)
 	{
-	  cgmb_outc(p->cmd_hdr[i]);
+	  cgmb_outc(g_p->cmd_hdr[i]);
 	}
     }
 
 
   /* now flush out the data */
 
-  for (i = 0; i < p->cmd_index; ++i)
+  for (i = 0; i < g_p->cmd_index; ++i)
     {
-      cgmb_outc(p->cmd_data[i]);
+      cgmb_outc(g_p->cmd_data[i]);
     }
 
-  if (p->cmd_index % 2)
+  if (g_p->cmd_index % 2)
     {
       cgmb_outc('\0');
     }
 
-  p->cmd_index = 0;
-  p->bfr_index = 0;
-  ++p->partition;
+  g_p->cmd_index = 0;
+  g_p->bfr_index = 0;
+  ++g_p->partition;
 }
 
 
@@ -1393,12 +1446,12 @@ static void cgmb_flush_cmd(int this_flush)
 
 static void cgmb_out_bc(int c)
 {
-  if (p->cmd_index >= max_long)
+  if (g_p->cmd_index >= max_long)
     {
       cgmb_flush_cmd(int_flush);
     }
 
-  p->cmd_data[p->cmd_index++] = c;
+  g_p->cmd_data[g_p->cmd_index++] = c;
 }
 
 
@@ -1411,13 +1464,13 @@ static void cgmb_out_bs(char *cptr, int n)
   int to_do, space_left, i;
 
   to_do = n;
-  space_left = max_long - p->cmd_index;
+  space_left = max_long - g_p->cmd_index;
 
   while (to_do > space_left)
     {
       for (i = 0; i < space_left; ++i)
 	{
-	  p->cmd_data[p->cmd_index++] = *cptr++;
+	  g_p->cmd_data[g_p->cmd_index++] = *cptr++;
 	}
 
       cgmb_flush_cmd(int_flush);
@@ -1427,7 +1480,7 @@ static void cgmb_out_bs(char *cptr, int n)
 
   for (i = 0; i < to_do; ++i)
     {
-      p->cmd_data[p->cmd_index++] = *cptr++;
+      g_p->cmd_data[g_p->cmd_index++] = *cptr++;
     }
 }
 
@@ -2024,10 +2077,10 @@ static void cgmb_scalmode(void)
 {
   cgmb_start_cmd(2, (int) ScalMode);
 
-  if (p->mm > 0)
+  if (g_p->mm > 0)
     {
       cgmb_eint(1);
-      cgmb_float(p->mm);
+      cgmb_float(g_p->mm);
     }
   else
     {
@@ -2088,8 +2141,8 @@ static void cgmb_vdcextent(void)
 
   cgmb_vint(0);
   cgmb_vint(0);
-  cgmb_vint(p->xext);
-  cgmb_vint(p->yext);
+  cgmb_vint(g_p->xext);
+  cgmb_vint(g_p->yext);
 
   cgmb_flush_cmd(final_flush);
 }
@@ -2553,8 +2606,8 @@ static void init_color_table(void)
   for (i = 0; i < MAX_COLOR; i++)
     {
       j = i;
-      gks_inq_rgb(j, &p->color_t[i * 3], &p->color_t[i * 3 + 1],
-		  &p->color_t[i * 3 + 2]);
+      gks_inq_rgb(j, &g_p->color_t[i * 3], &g_p->color_t[i * 3 + 1],
+		  &g_p->color_t[i * 3 + 2]);
     }
 }
 
@@ -2565,7 +2618,7 @@ static void setup_colors(void)
   int i;
 
   for (i = 0; i < MAX_COLOR; i++)
-    p->cgm[coltab] (i, 1, &p->color_t[3 * i]);
+    g_p->cgm[coltab] (i, 1, &g_p->color_t[3 * i]);
 }
 
 
@@ -2583,7 +2636,7 @@ static void set_xform(unsigned init)
   if (init)
     {
       gks_inq_current_xformno(&errind, &tnr);
-      gks_inq_xform(tnr, &errind, p->wn, p->vp);
+      gks_inq_xform(tnr, &errind, g_p->wn, g_p->vp);
       gks_inq_clip(&errind, &clip_old, clprt);
     }
 
@@ -2593,24 +2646,24 @@ static void set_xform(unsigned init)
 
   for (i = 0; i < 4; i++)
     {
-      if (vp_new[i] != p->vp[i])
+      if (vp_new[i] != g_p->vp[i])
 	{
-	  p->vp[i] = vp_new[i];
+	  g_p->vp[i] = vp_new[i];
 	  update = TRUE;
 	}
-      if (wn_new[i] != p->wn[i])
+      if (wn_new[i] != g_p->wn[i])
 	{
-	  p->wn[i] = wn_new[i];
+	  g_p->wn[i] = wn_new[i];
 	  update = TRUE;
 	}
     }
 
   if (init || update || (clip_old != clip_new))
     {
-      p->xform.a = (vp_new[1] - vp_new[0]) / (wn_new[1] - wn_new[0]);
-      p->xform.b = vp_new[0] - wn_new[0] * p->xform.a;
-      p->xform.c = (vp_new[3] - vp_new[2]) / (wn_new[3] - wn_new[2]);
-      p->xform.d = vp_new[2] - wn_new[2] * p->xform.c;
+      g_p->xform.a = (vp_new[1] - vp_new[0]) / (wn_new[1] - wn_new[0]);
+      g_p->xform.b = vp_new[0] - wn_new[0] * g_p->xform.a;
+      g_p->xform.c = (vp_new[3] - vp_new[2]) / (wn_new[3] - wn_new[2]);
+      g_p->xform.d = vp_new[2] - wn_new[2] * g_p->xform.c;
 
       if (init)
 	{
@@ -2621,12 +2674,12 @@ static void set_xform(unsigned init)
 	      clip_rect[2] = (int) (vp_new[1] * max_coord);
 	      clip_rect[3] = (int) (vp_new[3] * max_coord);
 
-	      p->cgm[cliprect] (clip_rect);
-	      p->cgm[clipindic] (TRUE);
+	      g_p->cgm[cliprect] (clip_rect);
+	      g_p->cgm[clipindic] (TRUE);
 	    }
 	  else
 	    {
-	      p->cgm[clipindic] (FALSE);
+	      g_p->cgm[clipindic] (FALSE);
 	    }
 	  clip_old = clip_new;
 	}
@@ -2641,12 +2694,12 @@ static void set_xform(unsigned init)
 		  clip_rect[2] = (int) (vp_new[1] * max_coord);
 		  clip_rect[3] = (int) (vp_new[3] * max_coord);
 
-		  p->cgm[cliprect] (clip_rect);
-		  p->cgm[clipindic] (TRUE);
+		  g_p->cgm[cliprect] (clip_rect);
+		  g_p->cgm[clipindic] (TRUE);
 		}
 	      else
 		{
-		  p->cgm[clipindic] (FALSE);
+		  g_p->cgm[clipindic] (FALSE);
 		}
 	      clip_old = clip_new;
 	    }
@@ -2700,9 +2753,9 @@ static void setup_polyline_attributes(unsigned init)
 
   if (init)
     {
-      p->pline.type = 1;
-      p->pline.width = 1.0;
-      p->pline.color = 1;
+      g_p->pline.type = 1;
+      g_p->pline.width = 1.0;
+      g_p->pline.color = 1;
     }
   else
     {
@@ -2710,26 +2763,26 @@ static void setup_polyline_attributes(unsigned init)
       gks_inq_pline_linewidth(&errind, &newpline.width);
       gks_inq_pline_color_index(&errind, &newpline.color);
 
-      if (p->encode == cgm_grafkit)
+      if (g_p->encode == cgm_grafkit)
 	{
 	  if (newpline.type < 0)
 	    newpline.type = max_std_linetype - newpline.type;
 	}
 
-      if (newpline.type != p->pline.type)
+      if (newpline.type != g_p->pline.type)
 	{
-	  p->cgm[ltype] (newpline.type);
-	  p->pline.type = newpline.type;
+	  g_p->cgm[ltype] (newpline.type);
+	  g_p->pline.type = newpline.type;
 	}
-      if (newpline.width != p->pline.width)
+      if (newpline.width != g_p->pline.width)
 	{
-	  p->cgm[lwidth] (newpline.width);
-	  p->pline.width = newpline.width;
+	  g_p->cgm[lwidth] (newpline.width);
+	  g_p->pline.width = newpline.width;
 	}
-      if (newpline.color != p->pline.color)
+      if (newpline.color != g_p->pline.color)
 	{
-	  p->cgm[lcolour] (newpline.color);
-	  p->pline.color = newpline.color;
+	  g_p->cgm[lcolour] (newpline.color);
+	  g_p->pline.color = newpline.color;
 	}
     }
 }
@@ -2743,9 +2796,9 @@ static void setup_polymarker_attributes(unsigned init)
 
   if (init)
     {
-      p->pmark.type = 3;
-      p->pmark.width = 1.0;
-      p->pmark.color = 1;
+      g_p->pmark.type = 3;
+      g_p->pmark.width = 1.0;
+      g_p->pmark.color = 1;
     }
   else
     {
@@ -2753,7 +2806,7 @@ static void setup_polymarker_attributes(unsigned init)
       gks_inq_pmark_size(&errind, &newpmark.width);
       gks_inq_pmark_color_index(&errind, &newpmark.color);
 
-      if (p->encode == cgm_grafkit)
+      if (g_p->encode == cgm_grafkit)
 	{
 	  if (newpmark.type < 0)
 	    newpmark.type = max_std_markertype - newpmark.type;
@@ -2761,20 +2814,20 @@ static void setup_polymarker_attributes(unsigned init)
 	    newpmark.type = 3;
 	}
 
-      if (newpmark.type != p->pmark.type)
+      if (newpmark.type != g_p->pmark.type)
 	{
-	  p->cgm[mtype] (newpmark.type);
-	  p->pmark.type = newpmark.type;
+	  g_p->cgm[mtype] (newpmark.type);
+	  g_p->pmark.type = newpmark.type;
 	}
-      if (newpmark.width != p->pmark.width)
+      if (newpmark.width != g_p->pmark.width)
 	{
-	  p->cgm[msize] (newpmark.width);
-	  p->pmark.width = newpmark.width;
+	  g_p->cgm[msize] (newpmark.width);
+	  g_p->pmark.width = newpmark.width;
 	}
-      if (newpmark.color != p->pmark.color)
+      if (newpmark.color != g_p->pmark.color)
 	{
-	  p->cgm[mcolour] (newpmark.color);
-	  p->pmark.color = newpmark.color;
+	  g_p->cgm[mcolour] (newpmark.color);
+	  g_p->pmark.color = newpmark.color;
 	}
     }
 }
@@ -2789,17 +2842,17 @@ static void setup_text_attributes(unsigned init)
 
   if (init)
     {
-      p->text.font = 1;
-      p->text.prec = 0;
-      p->text.expfac = 1.0;
-      p->text.spacing = 0.0;
-      p->text.color = 1;
-      p->text.height = 0.01;
-      p->text.upx = 0;
-      p->text.upy = max_coord;
-      p->text.path = 0;
-      p->text.halign = 0;
-      p->text.valign = 0;
+      g_p->text.font = 1;
+      g_p->text.prec = 0;
+      g_p->text.expfac = 1.0;
+      g_p->text.spacing = 0.0;
+      g_p->text.color = 1;
+      g_p->text.height = 0.01;
+      g_p->text.upx = 0;
+      g_p->text.upy = max_coord;
+      g_p->text.path = 0;
+      g_p->text.halign = 0;
+      g_p->text.valign = 0;
     }
   else
     {
@@ -2810,8 +2863,8 @@ static void setup_text_attributes(unsigned init)
       gks_set_chr_xform();
       gks_chr_height(&newtext.height);
       gks_inq_text_upvec(&errind, &upx, &upy);
-      upx *= p->xform.a;
-      upy *= p->xform.c;
+      upx *= g_p->xform.a;
+      upy *= g_p->xform.c;
       gks_seg_xform(&upx, &upy);
       norm = fabs(upx) > fabs(upy) ? fabs(upx) : fabs(upy);
       newtext.upx = (int) (upx / norm * max_coord);
@@ -2819,61 +2872,61 @@ static void setup_text_attributes(unsigned init)
       gks_inq_text_path(&errind, &newtext.path);
       gks_inq_text_align(&errind, &newtext.halign, &newtext.valign);
 
-      if (p->encode == cgm_grafkit)
+      if (g_p->encode == cgm_grafkit)
 	{
 	  if (newtext.font < 0)
 	    newtext.font = max_std_textfont - newtext.font;
 	  newtext.prec = 2;
 	}
 
-      if (newtext.font != p->text.font)
+      if (newtext.font != g_p->text.font)
 	{
-	  p->cgm[tfindex] (newtext.font);
-	  p->text.font = newtext.font;
+	  g_p->cgm[tfindex] (newtext.font);
+	  g_p->text.font = newtext.font;
 	}
-      if (newtext.prec != p->text.prec)
+      if (newtext.prec != g_p->text.prec)
 	{
-	  p->cgm[tprec] (newtext.prec);
-	  p->text.prec = newtext.prec;
+	  g_p->cgm[tprec] (newtext.prec);
+	  g_p->text.prec = newtext.prec;
 	}
-      if (newtext.expfac != p->text.expfac)
+      if (newtext.expfac != g_p->text.expfac)
 	{
-	  p->cgm[cexpfac] (newtext.expfac);
-	  p->text.expfac = newtext.expfac;
+	  g_p->cgm[cexpfac] (newtext.expfac);
+	  g_p->text.expfac = newtext.expfac;
 	}
-      if (newtext.spacing != p->text.spacing)
+      if (newtext.spacing != g_p->text.spacing)
 	{
-	  p->cgm[cspace] (newtext.spacing);
-	  p->text.spacing = newtext.spacing;
+	  g_p->cgm[cspace] (newtext.spacing);
+	  g_p->text.spacing = newtext.spacing;
 	}
-      if (newtext.color != p->text.color)
+      if (newtext.color != g_p->text.color)
 	{
-	  p->cgm[tcolour] (newtext.color);
-	  p->text.color = newtext.color;
+	  g_p->cgm[tcolour] (newtext.color);
+	  g_p->text.color = newtext.color;
 	}
-      if (newtext.height != p->text.height)
+      if (newtext.height != g_p->text.height)
 	{
-	  p->cgm[cheight] ((int) (newtext.height * max_coord));
-	  p->text.height = newtext.height;
+	  g_p->cgm[cheight] ((int) (newtext.height * max_coord));
+	  g_p->text.height = newtext.height;
 	}
-      if ((newtext.upx != p->text.upx) || (newtext.upy != p->text.upy))
+      if ((newtext.upx != g_p->text.upx) || (newtext.upy != g_p->text.upy))
 	{
-	  p->cgm[corient] (newtext.upx, newtext.upy, newtext.upy,
+	  g_p->cgm[corient] (newtext.upx, newtext.upy, newtext.upy,
 			   -newtext.upx);
-	  p->text.upx = newtext.upx;
-	  p->text.upy = newtext.upy;
+	  g_p->text.upx = newtext.upx;
+	  g_p->text.upy = newtext.upy;
 	}
-      if (newtext.path != p->text.path)
+      if (newtext.path != g_p->text.path)
 	{
-	  p->cgm[tpath] (newtext.path);
-	  p->text.path = newtext.path;
+	  g_p->cgm[tpath] (newtext.path);
+	  g_p->text.path = newtext.path;
 	}
-      if ((newtext.halign != p->text.halign) || (newtext.valign !=
-						 p->text.valign))
+      if ((newtext.halign != g_p->text.halign) || (newtext.valign !=
+						 g_p->text.valign))
 	{
-	  p->cgm[talign] (newtext.halign, newtext.valign);
-	  p->text.halign = newtext.halign;
-	  p->text.valign = newtext.valign;
+	  g_p->cgm[talign] (newtext.halign, newtext.valign);
+	  g_p->text.halign = newtext.halign;
+	  g_p->text.valign = newtext.valign;
 	}
     }
 }
@@ -2887,10 +2940,10 @@ static void setup_fill_attributes(unsigned init)
 
   if (init)
     {
-      p->fill.intstyle = 0;
-      p->fill.color = 1;
-      p->fill.pattern_index = 1;
-      p->fill.hatch_index = 1;
+      g_p->fill.intstyle = 0;
+      g_p->fill.color = 1;
+      g_p->fill.pattern_index = 1;
+      g_p->fill.hatch_index = 1;
     }
   else
     {
@@ -2899,25 +2952,25 @@ static void setup_fill_attributes(unsigned init)
       gks_inq_fill_style_index(&errind, &newfill.pattern_index);
       gks_inq_fill_style_index(&errind, &newfill.hatch_index);
 
-      if (newfill.intstyle != p->fill.intstyle)
+      if (newfill.intstyle != g_p->fill.intstyle)
 	{
-	  p->cgm[intstyle] (newfill.intstyle);
-	  p->fill.intstyle = newfill.intstyle;
+	  g_p->cgm[intstyle] (newfill.intstyle);
+	  g_p->fill.intstyle = newfill.intstyle;
 	}
-      if (newfill.color != p->fill.color)
+      if (newfill.color != g_p->fill.color)
 	{
-	  p->cgm[fillcolour] (newfill.color);
-	  p->fill.color = newfill.color;
+	  g_p->cgm[fillcolour] (newfill.color);
+	  g_p->fill.color = newfill.color;
 	}
-      if (newfill.pattern_index != p->fill.pattern_index)
+      if (newfill.pattern_index != g_p->fill.pattern_index)
 	{
-	  p->cgm[pindex] (newfill.pattern_index);
-	  p->fill.pattern_index = newfill.pattern_index;
+	  g_p->cgm[pindex] (newfill.pattern_index);
+	  g_p->fill.pattern_index = newfill.pattern_index;
 	}
-      if (newfill.hatch_index != p->fill.hatch_index)
+      if (newfill.hatch_index != g_p->fill.hatch_index)
 	{
-	  p->cgm[hindex] (newfill.hatch_index);
-	  p->fill.hatch_index = newfill.hatch_index;
+	  g_p->cgm[hindex] (newfill.hatch_index);
+	  g_p->fill.hatch_index = newfill.hatch_index;
 	}
     }
 }
@@ -2952,150 +3005,160 @@ static char *local_time(void)
 
 
 
-static void setup_clear_text_context(void)
+static void setup_clear_text_context(cgm_context *ctx)
 {
-  p->cgm[begin] = CGM_FUNC cgmt_begin;
-  p->cgm[end] = CGM_FUNC cgmt_end;
-  p->cgm[bp] = CGM_FUNC cgmt_bp;
-  p->cgm[bpage] = CGM_FUNC cgmt_bpage;
-  p->cgm[epage] = CGM_FUNC cgmt_epage;
-  p->cgm[mfversion] = CGM_FUNC cgmt_mfversion;
-  p->cgm[mfdescrip] = CGM_FUNC cgmt_mfdescrip;
-  p->cgm[vdctype] = CGM_FUNC cgmt_vdctype;
-  p->cgm[intprec] = CGM_FUNC cgmt_intprec;
-  p->cgm[realprec] = CGM_FUNC cgmt_realprec;
-  p->cgm[indexprec] = CGM_FUNC cgmt_indexprec;
-  p->cgm[colprec] = CGM_FUNC cgmt_colprec;
-  p->cgm[cindprec] = CGM_FUNC cgmt_cindprec;
-  p->cgm[cvextent] = CGM_FUNC cgmt_cvextent;
-  p->cgm[maxcind] = CGM_FUNC cgmt_maxcind;
-  p->cgm[mfellist] = CGM_FUNC cgmt_mfellist;
-  p->cgm[fontlist] = CGM_FUNC cgmt_fontlist;
-  p->cgm[cannounce] = CGM_FUNC cgmt_cannounce;
-  p->cgm[scalmode] = CGM_FUNC cgmt_scalmode;
-  p->cgm[colselmode] = CGM_FUNC cgmt_colselmode;
-  p->cgm[lwsmode] = CGM_FUNC cgmt_lwsmode;
-  p->cgm[msmode] = CGM_FUNC cgmt_msmode;
-  p->cgm[vdcextent] = CGM_FUNC cgmt_vdcextent;
-  p->cgm[backcol] = CGM_FUNC cgmt_backcol;
-  p->cgm[vdcintprec] = CGM_FUNC cgmt_vdcintprec;
-  p->cgm[cliprect] = CGM_FUNC cgmt_cliprect;
-  p->cgm[clipindic] = CGM_FUNC cgmt_clipindic;
-  p->cgm[pline] = CGM_FUNC cgmt_pline;
-  p->cgm[pmarker] = CGM_FUNC cgmt_pmarker;
-  p->cgm[text] = CGM_FUNC cgmt_text;
-  p->cgm[pgon] = CGM_FUNC cgmt_pgon;
-  p->cgm[ltype] = CGM_FUNC cgmt_ltype;
-  p->cgm[lwidth] = CGM_FUNC cgmt_lwidth;
-  p->cgm[lcolour] = CGM_FUNC cgmt_lcolour;
-  p->cgm[mtype] = CGM_FUNC cgmt_mtype;
-  p->cgm[msize] = CGM_FUNC cgmt_msize;
-  p->cgm[mcolour] = CGM_FUNC cgmt_mcolour;
-  p->cgm[tfindex] = CGM_FUNC cgmt_tfindex;
-  p->cgm[tprec] = CGM_FUNC cgmt_tprec;
-  p->cgm[cexpfac] = CGM_FUNC cgmt_cexpfac;
-  p->cgm[cspace] = CGM_FUNC cgmt_cspace;
-  p->cgm[tcolour] = CGM_FUNC cgmt_tcolour;
-  p->cgm[cheight] = CGM_FUNC cgmt_cheight;
-  p->cgm[corient] = CGM_FUNC cgmt_corient;
-  p->cgm[tpath] = CGM_FUNC cgmt_tpath;
-  p->cgm[talign] = CGM_FUNC cgmt_talign;
-  p->cgm[intstyle] = CGM_FUNC cgmt_intstyle;
-  p->cgm[fillcolour] = CGM_FUNC cgmt_fillcolour;
-  p->cgm[hindex] = CGM_FUNC cgmt_hindex;
-  p->cgm[pindex] = CGM_FUNC cgmt_pindex;
-  p->cgm[coltab] = CGM_FUNC cgmt_coltab;
-  p->cgm[carray] = CGM_FUNC cgmt_carray;
+    ctx->funcs.begin = cgmt_begin_p;
+    ctx->funcs.end = cgmt_end_p;
+  ctx->cgm[begin] = CGM_FUNC cgmt_begin;
+  ctx->cgm[end] = CGM_FUNC cgmt_end;
+  ctx->cgm[bp] = CGM_FUNC cgmt_bp;
+  ctx->cgm[bpage] = CGM_FUNC cgmt_bpage;
+  ctx->cgm[epage] = CGM_FUNC cgmt_epage;
+  ctx->cgm[mfversion] = CGM_FUNC cgmt_mfversion;
+  ctx->cgm[mfdescrip] = CGM_FUNC cgmt_mfdescrip;
+  ctx->cgm[vdctype] = CGM_FUNC cgmt_vdctype;
+  ctx->cgm[intprec] = CGM_FUNC cgmt_intprec;
+  ctx->cgm[realprec] = CGM_FUNC cgmt_realprec;
+  ctx->cgm[indexprec] = CGM_FUNC cgmt_indexprec;
+  ctx->cgm[colprec] = CGM_FUNC cgmt_colprec;
+  ctx->cgm[cindprec] = CGM_FUNC cgmt_cindprec;
+  ctx->cgm[cvextent] = CGM_FUNC cgmt_cvextent;
+  ctx->cgm[maxcind] = CGM_FUNC cgmt_maxcind;
+  ctx->cgm[mfellist] = CGM_FUNC cgmt_mfellist;
+  ctx->cgm[fontlist] = CGM_FUNC cgmt_fontlist;
+  ctx->cgm[cannounce] = CGM_FUNC cgmt_cannounce;
+  ctx->cgm[scalmode] = CGM_FUNC cgmt_scalmode;
+  ctx->cgm[colselmode] = CGM_FUNC cgmt_colselmode;
+  ctx->cgm[lwsmode] = CGM_FUNC cgmt_lwsmode;
+  ctx->cgm[msmode] = CGM_FUNC cgmt_msmode;
+  ctx->cgm[vdcextent] = CGM_FUNC cgmt_vdcextent;
+  ctx->cgm[backcol] = CGM_FUNC cgmt_backcol;
+  ctx->cgm[vdcintprec] = CGM_FUNC cgmt_vdcintprec;
+  ctx->cgm[cliprect] = CGM_FUNC cgmt_cliprect;
+  ctx->cgm[clipindic] = CGM_FUNC cgmt_clipindic;
+  ctx->cgm[pline] = CGM_FUNC cgmt_pline;
+  ctx->cgm[pmarker] = CGM_FUNC cgmt_pmarker;
+  ctx->cgm[text] = CGM_FUNC cgmt_text;
+  ctx->cgm[pgon] = CGM_FUNC cgmt_pgon;
+  ctx->cgm[ltype] = CGM_FUNC cgmt_ltype;
+  ctx->cgm[lwidth] = CGM_FUNC cgmt_lwidth;
+  ctx->cgm[lcolour] = CGM_FUNC cgmt_lcolour;
+  ctx->cgm[mtype] = CGM_FUNC cgmt_mtype;
+  ctx->cgm[msize] = CGM_FUNC cgmt_msize;
+  ctx->cgm[mcolour] = CGM_FUNC cgmt_mcolour;
+  ctx->cgm[tfindex] = CGM_FUNC cgmt_tfindex;
+  ctx->cgm[tprec] = CGM_FUNC cgmt_tprec;
+  ctx->cgm[cexpfac] = CGM_FUNC cgmt_cexpfac;
+  ctx->cgm[cspace] = CGM_FUNC cgmt_cspace;
+  ctx->cgm[tcolour] = CGM_FUNC cgmt_tcolour;
+  ctx->cgm[cheight] = CGM_FUNC cgmt_cheight;
+  ctx->cgm[corient] = CGM_FUNC cgmt_corient;
+  ctx->cgm[tpath] = CGM_FUNC cgmt_tpath;
+  ctx->cgm[talign] = CGM_FUNC cgmt_talign;
+  ctx->cgm[intstyle] = CGM_FUNC cgmt_intstyle;
+  ctx->cgm[fillcolour] = CGM_FUNC cgmt_fillcolour;
+  ctx->cgm[hindex] = CGM_FUNC cgmt_hindex;
+  ctx->cgm[pindex] = CGM_FUNC cgmt_pindex;
+  ctx->cgm[coltab] = CGM_FUNC cgmt_coltab;
+  ctx->cgm[carray] = CGM_FUNC cgmt_carray;
 
-  p->buffer_ind = 0;
-  p->buffer[0] = '\0';
+  ctx->buffer_ind = 0;
+  ctx->buffer[0] = '\0';
+}
+
+static void setup_clear_text_context()
+{
+    setup_clear_text_context(g_p);
 }
 
 
-
-static void setup_binary_context(void)
+static void setup_binary_context(cgm_context *ctx)
 {
-  p->cgm[begin] = CGM_FUNC cgmb_begin;
-  p->cgm[end] = CGM_FUNC cgmb_end;
-  p->cgm[bp] = CGM_FUNC cgmb_bp;
-  p->cgm[bpage] = CGM_FUNC cgmb_bpage;
-  p->cgm[epage] = CGM_FUNC cgmb_epage;
-  p->cgm[mfversion] = CGM_FUNC cgmb_mfversion;
-  p->cgm[mfdescrip] = CGM_FUNC cgmb_mfdescrip;
-  p->cgm[vdctype] = CGM_FUNC cgmb_vdctype;
-  p->cgm[intprec] = CGM_FUNC cgmb_intprec;
-  p->cgm[realprec] = CGM_FUNC cgmb_realprec;
-  p->cgm[indexprec] = CGM_FUNC cgmb_indexprec;
-  p->cgm[colprec] = CGM_FUNC cgmb_colprec;
-  p->cgm[cindprec] = CGM_FUNC cgmb_cindprec;
-  p->cgm[cvextent] = CGM_FUNC cgmb_cvextent;
-  p->cgm[maxcind] = CGM_FUNC cgmb_maxcind;
-  p->cgm[mfellist] = CGM_FUNC cgmb_mfellist;
-  p->cgm[fontlist] = CGM_FUNC cgmb_fontlist;
-  p->cgm[cannounce] = CGM_FUNC cgmb_cannounce;
-  p->cgm[scalmode] = CGM_FUNC cgmb_scalmode;
-  p->cgm[colselmode] = CGM_FUNC cgmb_colselmode;
-  p->cgm[lwsmode] = CGM_FUNC cgmb_lwsmode;
-  p->cgm[msmode] = CGM_FUNC cgmb_msmode;
-  p->cgm[vdcextent] = CGM_FUNC cgmb_vdcextent;
-  p->cgm[backcol] = CGM_FUNC cgmb_backcol;
-  p->cgm[vdcintprec] = CGM_FUNC cgmb_vdcintprec;
-  p->cgm[cliprect] = CGM_FUNC cgmb_cliprect;
-  p->cgm[clipindic] = CGM_FUNC cgmb_clipindic;
-  p->cgm[pline] = CGM_FUNC cgmb_pline;
-  p->cgm[pmarker] = CGM_FUNC cgmb_pmarker;
-  p->cgm[text] = CGM_FUNC cgmb_text;
-  p->cgm[pgon] = CGM_FUNC cgmb_pgon;
-  p->cgm[ltype] = CGM_FUNC cgmb_ltype;
-  p->cgm[lwidth] = CGM_FUNC cgmb_lwidth;
-  p->cgm[lcolour] = CGM_FUNC cgmb_lcolour;
-  p->cgm[mtype] = CGM_FUNC cgmb_mtype;
-  p->cgm[msize] = CGM_FUNC cgmb_msize;
-  p->cgm[mcolour] = CGM_FUNC cgmb_mcolour;
-  p->cgm[tfindex] = CGM_FUNC cgmb_tfindex;
-  p->cgm[tprec] = CGM_FUNC cgmb_tprec;
-  p->cgm[cexpfac] = CGM_FUNC cgmb_cexpfac;
-  p->cgm[cspace] = CGM_FUNC cgmb_cspace;
-  p->cgm[tcolour] = CGM_FUNC cgmb_tcolour;
-  p->cgm[cheight] = CGM_FUNC cgmb_cheight;
-  p->cgm[corient] = CGM_FUNC cgmb_corient;
-  p->cgm[tpath] = CGM_FUNC cgmb_tpath;
-  p->cgm[talign] = CGM_FUNC cgmb_talign;
-  p->cgm[intstyle] = CGM_FUNC cgmb_intstyle;
-  p->cgm[fillcolour] = CGM_FUNC cgmb_fillcolour;
-  p->cgm[hindex] = CGM_FUNC cgmb_hindex;
-  p->cgm[pindex] = CGM_FUNC cgmb_pindex;
-  p->cgm[coltab] = CGM_FUNC cgmb_coltab;
-  p->cgm[carray] = CGM_FUNC cgmb_carray;
+  ctx->cgm[begin] = CGM_FUNC cgmb_begin;
+  ctx->cgm[end] = CGM_FUNC cgmb_end;
+  ctx->cgm[bp] = CGM_FUNC cgmb_bp;
+  ctx->cgm[bpage] = CGM_FUNC cgmb_bpage;
+  ctx->cgm[epage] = CGM_FUNC cgmb_epage;
+  ctx->cgm[mfversion] = CGM_FUNC cgmb_mfversion;
+  ctx->cgm[mfdescrip] = CGM_FUNC cgmb_mfdescrip;
+  ctx->cgm[vdctype] = CGM_FUNC cgmb_vdctype;
+  ctx->cgm[intprec] = CGM_FUNC cgmb_intprec;
+  ctx->cgm[realprec] = CGM_FUNC cgmb_realprec;
+  ctx->cgm[indexprec] = CGM_FUNC cgmb_indexprec;
+  ctx->cgm[colprec] = CGM_FUNC cgmb_colprec;
+  ctx->cgm[cindprec] = CGM_FUNC cgmb_cindprec;
+  ctx->cgm[cvextent] = CGM_FUNC cgmb_cvextent;
+  ctx->cgm[maxcind] = CGM_FUNC cgmb_maxcind;
+  ctx->cgm[mfellist] = CGM_FUNC cgmb_mfellist;
+  ctx->cgm[fontlist] = CGM_FUNC cgmb_fontlist;
+  ctx->cgm[cannounce] = CGM_FUNC cgmb_cannounce;
+  ctx->cgm[scalmode] = CGM_FUNC cgmb_scalmode;
+  ctx->cgm[colselmode] = CGM_FUNC cgmb_colselmode;
+  ctx->cgm[lwsmode] = CGM_FUNC cgmb_lwsmode;
+  ctx->cgm[msmode] = CGM_FUNC cgmb_msmode;
+  ctx->cgm[vdcextent] = CGM_FUNC cgmb_vdcextent;
+  ctx->cgm[backcol] = CGM_FUNC cgmb_backcol;
+  ctx->cgm[vdcintprec] = CGM_FUNC cgmb_vdcintprec;
+  ctx->cgm[cliprect] = CGM_FUNC cgmb_cliprect;
+  ctx->cgm[clipindic] = CGM_FUNC cgmb_clipindic;
+  ctx->cgm[pline] = CGM_FUNC cgmb_pline;
+  ctx->cgm[pmarker] = CGM_FUNC cgmb_pmarker;
+  ctx->cgm[text] = CGM_FUNC cgmb_text;
+  ctx->cgm[pgon] = CGM_FUNC cgmb_pgon;
+  ctx->cgm[ltype] = CGM_FUNC cgmb_ltype;
+  ctx->cgm[lwidth] = CGM_FUNC cgmb_lwidth;
+  ctx->cgm[lcolour] = CGM_FUNC cgmb_lcolour;
+  ctx->cgm[mtype] = CGM_FUNC cgmb_mtype;
+  ctx->cgm[msize] = CGM_FUNC cgmb_msize;
+  ctx->cgm[mcolour] = CGM_FUNC cgmb_mcolour;
+  ctx->cgm[tfindex] = CGM_FUNC cgmb_tfindex;
+  ctx->cgm[tprec] = CGM_FUNC cgmb_tprec;
+  ctx->cgm[cexpfac] = CGM_FUNC cgmb_cexpfac;
+  ctx->cgm[cspace] = CGM_FUNC cgmb_cspace;
+  ctx->cgm[tcolour] = CGM_FUNC cgmb_tcolour;
+  ctx->cgm[cheight] = CGM_FUNC cgmb_cheight;
+  ctx->cgm[corient] = CGM_FUNC cgmb_corient;
+  ctx->cgm[tpath] = CGM_FUNC cgmb_tpath;
+  ctx->cgm[talign] = CGM_FUNC cgmb_talign;
+  ctx->cgm[intstyle] = CGM_FUNC cgmb_intstyle;
+  ctx->cgm[fillcolour] = CGM_FUNC cgmb_fillcolour;
+  ctx->cgm[hindex] = CGM_FUNC cgmb_hindex;
+  ctx->cgm[pindex] = CGM_FUNC cgmb_pindex;
+  ctx->cgm[coltab] = CGM_FUNC cgmb_coltab;
+  ctx->cgm[carray] = CGM_FUNC cgmb_carray;
 
-  p->buffer_ind = 0;
-  p->buffer[0] = '\0';
+  ctx->buffer_ind = 0;
+  ctx->buffer[0] = '\0';
 
-  p->bfr_index = 0;
+  ctx->bfr_index = 0;
+}
+static void setup_binary_context()
+{
+    setup_binary_context(g_p);
 }
 
 
 
 static void cgm_begin_page(void)
 {
-  p->cgm[bp] (local_time());
+  g_p->cgm[bp] (local_time());
 
-  if (p->encode != cgm_grafkit)
-    p->cgm[scalmode] ();
+  if (g_p->encode != cgm_grafkit)
+    g_p->cgm[scalmode] ();
 
-  p->cgm[colselmode] ();
+  g_p->cgm[colselmode] ();
 
-  if (p->encode != cgm_grafkit)
+  if (g_p->encode != cgm_grafkit)
     {
-      p->cgm[lwsmode] ();
-      p->cgm[msmode] ();
+      g_p->cgm[lwsmode] ();
+      g_p->cgm[msmode] ();
     }
 
-  p->cgm[vdcextent] ();
-  p->cgm[backcol] ();
+  g_p->cgm[vdcextent] ();
+  g_p->cgm[backcol] ();
 
-  p->cgm[bpage] ();
-  p->cgm[vdcintprec] ();
+  g_p->cgm[bpage] ();
+  g_p->cgm[vdcintprec] ();
 
   setup_colors();
 
@@ -3106,251 +3169,10 @@ static void cgm_begin_page(void)
   setup_text_attributes(TRUE);
   setup_fill_attributes(TRUE);
 
-  p->begin_page = FALSE;
+  g_p->begin_page = FALSE;
 }
 
-static void gks_drv_cgm(int fctid, int dx, int dy, int dimx, int *ia,
-		 int lr1, double *r1, int lr2, double *r2, int lc, char *chars,
-		 void **context)
-{
-  char *buffer;
-
-  p = (cgm_context *) *context;
-
-  switch (fctid)
-    {
-
-    case 2:
-/*
- *  Open workstation
- */
-      p = (cgm_context *) gks_malloc(sizeof(cgm_context));
-
-      p->conid = ia[1];
-
-      if (ia[2] == 7)
-	{
-	  p->encode = cgm_binary;
-	  setup_binary_context();
-	}
-      else if (ia[2] == 8)
-	{
-	  p->encode = cgm_clear_text;
-	  setup_clear_text_context();
-	}
-      else if (ia[2] == (7 | 0x50000))
-	{
-	  p->encode = cgm_grafkit;
-	  setup_binary_context();
-	}
-      else
-	{
-	  gks_perror("invalid bit mask (%x)", ia[2]);
-	  ia[0] = ia[1] = 0;
-	  return;
-	}
-
-      buffer = "GKS, Copyright @ 2001, Josef Heinen";
-
-      if (((char *) gks_getenv("GKS_SCALE_MODE_METRIC")) != NULL)
-	p->mm = 0.19685 / max_coord * 1000;
-      else
-	p->mm = 0;
-
-      p->cgm[begin] (buffer);
-      p->cgm[mfversion] ();
-      p->cgm[mfdescrip] ();
-
-      if (p->encode != cgm_grafkit)
-	{
-	  p->cgm[vdctype] ();
-	  p->cgm[intprec] ();
-#if 0
-	  p->cgm[realprec] ();	/* causes problems with RALCGM */
-#endif
-	  p->cgm[indexprec] ();
-	  p->cgm[colprec] ();
-	  p->cgm[cindprec] ();
-	  p->cgm[maxcind] ();
-	  p->cgm[cvextent] ();
-	}
-
-      p->cgm[mfellist] ();
-      p->cgm[fontlist] ();
-
-      if (p->encode != cgm_grafkit)
-	p->cgm[cannounce] ();
-
-      init_color_table();
-
-      p->xext = p->yext = max_coord;
-
-      p->begin_page = TRUE;
-      p->active = FALSE;
-
-      *context = p;
-      break;
-
-    case 3:
-/*
- *  Close workstation
- */
-      p->cgm[epage] ();
-      p->cgm[end] ();
-
-      free(p);
-      break;
-
-    case 4:
-/*
- *  Activate workstation
- */
-      p->active = TRUE;
-      break;
-
-    case 5:
-/*
- *  Deactivate workstation
- */
-      p->active = FALSE;
-      break;
-
-    case 6:
-/*
- *  Clear workstation
- */
-      if (!p->begin_page)
-	{
-	  p->cgm[epage] ();
-	  p->begin_page = TRUE;
-	}
-      break;
-
-    case 12:
-/*
- *  Polyline
- */
-      if (p->active)
-	{
-	  if (p->begin_page)
-	    cgm_begin_page();
-
-	  setup_polyline_attributes(FALSE);
-	  output_points((void (*)(int, int *, int *)) p->cgm[pline],
-			ia[0], r1, r2);
-	}
-      break;
-
-    case 13:
-/*
- *  Polymarker
- */
-      if (p->active)
-	{
-	  if (p->begin_page)
-	    cgm_begin_page();
-
-	  setup_polymarker_attributes(FALSE);
-	  output_points((void (*)(int, int *, int *)) p->cgm[pmarker],
-			ia[0], r1, r2);
-	}
-      break;
-
-    case 14:
-/*
- *  Text
- */
-      if (p->active)
-	{
-	  int x, y;
-
-	  if (p->begin_page)
-	    cgm_begin_page();
-
-	  set_xform(FALSE);
-	  setup_text_attributes(FALSE);
-
-	  WC_to_VDC(r1[0], r2[0], &x, &y);
-	  p->cgm[text] (x, y, TRUE, chars);
-	}
-      break;
-
-    case 15:
-/*
- *  Fill Area
- */
-      if (p->active)
-	{
-	  if (p->begin_page)
-	    cgm_begin_page();
-
-	  setup_fill_attributes(FALSE);
-	  output_points((void (*)(int, int *, int *)) p->cgm[pgon],
-			ia[0], r1, r2);
-	}
-      break;
-
-    case 16:
-/*
- *  Cell Array
- */
-      if (p->active)
-	{
-	  int xmin, xmax, ymin, ymax;
-
-	  if (p->begin_page)
-	    cgm_begin_page();
-
-	  set_xform(FALSE);
-
-	  WC_to_VDC(r1[0], r2[0], &xmin, &ymin);
-	  WC_to_VDC(r1[1], r2[1], &xmax, &ymax);
-
-	  p->cgm[carray] (xmin, xmax, ymin, ymax, dx, dy, dimx, ia);
-	}
-      break;
-
-    case 48:
-/*
- *  Set color representation
- */
-      if (p->begin_page)
-	{
-	  p->color_t[ia[1] * 3] = r1[0];
-	  p->color_t[ia[1] * 3 + 1] = r1[1];
-	  p->color_t[ia[1] * 3 + 2] = r1[2];
-	}
-      break;
-
-    case 54:
-/*
- *  Set workstation window
- */
-      if (p->begin_page)
-	{
-	  p->xext = (int) (max_coord * (r1[1] - r1[0]));
-	  p->yext = (int) (max_coord * (r2[1] - r2[0]));
-	}
-      break;
-
-    case 55:
-/*
- *  Set workstation viewport
- */
-      if (p->begin_page)
-	{
-	  if (p->mm > 0)
-	    p->mm = (r1[1] - r1[0]) / max_coord * 1000;
-	}
-      break;
-
-    }
-}
-
-namespace cgm
-{
-
-enum Function
+enum class Function
 {
     OpenWorkstation = 2,
     CloseWorkstation = 3,
@@ -3367,41 +3189,309 @@ enum Function
     SetWorkstationViewport = 55,
 };
 
-static cgm_context *g_context;
-
-void beginMetafile(FILE *file, Encoding enc)
+static int gks_flush_buffer(cgm_context *ctx, void *data)
 {
-    int dx{};
-    int dy{};
-    int dimx{};
-    int ia[100]{};
-    int lr1{};
-    double r1[100]{};
-    int lr2{};
-    double r2[100]{};
-    int lc{1};
-    char *chars = nullptr;
-    cgm_context *context = nullptr;
-    ia[1] = fileno(file);
-    ia[2] = static_cast<int>(enc);
-    gks_drv_cgm(OpenWorkstation, dx, dy, dimx, ia, lr1, r1, lr2, r2, lc, chars, reinterpret_cast<void **>(&context));
-    g_context = context;
+    gks_write_file(ctx->conid, ctx->buffer, ctx->buffer_ind);
 }
 
-void endMetafile(FILE *file)
+static void gks_drv_cgm(Function fctid, int dx, int dy, int dimx, int *ia,
+		 int lr1, double *r1, int lr2, double *r2, int lc, char *chars,
+		 void **context)
 {
-    int dx{};
-    int dy{};
-    int dimx{};
-    int ia[100];
-    int lr1{};
-    double r1[100];
-    int lr2{};
-    double r2[100];
-    int lc{};
-    char *chars = nullptr;
-    ia[1] = fileno(file);
-    gks_drv_cgm(CloseWorkstation, dx, dy, dimx, ia, lr1, r1, lr2, r2, lc, chars, reinterpret_cast<void **>(&g_context));
+  char *buffer;
+
+  g_p = (cgm_context *) *context;
+
+  switch (fctid)
+    {
+
+  case Function::OpenWorkstation:
+      g_p = (cgm_context *) gks_malloc(sizeof(cgm_context));
+
+      g_p->conid = ia[1];
+
+      if (ia[2] == 7)
+	{
+	  g_p->encode = cgm_binary;
+      g_p->flush_buffer_context = &g_p->conid;
+      g_p->flush_buffer = gks_flush_buffer;
+	  setup_binary_context();
+	}
+      else if (ia[2] == 8)
+	{
+	  g_p->encode = cgm_clear_text;
+      g_p->flush_buffer_context = &g_p->conid;
+      g_p->flush_buffer = gks_flush_buffer;
+      setup_clear_text_context();
+	}
+      else if (ia[2] == (7 | 0x50000))
+	{
+	  g_p->encode = cgm_grafkit;
+      g_p->flush_buffer_context = &g_p->conid;
+      g_p->flush_buffer = gks_flush_buffer;
+      setup_binary_context();
+	}
+      else
+	{
+	  gks_perror("invalid bit mask (%x)", ia[2]);
+	  ia[0] = ia[1] = 0;
+	  return;
+	}
+
+      buffer = "GKS, Copyright @ 2001, Josef Heinen";
+
+      if (((char *) gks_getenv("GKS_SCALE_MODE_METRIC")) != NULL)
+	g_p->mm = 0.19685 / max_coord * 1000;
+      else
+	g_p->mm = 0;
+
+      g_p->cgm[begin] (buffer);
+      g_p->cgm[mfversion] ();
+      g_p->cgm[mfdescrip] ();
+
+      if (g_p->encode != cgm_grafkit)
+	{
+	  g_p->cgm[vdctype] ();
+	  g_p->cgm[intprec] ();
+#if 0
+	  p->cgm[realprec] ();	/* causes problems with RALCGM */
+#endif
+	  g_p->cgm[indexprec] ();
+	  g_p->cgm[colprec] ();
+	  g_p->cgm[cindprec] ();
+	  g_p->cgm[maxcind] ();
+	  g_p->cgm[cvextent] ();
+	}
+
+      g_p->cgm[mfellist] ();
+      g_p->cgm[fontlist] ();
+
+      if (g_p->encode != cgm_grafkit)
+	g_p->cgm[cannounce] ();
+
+      init_color_table();
+
+      g_p->xext = g_p->yext = max_coord;
+
+      g_p->begin_page = TRUE;
+      g_p->active = FALSE;
+
+      *context = g_p;
+      break;
+
+  case Function::CloseWorkstation:
+      g_p->cgm[epage] ();
+      g_p->cgm[end] ();
+
+      free(g_p);
+      break;
+
+  case Function::ActivateWorkstation:
+      g_p->active = TRUE;
+      break;
+
+  case Function::DeactivateWorkstation:
+      g_p->active = FALSE;
+      break;
+
+  case Function::ClearWorkstation:
+      if (!g_p->begin_page)
+	{
+	  g_p->cgm[epage] ();
+	  g_p->begin_page = TRUE;
+	}
+      break;
+
+  case Function::Polyline:
+      if (g_p->active)
+	{
+	  if (g_p->begin_page)
+	    cgm_begin_page();
+
+	  setup_polyline_attributes(FALSE);
+	  output_points((void (*)(int, int *, int *)) g_p->cgm[pline],
+			ia[0], r1, r2);
+	}
+      break;
+
+  case Function::Polymarker:
+      if (g_p->active)
+	{
+	  if (g_p->begin_page)
+	    cgm_begin_page();
+
+	  setup_polymarker_attributes(FALSE);
+	  output_points((void (*)(int, int *, int *)) g_p->cgm[pmarker],
+			ia[0], r1, r2);
+	}
+      break;
+
+  case Function::Text:
+      if (g_p->active)
+	{
+	  int x, y;
+
+	  if (g_p->begin_page)
+	    cgm_begin_page();
+
+	  set_xform(FALSE);
+	  setup_text_attributes(FALSE);
+
+	  WC_to_VDC(r1[0], r2[0], &x, &y);
+	  g_p->cgm[text] (x, y, TRUE, chars);
+	}
+      break;
+
+  case Function::FillArea:
+      if (g_p->active)
+	{
+	  if (g_p->begin_page)
+	    cgm_begin_page();
+
+	  setup_fill_attributes(FALSE);
+	  output_points((void (*)(int, int *, int *)) g_p->cgm[pgon],
+			ia[0], r1, r2);
+	}
+      break;
+
+  case Function::CellArray:
+      if (g_p->active)
+	{
+	  int xmin, xmax, ymin, ymax;
+
+	  if (g_p->begin_page)
+	    cgm_begin_page();
+
+	  set_xform(FALSE);
+
+	  WC_to_VDC(r1[0], r2[0], &xmin, &ymin);
+	  WC_to_VDC(r1[1], r2[1], &xmax, &ymax);
+
+	  g_p->cgm[carray] (xmin, xmax, ymin, ymax, dx, dy, dimx, ia);
+	}
+      break;
+
+  case Function::SetColorRep:
+      if (g_p->begin_page)
+	{
+	  g_p->color_t[ia[1] * 3] = r1[0];
+	  g_p->color_t[ia[1] * 3 + 1] = r1[1];
+	  g_p->color_t[ia[1] * 3 + 2] = r1[2];
+	}
+      break;
+
+  case Function::SetWorkstationWindow:
+      if (g_p->begin_page)
+	{
+	  g_p->xext = (int) (max_coord * (r1[1] - r1[0]));
+	  g_p->yext = (int) (max_coord * (r2[1] - r2[0]));
+	}
+      break;
+
+  case Function::SetWorkstationViewport:
+      if (g_p->begin_page)
+	{
+	  if (g_p->mm > 0)
+	    g_p->mm = (r1[1] - r1[0]) / max_coord * 1000;
+	}
+      break;
+
+    }
+}
+
+namespace cgm
+{
+
+namespace
+{
+
+class MetafileStreamWriter : public MetafileWriter
+{
+public:
+    MetafileStreamWriter(std::ostream &stream)
+        : m_stream(stream),
+        m_context{}
+    {
+        m_context.flush_buffer_context = this;
+        m_context.flush_buffer = flushBufferCb;
+    }
+
+    void beginMetafile(const char *identifier) override;
+    void endMetafile() override;
+
+protected:
+    void flushBuffer();
+
+    static int flushBufferCb(cgm_context *ctx, void *data)
+    {
+        static_cast<MetafileStreamWriter *>(data)->flushBuffer();
+        return 0;
+    }
+
+    std::ostream &m_stream;
+    cgm_context m_context;
+};
+
+class BinaryMetafileWriter : public MetafileStreamWriter
+{
+public:
+    BinaryMetafileWriter(std::ostream &stream)
+        : MetafileStreamWriter(stream)
+    {
+        m_context.encode = cgm_binary;
+        setup_binary_context(&m_context);
+    }
+};
+
+class ClearTextMetafileWriter : public MetafileStreamWriter
+{
+public:
+    ClearTextMetafileWriter(std::ostream &stream)
+        : MetafileStreamWriter(stream)
+    {
+        m_context.encode = cgm_clear_text;
+        setup_clear_text_context(&m_context);
+    }
+};
+
+void MetafileStreamWriter::beginMetafile(const char *identifier)
+{
+    if (((char *) gks_getenv("GKS_SCALE_MODE_METRIC")) != NULL)
+        m_context.mm = 0.19685 / max_coord * 1000;
+    else
+        m_context.mm = 0;
+
+    m_context.funcs.begin(&m_context, identifier);
+    flushBuffer();
+}
+
+void MetafileStreamWriter::endMetafile()
+{
+    m_context.funcs.end(&m_context);
+    flushBuffer();
+}
+
+void MetafileStreamWriter::flushBuffer()
+{
+    m_stream.write(m_context.buffer, m_context.buffer_ind);
+    m_context.buffer_ind = 0;
+    m_context.buffer[0] = 0;
+}
+
+}
+
+std::unique_ptr<MetafileWriter> create(std::ostream &stream, Encoding enc)
+{
+    if (enc == Encoding::Binary)
+    {
+        return std::make_unique<BinaryMetafileWriter>(stream);
+    }
+    if (enc == Encoding::ClearText)
+    {
+        return std::make_unique<ClearTextMetafileWriter>(stream);
+    }
+
+    throw std::runtime_error("Unsupported encoding");
 }
 
 }

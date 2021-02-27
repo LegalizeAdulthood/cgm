@@ -11,7 +11,7 @@
 void gks_seg_xform(double *x, double *y);
 int gks_open_file(const char *path, const char *mode);
 int gks_read_file(int fd, void *buf, int count);
-int gks_write_file(int fd, void *buf, int count);
+int gks_write_file(int fd, const void *buf, int count);
 int gks_close_file(int fd);
 
 const char *gks_getenv(const char *env);

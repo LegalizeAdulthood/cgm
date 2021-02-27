@@ -1,21 +1,28 @@
-#include <catch2/catch.hpp>
-
 #include <cgm/cgm.h>
 
-#include <stdio.h>
+#include <catch2/catch.hpp>
+
+#include <sstream>
 
 TEST_CASE("begin clear text, end")
 {
-    FILE *file = fopen("ClearText.cgm", "wt");
-    cgm::beginMetafile(file, cgm::Encoding::ClearText);
-    cgm::endMetafile(file);
-    fclose(file);
+    std::ostringstream stream;
+    std::unique_ptr<cgm::MetafileWriter> writer{create(stream, cgm::Encoding::ClearText)};
+
+    writer->beginMetafile("cgm unit test");
+    writer->endMetafile();
+
+    REQUIRE(stream.str() == "BegMF \"cgm unit test\";\nEndMF;\n");
 }
 
-TEST_CASE("begin binary, end")
-{
-    FILE *file = fopen("Binary.cgm", "wb");
-    cgm::beginMetafile(file, cgm::Encoding::Binary);
-    cgm::endMetafile(file);
-    fclose(file);
-}
+//TEST_CASE("begin binary, end")
+//{
+//    std::ostringstream stream;
+//    std::unique_ptr<cgm::MetafileWriter> writer{create(stream, cgm::Encoding::Binary)};
+//    writer.begin();
+//
+//    FILE *file = fopen("Binary.cgm", "wb");
+//    cgm::beginMetafile(file, cgm::Encoding::Binary);
+//    cgm::endMetafile(file);
+//    fclose(file);
+//}
