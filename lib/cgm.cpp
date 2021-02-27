@@ -86,6 +86,7 @@ struct cgm_funcs
     int (*begin)(cgm_context *p, const char *comment);
     void (*end)(cgm_context *p);
     void (*metafileVersion)(cgm_context *p, int value);
+    void (*metafileDescription)(cgm_context *p, const char *value);
 };
 
 struct cgm_context
@@ -453,17 +454,17 @@ static void cgmt_mfversion()
 
 
 /* Metafile description */
+static void cgmt_mfdescrip_p(cgm_context *ctx, const char *descrip)
+{
+    cgmt_start_cmd(ctx, 1, MfDescrip);
 
+    cgmt_string(ctx, descrip, strlen(descrip));
+
+    cgmt_flush_cmd(ctx, final_flush);
+}
 static void cgmt_mfdescrip(void)
 {
-  char *descrip;
-
-  cgmt_start_cmd(1, MfDescrip);
-
-  descrip = "GKS 5 CGM Clear Text";
-  cgmt_string(descrip, strlen(descrip));
-
-  cgmt_flush_cmd(final_flush);
+    cgmt_mfdescrip_p(g_p, "GKS 5 CGM Clear Text");
 }
 
 
@@ -3017,6 +3018,7 @@ static void setup_clear_text_context(cgm_context *ctx)
     ctx->funcs.begin = cgmt_begin_p;
     ctx->funcs.end = cgmt_end_p;
     ctx->funcs.metafileVersion = cgmt_mfversion_p;
+    ctx->funcs.metafileDescription = cgmt_mfdescrip_p;
   ctx->cgm[begin] = CGM_FUNC cgmt_begin;
   ctx->cgm[end] = CGM_FUNC cgmt_end;
   ctx->cgm[bp] = CGM_FUNC cgmt_bp;
@@ -3427,6 +3429,7 @@ public:
     void beginMetafile(const char *identifier) override;
     void endMetafile() override;
     void metafileVersion(int value) override;
+    void metafileDescription(char const *value) override;
 
 protected:
     std::ostream &m_stream;
@@ -3482,6 +3485,11 @@ void MetafileStreamWriter::endMetafile()
 void MetafileStreamWriter::metafileVersion(int value)
 {
     m_context.funcs.metafileVersion(&m_context, value);
+}
+
+void MetafileStreamWriter::metafileDescription(char const *value)
+{
+    m_context.funcs.metafileDescription(&m_context, value);
 }
 
 void MetafileStreamWriter::flushBuffer()
