@@ -4,15 +4,24 @@
 
 #include <sstream>
 
-TEST_CASE("begin clear text, end")
+TEST_CASE("metafile begin clear text")
 {
     std::ostringstream stream;
     std::unique_ptr<cgm::MetafileWriter> writer{create(stream, cgm::Encoding::ClearText)};
 
     writer->beginMetafile("cgm unit test");
+
+    REQUIRE(stream.str() == "BegMF \"cgm unit test\";\n");
+}
+
+TEST_CASE("metafile end clear text")
+{
+    std::ostringstream stream;
+    std::unique_ptr<cgm::MetafileWriter> writer{create(stream, cgm::Encoding::ClearText)};
+
     writer->endMetafile();
 
-    REQUIRE(stream.str() == "BegMF \"cgm unit test\";\nEndMF;\n");
+    REQUIRE(stream.str() == "EndMF;\n");
 }
 
 TEST_CASE("metafile version")
@@ -20,13 +29,9 @@ TEST_CASE("metafile version")
     std::ostringstream stream;
     std::unique_ptr<cgm::MetafileWriter> writer{create(stream, cgm::Encoding::ClearText)};
 
-    writer->beginMetafile("cgm unit test");
     writer->metafileVersion(2);
-    writer->endMetafile();
 
-    REQUIRE(stream.str() == "BegMF \"cgm unit test\";\n"
-        "MFDesc 1;\n"
-        "EndMF;\n");
+    REQUIRE(stream.str() == "MFDesc 1;\n");
 }
 
 
@@ -35,13 +40,9 @@ TEST_CASE("metafile description")
     std::ostringstream stream;
     std::unique_ptr<cgm::MetafileWriter> writer{create(stream, cgm::Encoding::ClearText)};
 
-    writer->beginMetafile("cgm unit test");
     writer->metafileDescription("this is a foo widget");
-    writer->endMetafile();
 
-    REQUIRE(stream.str() == "BegMF \"cgm unit test\";\n"
-        "MFDesc \"this is a foo widget\";\n"
-        "EndMF;\n");
+    REQUIRE(stream.str() == "MFDesc \"this is a foo widget\";\n");
 }
 
 //TEST_CASE("begin binary, end")
