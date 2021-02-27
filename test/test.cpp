@@ -108,6 +108,13 @@ TEST_CASE("clear text encoding")
         REQUIRE(stream.str() == "BegMFDefaults;\n"
             "EndMFDefaults;\n");
     }
+    SECTION("font list")
+    {
+        std::vector<std::string> fonts{"Hershey Simplex", "Hershey Roman"};
+        writer->fontList(fonts);
+
+        REQUIRE(stream.str() == "FontList 'Hershey Simplex', 'Hershey Roman';\n");
+    }
 }
 
 //TEST_CASE("begin binary, end")

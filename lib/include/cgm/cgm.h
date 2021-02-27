@@ -2,8 +2,8 @@
 
 #include <iosfwd>
 #include <memory>
-
-#include <stdio.h>
+#include <string>
+#include <vector>
 
 namespace cgm
 {
@@ -40,6 +40,7 @@ public:
     virtual void colorValueExtent(int redMin, int redMax, int greenMin, int greenMax, int blueMin, int blueMax) = 0;
     virtual void metafileElementList() = 0;
     virtual void metafileDefaultsReplacement() = 0;
+    virtual void fontList(std::vector<std::string> const & fonts) = 0;
 };
 
 std::unique_ptr<MetafileWriter> create(std::ostream &stream, Encoding enc);

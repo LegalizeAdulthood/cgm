@@ -97,6 +97,7 @@ struct cgm_funcs
     void (*colorValueExtent)(cgm_context *p, int redMin, int redMax, int greenMin, int greenMax, int blueMin, int blueMax);
     void (*metafileElementList)(cgm_context *p);
     void (*metafileDefaultsReplacement)(cgm_context *p);
+    void (*fontList)(cgm_context *p, int numFonts, const char **fontNames);
 };
 
 struct cgm_context
@@ -676,25 +677,31 @@ void cgmt_defaultsReplacement(cgm_context *ctx)
 
 
 /* Font List */
-
-static void cgmt_fontlist(void)
+static void cgmt_fontlist_p(cgm_context *ctx, int numFonts, const char **fonts)
 {
-  int i;
-  char s[max_str];
-  int font;
+    int i;
+    char s[max_str];
 
-  cgmt_start_cmd(1, (int) FontList);
+    cgmt_start_cmd(ctx, 1, (int) FontList);
 
-  cgmt_outc(' ');
+    cgmt_outc(ctx, ' ');
 
-  for (i = 0; i < max_std_textfont; i++)
+    for (i = 0; i < numFonts; i++)
     {
-      font = map[i];
-      sprintf(s, "'%s'%s", fonts[font], (i < max_std_textfont - 1) ? ", " : "");
-      cgmt_out_string(s);
+        sprintf(s, "'%s'%s", fonts[i], (i < numFonts - 1) ? ", " : "");
+        cgmt_out_string(ctx, s);
     }
 
-  cgmt_flush_cmd(final_flush);
+    cgmt_flush_cmd(ctx, final_flush);
+}
+static void cgmt_fontlist(void)
+{
+    const char *fontNames[max_std_textfont];
+    for (int i = 0; i < max_std_textfont; ++i)
+    {
+        fontNames[i] = fonts[map[i]];
+    }
+    cgmt_fontlist_p(g_p, max_std_textfont, fontNames);
 }
 
 
@@ -3091,6 +3098,7 @@ static void setup_clear_text_context(cgm_context *ctx)
     ctx->funcs.colorValueExtent = cgmt_cvextent_p;
     ctx->funcs.metafileElementList = cgmt_mfellist_p;
     ctx->funcs.metafileDefaultsReplacement = cgmt_defaultsReplacement;
+    ctx->funcs.fontList = cgmt_fontlist_p;
   ctx->cgm[begin] = CGM_FUNC cgmt_begin;
   ctx->cgm[end] = CGM_FUNC cgmt_end;
   ctx->cgm[bp] = CGM_FUNC cgmt_bp;
@@ -3513,6 +3521,7 @@ public:
         int blueMax) override;
     void metafileElementList() override;
     void metafileDefaultsReplacement() override;
+    void fontList(std::vector<std::string> const &fonts) override;
 
 protected:
     std::ostream &m_stream;
@@ -3625,6 +3634,16 @@ void MetafileStreamWriter::metafileElementList()
 void MetafileStreamWriter::metafileDefaultsReplacement()
 {
     m_context.funcs.metafileDefaultsReplacement(&m_context);
+}
+
+void MetafileStreamWriter::fontList(std::vector<std::string> const &fonts)
+{
+    std::vector<const char *> fontNames;
+    for (const std::string &font : fonts)
+    {
+        fontNames.push_back(font.c_str());
+    }
+    m_context.funcs.fontList(&m_context, static_cast<int>(fonts.size()), fontNames.data());
 }
 
 void MetafileStreamWriter::flushBuffer()
