@@ -189,6 +189,12 @@ TEST_CASE("clear text encoding")
 
         REQUIRE(stream.str() == "VDCExt 0,0 640,480;\n");
     }
+    SECTION("background color")
+    {
+        writer->backgroundColor(128, 64, 128);
+
+        REQUIRE(stream.str() == "BackColr 128 64 128;\n");
+    }
 }
 
 //TEST_CASE("begin binary, end")
