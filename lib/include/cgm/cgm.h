@@ -39,6 +39,7 @@ public:
     virtual void maximumColorIndex(int max) = 0;
     virtual void colorValueExtent(int redMin, int redMax, int greenMin, int greenMax, int blueMin, int blueMax) = 0;
     virtual void metafileElementList() = 0;
+    virtual void metafileDefaultsReplacement() = 0;
 };
 
 std::unique_ptr<MetafileWriter> create(std::ostream &stream, Encoding enc);

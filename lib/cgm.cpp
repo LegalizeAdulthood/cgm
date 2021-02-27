@@ -96,6 +96,7 @@ struct cgm_funcs
     void (*maximumColorIndex)(cgm_context *p, int max);
     void (*colorValueExtent)(cgm_context *p, int redMin, int redMax, int greenMin, int greenMax, int blueMin, int blueMax);
     void (*metafileElementList)(cgm_context *p);
+    void (*metafileDefaultsReplacement)(cgm_context *p);
 };
 
 struct cgm_context
@@ -219,7 +220,7 @@ static void cgmt_outc(char chr)
 
 /* Write string to CGM clear text */
 
-static void cgmt_out_string(cgm_context *ctx, char *string)
+static void cgmt_out_string(cgm_context *ctx, const char *string)
 {
   if ((int) (ctx->buffer_ind + strlen(string)) >= cgmt_recl)
     {
@@ -657,6 +658,19 @@ static void cgmt_mfellist_p(cgm_context *ctx)
 static void cgmt_mfellist(void)
 {
     cgmt_mfellist_p(g_p);
+}
+
+
+
+/* Metafile Defaults Replacement */
+void cgmt_defaultsReplacement(cgm_context *ctx)
+{
+    cgmt_out_string(ctx, "Beg");
+    cgmt_start_cmd(ctx, 1, (int) MfDefRep);
+    cgmt_flush_cmd(ctx, int_flush);
+    cgmt_out_string(ctx, "End");
+    cgmt_start_cmd(ctx, 1, (int) MfDefRep);
+    cgmt_flush_cmd(ctx, final_flush);
 }
 
 
@@ -3076,6 +3090,7 @@ static void setup_clear_text_context(cgm_context *ctx)
     ctx->funcs.maximumColorIndex = cgmt_maxcind_p;
     ctx->funcs.colorValueExtent = cgmt_cvextent_p;
     ctx->funcs.metafileElementList = cgmt_mfellist_p;
+    ctx->funcs.metafileDefaultsReplacement = cgmt_defaultsReplacement;
   ctx->cgm[begin] = CGM_FUNC cgmt_begin;
   ctx->cgm[end] = CGM_FUNC cgmt_end;
   ctx->cgm[bp] = CGM_FUNC cgmt_bp;
@@ -3497,6 +3512,7 @@ public:
     void colorValueExtent(int redMin, int redMax, int greenMin, int greenMax, int blueMin,
         int blueMax) override;
     void metafileElementList() override;
+    void metafileDefaultsReplacement() override;
 
 protected:
     std::ostream &m_stream;
@@ -3509,7 +3525,7 @@ private:
     {
         static_cast<MetafileStreamWriter *>(data)->flushBuffer();
         return 0;
-    }    
+    }
 };
 
 class BinaryMetafileWriter : public MetafileStreamWriter
@@ -3604,6 +3620,11 @@ void MetafileStreamWriter::colorValueExtent(int redMin, int redMax, int greenMin
 void MetafileStreamWriter::metafileElementList()
 {
     m_context.funcs.metafileElementList(&m_context);
+}
+
+void MetafileStreamWriter::metafileDefaultsReplacement()
+{
+    m_context.funcs.metafileDefaultsReplacement(&m_context);
 }
 
 void MetafileStreamWriter::flushBuffer()

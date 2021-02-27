@@ -101,6 +101,13 @@ TEST_CASE("clear text encoding")
             "   CharSpace TextColr CharHeight CharOri TextPath TextAlign IntStyle FillColr \n"
             "   HatchIndex PatIndex ColrTable\";\n");
     }
+    SECTION("metafile defaults replacement")
+    {
+        writer->metafileDefaultsReplacement();
+
+        REQUIRE(stream.str() == "BegMFDefaults;\n"
+            "EndMFDefaults;\n");
+    }
 }
 
 //TEST_CASE("begin binary, end")
