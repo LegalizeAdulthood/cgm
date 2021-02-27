@@ -195,6 +195,12 @@ TEST_CASE("clear text encoding")
 
         REQUIRE(stream.str() == "BackColr 128 64 128;\n");
     }
+    SECTION("vdc integer precision")
+    {
+        writer->vdcIntegerPrecision(-128, 128);
+
+        REQUIRE(stream.str() == "VDCIntegerPrec -128 128;\n");
+    }
 }
 
 //TEST_CASE("begin binary, end")

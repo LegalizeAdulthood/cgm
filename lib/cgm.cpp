@@ -106,6 +106,7 @@ struct cgm_funcs
     void (*markerSizeMode)(cgm_context *p, int mode);
     void (*vdcExtentInt)(cgm_context *p, int llx, int lly, int urx, int ury);
     void (*backgroundColor)(cgm_context *p, int red, int green, int blue);
+    void (*vdcIntegerPrecision)(cgm_context *p, int min, int max);
 };
 
 struct cgm_context
@@ -851,15 +852,18 @@ static void cgmt_backcol(void)
 
 
 /* VDC integer precision */
+static void cgmt_vdcintprec_p(cgm_context *ctx, int min, int max)
+{
+    cgmt_start_cmd(ctx, 3, (int) vdcIntPrec);
 
+    cgmt_int(ctx, min);
+    cgmt_int(ctx, max);
+
+    cgmt_flush_cmd(ctx, final_flush);
+}
 static void cgmt_vdcintprec(void)
 {
-  cgmt_start_cmd(3, (int) vdcIntPrec);
-
-  cgmt_int(-32768);
-  cgmt_int(32767);
-
-  cgmt_flush_cmd(final_flush);
+    cgmt_vdcintprec_p(g_p, -32768, 32767);
 }
 
 
@@ -3150,6 +3154,7 @@ static void setup_clear_text_context(cgm_context *ctx)
     ctx->funcs.markerSizeMode = cgmt_msmode_p;
     ctx->funcs.vdcExtentInt = cgmt_vdcectent_p;
     ctx->funcs.backgroundColor = cgmt_backcol_p;
+    ctx->funcs.vdcIntegerPrecision = cgmt_vdcintprec_p;
   ctx->cgm[begin] = CGM_FUNC cgmt_begin;
   ctx->cgm[end] = CGM_FUNC cgmt_end;
   ctx->cgm[bp] = CGM_FUNC cgmt_bp;
@@ -3580,6 +3585,7 @@ public:
     void markerSizeMode(MarkerSizeMode mode) override;
     void vdcExtent(int llx, int lly, int urx, int ury) override;
     void backgroundColor(int red, int green, int blue) override;
+    void vdcIntegerPrecision(int min, int max) override;
 
 protected:
     std::ostream &m_stream;
@@ -3737,6 +3743,11 @@ void MetafileStreamWriter::vdcExtent(int llx, int lly, int urx, int ury)
 void MetafileStreamWriter::backgroundColor(int red, int green, int blue)
 {
     m_context.funcs.backgroundColor(&m_context, red, green, blue);
+}
+
+void MetafileStreamWriter::vdcIntegerPrecision(int min, int max)
+{
+    m_context.funcs.vdcIntegerPrecision(&m_context, min, max);
 }
 
 void MetafileStreamWriter::flushBuffer()
