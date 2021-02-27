@@ -85,6 +85,7 @@ struct cgm_funcs
 {
     int (*begin)(cgm_context *p, const char *comment);
     void (*end)(cgm_context *p);
+    void (*metafileVersion)(cgm_context *p, int value);
 };
 
 struct cgm_context
@@ -283,8 +284,7 @@ static void cgmt_string(const char *cptr, int slen)
 
 
 /* Write a signed integer variable */
-
-static void cgmt_int(int xin)
+static void cgmt_int(cgm_context *ctx, int xin)
 {
   static char buf[max_pwrs + 2];
   register char *cptr;
@@ -305,10 +305,10 @@ static void cgmt_int(int xin)
     {
       *--cptr = digits[0];
 
-      if ((int) (g_p->buffer_ind + strlen(cptr)) < cgmt_recl)
-	cgmt_outc(' ');
+      if ((int) (ctx->buffer_ind + strlen(cptr)) < cgmt_recl)
+	cgmt_outc(ctx, ' ');
 
-      cgmt_out_string(cptr);	/* all done */
+      cgmt_out_string(ctx, cptr);	/* all done */
       return;
     }
 
@@ -322,12 +322,15 @@ static void cgmt_int(int xin)
   if (is_neg)
     *--cptr = '-';
 
-  if ((int) (g_p->buffer_ind + strlen(cptr)) < cgmt_recl)
-    cgmt_outc(' ');
+  if ((int) (ctx->buffer_ind + strlen(cptr)) < cgmt_recl)
+    cgmt_outc(ctx, ' ');
 
-  cgmt_out_string(cptr);
+  cgmt_out_string(ctx, cptr);
 }
-
+static void cgmt_int(int xin)
+{
+    cgmt_int(g_p, xin);
+}
 
 
 /* Write a real variable */
@@ -434,13 +437,17 @@ static void cgmt_epage(void)
 
 /* Metafile version */
 
-static void cgmt_mfversion(void)
+static void cgmt_mfversion_p(cgm_context *ctx, int version)
 {
-  cgmt_start_cmd(1, (int) MfVersion);
+  cgmt_start_cmd(ctx, 1, version);
 
-  cgmt_int(1);
+  cgmt_int(ctx, 1);
 
-  cgmt_flush_cmd(final_flush);
+  cgmt_flush_cmd(ctx, final_flush);
+}
+static void cgmt_mfversion()
+{
+    cgmt_mfversion_p(g_p, (int) MfVersion);
 }
 
 
@@ -3009,6 +3016,7 @@ static void setup_clear_text_context(cgm_context *ctx)
 {
     ctx->funcs.begin = cgmt_begin_p;
     ctx->funcs.end = cgmt_end_p;
+    ctx->funcs.metafileVersion = cgmt_mfversion_p;
   ctx->cgm[begin] = CGM_FUNC cgmt_begin;
   ctx->cgm[end] = CGM_FUNC cgmt_end;
   ctx->cgm[bp] = CGM_FUNC cgmt_bp;
@@ -3418,8 +3426,13 @@ public:
 
     void beginMetafile(const char *identifier) override;
     void endMetafile() override;
+    void metafileVersion(int value) override;
 
 protected:
+    std::ostream &m_stream;
+    cgm_context m_context;
+
+private:
     void flushBuffer();
 
     static int flushBufferCb(cgm_context *ctx, void *data)
@@ -3427,9 +3440,6 @@ protected:
         static_cast<MetafileStreamWriter *>(data)->flushBuffer();
         return 0;
     }
-
-    std::ostream &m_stream;
-    cgm_context m_context;
 };
 
 class BinaryMetafileWriter : public MetafileStreamWriter
@@ -3462,13 +3472,16 @@ void MetafileStreamWriter::beginMetafile(const char *identifier)
         m_context.mm = 0;
 
     m_context.funcs.begin(&m_context, identifier);
-    flushBuffer();
 }
 
 void MetafileStreamWriter::endMetafile()
 {
     m_context.funcs.end(&m_context);
-    flushBuffer();
+}
+
+void MetafileStreamWriter::metafileVersion(int value)
+{
+    m_context.funcs.metafileVersion(&m_context, value);
 }
 
 void MetafileStreamWriter::flushBuffer()
