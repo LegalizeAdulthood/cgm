@@ -100,6 +100,7 @@ struct cgm_funcs
     void (*fontList)(cgm_context *p, int numFonts, const char **fontNames);
     // character set list
     void (*characterCodingAnnouncer)(cgm_context *p, int value);
+    void (*scalingMode)(cgm_context *p, int mode, double value);
 };
 
 struct cgm_context
@@ -734,20 +735,25 @@ static void cgmt_cannounce(void)
 
 
 /* Scaling mode */
+static void cgmt_scalmode_p(cgm_context *ctx, int mode, double value)
+{
+    cgmt_start_cmd(ctx, 2, (int) ScalMode);
 
+    if (mode == 1)
+    {
+        cgmt_out_string(ctx, " Metric");
+    }
+    else
+    {
+        cgmt_out_string(ctx, " Abstract");
+    }
+    cgmt_real(ctx, value);
+
+    cgmt_flush_cmd(ctx, final_flush);
+}
 static void cgmt_scalmode(void)
 {
-  cgmt_start_cmd(2, (int) ScalMode);
-
-  if (g_p->mm > 0)
-    {
-      cgmt_out_string(" Metric");
-      cgmt_real(g_p->mm);
-    }
-  else
-    cgmt_out_string(" Abstract");
-
-  cgmt_flush_cmd(final_flush);
+    cgmt_scalmode_p(g_p, g_p->mm > 0 ? 1 : 0, g_p->mm);
 }
 
 
@@ -3114,6 +3120,7 @@ static void setup_clear_text_context(cgm_context *ctx)
     ctx->funcs.metafileDefaultsReplacement = cgmt_defaultsReplacement;
     ctx->funcs.fontList = cgmt_fontlist_p;
     ctx->funcs.characterCodingAnnouncer = cgmt_cannounce_p;
+    ctx->funcs.scalingMode = cgmt_scalmode_p;
   ctx->cgm[begin] = CGM_FUNC cgmt_begin;
   ctx->cgm[end] = CGM_FUNC cgmt_end;
   ctx->cgm[bp] = CGM_FUNC cgmt_bp;
@@ -3538,6 +3545,7 @@ public:
     void metafileDefaultsReplacement() override;
     void fontList(std::vector<std::string> const &fonts) override;
     void characterCodingAnnouncer(CharCodeAnnouncer value) override;
+    void scalingMode(ScalingMode mode, float value) override;
 
 protected:
     std::ostream &m_stream;
@@ -3665,6 +3673,11 @@ void MetafileStreamWriter::fontList(std::vector<std::string> const &fonts)
 void MetafileStreamWriter::characterCodingAnnouncer(CharCodeAnnouncer value)
 {
     m_context.funcs.characterCodingAnnouncer(&m_context, static_cast<int>(value));
+}
+
+void MetafileStreamWriter::scalingMode(ScalingMode mode, float value)
+{
+    m_context.funcs.scalingMode(&m_context, static_cast<int>(mode), static_cast<double>(value));
 }
 
 void MetafileStreamWriter::flushBuffer()

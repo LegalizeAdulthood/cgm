@@ -122,6 +122,21 @@ TEST_CASE("clear text encoding")
 
         REQUIRE(stream.str() == "CharCoding Extd8Bit;\n");
     }
+    SECTION("scaling mode")
+    {
+        SECTION("abstract")
+        {
+            writer->scalingMode(cgm::ScalingMode::Abstract, 1.0f);
+
+            REQUIRE(stream.str() == "ScaleMode Abstract 1.000000;\n");
+        }
+        SECTION("metric")
+        {
+            writer->scalingMode(cgm::ScalingMode::Metric, 1.0f);
+
+            REQUIRE(stream.str() == "ScaleMode Metric 1.000000;\n");
+        }
+    }
 }
 
 //TEST_CASE("begin binary, end")

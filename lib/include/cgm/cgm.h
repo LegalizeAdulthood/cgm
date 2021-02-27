@@ -29,6 +29,12 @@ enum class CharCodeAnnouncer
     Extended8Bit
 };
 
+enum class ScalingMode
+{
+    Abstract,
+    Metric
+};
+
 class MetafileWriter
 {
 public:
@@ -50,6 +56,7 @@ public:
     virtual void metafileDefaultsReplacement() = 0;
     virtual void fontList(std::vector<std::string> const & fonts) = 0;
     virtual void characterCodingAnnouncer(CharCodeAnnouncer value) = 0;
+    virtual void scalingMode(ScalingMode mode, float value) = 0;
 };
 
 std::unique_ptr<MetafileWriter> create(std::ostream &stream, Encoding enc);
