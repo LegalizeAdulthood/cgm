@@ -47,7 +47,7 @@ TEST_CASE("clear text encoding")
     }
     SECTION("integer precision")
     {
-        writer->intPrecision(1, 32767);
+        writer->intPrecisionClearText(1, 32767);
 
         REQUIRE(stream.str() == "IntegerPrec 1 32767;\n");
     }

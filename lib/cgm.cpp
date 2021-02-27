@@ -88,7 +88,7 @@ struct cgm_funcs
     void (*metafileVersion)(cgm_context *p, int value);
     void (*metafileDescription)(cgm_context *p, const char *value);
     void (*vdcType)(cgm_context *p, cgm::VdcType type);
-    void (*intPrecision)(cgm_context *p, int min, int max);
+    void (*intPrecisionClearText)(cgm_context *p, int min, int max);
     void (*realPrecisionClearText)(cgm_context *p, double minReal, double maxReal, int digits);
 };
 
@@ -3048,7 +3048,7 @@ static void setup_clear_text_context(cgm_context *ctx)
     ctx->funcs.metafileVersion = cgmt_mfversion_p;
     ctx->funcs.metafileDescription = cgmt_mfdescrip_p;
     ctx->funcs.vdcType = cgmt_vdctype_p;
-    ctx->funcs.intPrecision = cgmt_intprec_p;
+    ctx->funcs.intPrecisionClearText = cgmt_intprec_p;
     ctx->funcs.realPrecisionClearText = cgmt_realprec_p;
   ctx->cgm[begin] = CGM_FUNC cgmt_begin;
   ctx->cgm[end] = CGM_FUNC cgmt_end;
@@ -3462,7 +3462,7 @@ public:
     void metafileVersion(int value) override;
     void metafileDescription(char const *value) override;
     void vdcType(VdcType type) override;
-    void intPrecision(int min, int max) override;
+    void intPrecisionClearText(int min, int max) override;
     void realPrecisionClearText(float minReal, float maxReal, int digits) override;
 
 protected:
@@ -3531,9 +3531,9 @@ void MetafileStreamWriter::vdcType(VdcType type)
     m_context.funcs.vdcType(&m_context, type);
 }
 
-void MetafileStreamWriter::intPrecision(int min, int max)
+void MetafileStreamWriter::intPrecisionClearText(int min, int max)
 {
-    m_context.funcs.intPrecision(&m_context, min, max);
+    m_context.funcs.intPrecisionClearText(&m_context, min, max);
 }
 
 void MetafileStreamWriter::realPrecisionClearText(float minReal, float maxReal, int digits)
