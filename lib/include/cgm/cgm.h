@@ -78,6 +78,7 @@ public:
     virtual void colorMode(ColorMode mode) = 0;
     virtual void lineWidthMode(LineWidthMode mode) = 0;
     virtual void markerSizeMode(MarkerSizeMode mode) = 0;
+    virtual void vdcExtent(int llx, int lly, int urx, int ury) = 0;
 };
 
 std::unique_ptr<MetafileWriter> create(std::ostream &stream, Encoding enc);

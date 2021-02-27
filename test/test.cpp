@@ -182,6 +182,13 @@ TEST_CASE("clear text encoding")
             REQUIRE(stream.str() == "MarkerSizeMode Scaled;\n");
         }
     }
+    // edge width specification mode
+    SECTION("vdc extent")
+    {
+        writer->vdcExtent(0, 0, 640, 480);
+
+        REQUIRE(stream.str() == "VDCExt 0,0 640,480;\n");
+    }
 }
 
 //TEST_CASE("begin binary, end")

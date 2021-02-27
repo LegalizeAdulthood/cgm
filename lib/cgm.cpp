@@ -104,6 +104,7 @@ struct cgm_funcs
     void (*colorMode)(cgm_context *p, int mode);
     void (*lineWidthMode)(cgm_context *p, int mode);
     void (*markerSizeMode)(cgm_context *p, int mode);
+    void (*vdcExtentInt)(cgm_context *p, int llx, int lly, int urx, int ury);
 };
 
 struct cgm_context
@@ -814,18 +815,18 @@ static void cgmt_msmode(void)
 
 
 /* VDC extent */
-static void cgmt_vdcectent_p(cgm_context *ctx, int xmin, int xmax, int ymin, int ymax)
+static void cgmt_vdcectent_p(cgm_context *ctx, int llx, int lly, int urx, int ury)
 {
     cgmt_start_cmd(ctx, 2, (int) vdcExtent);
 
-    cgmt_ipoint(ctx, xmin, ymin);
-    cgmt_ipoint(ctx, xmax, ymax);
+    cgmt_ipoint(ctx, llx, lly);
+    cgmt_ipoint(ctx, urx, ury);
 
     cgmt_flush_cmd(ctx, final_flush);
 }
 static void cgmt_vdcextent(void)
 {
-    cgmt_vdcectent_p(g_p, 0, g_p->xext, 0, g_p->yext);
+    cgmt_vdcectent_p(g_p, 0, 0, g_p->xext, g_p->yext);
 }
 
 
@@ -3143,6 +3144,7 @@ static void setup_clear_text_context(cgm_context *ctx)
     ctx->funcs.colorMode = cgmt_colselmode_p;
     ctx->funcs.lineWidthMode = cgmt_lwsmode_p;
     ctx->funcs.markerSizeMode = cgmt_msmode_p;
+    ctx->funcs.vdcExtentInt = cgmt_vdcectent_p;
   ctx->cgm[begin] = CGM_FUNC cgmt_begin;
   ctx->cgm[end] = CGM_FUNC cgmt_end;
   ctx->cgm[bp] = CGM_FUNC cgmt_bp;
@@ -3571,6 +3573,7 @@ public:
     void colorMode(ColorMode mode) override;
     void lineWidthMode(LineWidthMode mode) override;
     void markerSizeMode(MarkerSizeMode mode) override;
+    void vdcExtent(int llx, int lly, int urx, int ury) override;
 
 protected:
     std::ostream &m_stream;
@@ -3718,6 +3721,11 @@ void MetafileStreamWriter::lineWidthMode(LineWidthMode mode)
 void MetafileStreamWriter::markerSizeMode(MarkerSizeMode mode)
 {
     m_context.funcs.markerSizeMode(&m_context, static_cast<int>(mode));
+}
+
+void MetafileStreamWriter::vdcExtent(int llx, int lly, int urx, int ury)
+{
+    m_context.funcs.vdcExtentInt(&m_context, llx, lly, urx, ury);
 }
 
 void MetafileStreamWriter::flushBuffer()
