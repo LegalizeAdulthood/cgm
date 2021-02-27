@@ -101,6 +101,7 @@ struct cgm_funcs
     // character set list
     void (*characterCodingAnnouncer)(cgm_context *p, int value);
     void (*scalingMode)(cgm_context *p, int mode, double value);
+    void (*colorSelectionMode)(cgm_context *p, int mode);
 };
 
 struct cgm_context
@@ -759,14 +760,18 @@ static void cgmt_scalmode(void)
 
 
 /* Colour selection mode */
+static void cgmt_colselmode_p(cgm_context *ctx, int mode)
+{
+    cgmt_start_cmd(ctx, 2, (int) ColSelMode);
 
+    cgmt_out_string(ctx, mode == 0 ? " Indexed" : " Direct");
+
+    cgmt_flush_cmd(ctx, final_flush);
+
+}
 static void cgmt_colselmode(void)
 {
-  cgmt_start_cmd(2, (int) ColSelMode);
-
-  cgmt_out_string(" Indexed");
-
-  cgmt_flush_cmd(final_flush);
+    cgmt_colselmode_p(g_p, 0);
 }
 
 
@@ -3121,6 +3126,7 @@ static void setup_clear_text_context(cgm_context *ctx)
     ctx->funcs.fontList = cgmt_fontlist_p;
     ctx->funcs.characterCodingAnnouncer = cgmt_cannounce_p;
     ctx->funcs.scalingMode = cgmt_scalmode_p;
+    ctx->funcs.colorSelectionMode = cgmt_colselmode_p;
   ctx->cgm[begin] = CGM_FUNC cgmt_begin;
   ctx->cgm[end] = CGM_FUNC cgmt_end;
   ctx->cgm[bp] = CGM_FUNC cgmt_bp;
@@ -3546,6 +3552,7 @@ public:
     void fontList(std::vector<std::string> const &fonts) override;
     void characterCodingAnnouncer(CharCodeAnnouncer value) override;
     void scalingMode(ScalingMode mode, float value) override;
+    void colorSelectionMode(ColorSelectionMode mode) override;
 
 protected:
     std::ostream &m_stream;
@@ -3678,6 +3685,11 @@ void MetafileStreamWriter::characterCodingAnnouncer(CharCodeAnnouncer value)
 void MetafileStreamWriter::scalingMode(ScalingMode mode, float value)
 {
     m_context.funcs.scalingMode(&m_context, static_cast<int>(mode), static_cast<double>(value));
+}
+
+void MetafileStreamWriter::colorSelectionMode(ColorSelectionMode mode)
+{
+    m_context.funcs.colorSelectionMode(&m_context, static_cast<int>(mode));
 }
 
 void MetafileStreamWriter::flushBuffer()

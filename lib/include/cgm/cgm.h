@@ -35,6 +35,12 @@ enum class ScalingMode
     Metric
 };
 
+enum class ColorSelectionMode
+{
+    Indexed,
+    Direct
+};
+
 class MetafileWriter
 {
 public:
@@ -57,6 +63,7 @@ public:
     virtual void fontList(std::vector<std::string> const & fonts) = 0;
     virtual void characterCodingAnnouncer(CharCodeAnnouncer value) = 0;
     virtual void scalingMode(ScalingMode mode, float value) = 0;
+    virtual void colorSelectionMode(ColorSelectionMode mode) = 0;
 };
 
 std::unique_ptr<MetafileWriter> create(std::ostream &stream, Encoding enc);

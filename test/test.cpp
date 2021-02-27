@@ -137,6 +137,21 @@ TEST_CASE("clear text encoding")
             REQUIRE(stream.str() == "ScaleMode Metric 1.000000;\n");
         }
     }
+    SECTION("color selection mode")
+    {
+        SECTION("indexed")
+        {
+            writer->colorSelectionMode(cgm::ColorSelectionMode::Indexed);
+
+            REQUIRE(stream.str() == "ColrMode Indexed;\n");
+        }
+        SECTION("direct")
+        {
+            writer->colorSelectionMode(cgm::ColorSelectionMode::Direct);
+
+            REQUIRE(stream.str() == "ColrMode Direct;\n");
+        }
+    }
 }
 
 //TEST_CASE("begin binary, end")
