@@ -95,6 +95,7 @@ struct cgm_funcs
     void (*colorIndexPrecisionClearText)(cgm_context *p, int max);
     void (*maximumColorIndex)(cgm_context *p, int max);
     void (*colorValueExtent)(cgm_context *p, int redMin, int redMax, int greenMin, int greenMax, int blueMin, int blueMax);
+    void (*metafileElementList)(cgm_context *p);
 };
 
 struct cgm_context
@@ -222,7 +223,7 @@ static void cgmt_out_string(cgm_context *ctx, char *string)
 {
   if ((int) (ctx->buffer_ind + strlen(string)) >= cgmt_recl)
     {
-      cgmt_fb();
+      cgmt_fb(ctx);
       strcpy(ctx->buffer, "   ");
       ctx->buffer_ind = 3;
     }
@@ -633,26 +634,29 @@ static void cgmt_maxcind(void)
 
 
 /* Metafile element list */
-
-static void cgmt_mfellist(void)
+static void cgmt_mfellist_p(cgm_context *ctx)
 {
-  int i;
+    int i;
 
-  cgmt_start_cmd(1, (int) MfElList);
+    cgmt_start_cmd(ctx, 1, (int) MfElList);
 
-  cgmt_outc(' ');
-  cgmt_outc(quote_char);
+    cgmt_outc(ctx, ' ');
+    cgmt_outc(ctx, quote_char);
 
-  for (i = 2; i < 2 * n_melements; i += 2)
+    for (i = 2; i < 2 * n_melements; i += 2)
     {
-      cgmt_out_string(cgmt_cptr[element_list[i]][element_list[i + 1]]);
+        cgmt_out_string(ctx, cgmt_cptr[element_list[i]][element_list[i + 1]]);
 
-      if (i < 2 * (n_melements - 1))
-	cgmt_outc(' ');
+        if (i < 2 * (n_melements - 1))
+            cgmt_outc(ctx, ' ');
     }
 
-  cgmt_outc(quote_char);
-  cgmt_flush_cmd(final_flush);
+    cgmt_outc(ctx, quote_char);
+    cgmt_flush_cmd(ctx, final_flush);
+}
+static void cgmt_mfellist(void)
+{
+    cgmt_mfellist_p(g_p);
 }
 
 
@@ -3071,6 +3075,7 @@ static void setup_clear_text_context(cgm_context *ctx)
     ctx->funcs.colorIndexPrecisionClearText = cgmt_cindprec_p;
     ctx->funcs.maximumColorIndex = cgmt_maxcind_p;
     ctx->funcs.colorValueExtent = cgmt_cvextent_p;
+    ctx->funcs.metafileElementList = cgmt_mfellist_p;
   ctx->cgm[begin] = CGM_FUNC cgmt_begin;
   ctx->cgm[end] = CGM_FUNC cgmt_end;
   ctx->cgm[bp] = CGM_FUNC cgmt_bp;
@@ -3491,6 +3496,7 @@ public:
     void maximumColorIndex(int max) override;
     void colorValueExtent(int redMin, int redMax, int greenMin, int greenMax, int blueMin,
         int blueMax) override;
+    void metafileElementList() override;
 
 protected:
     std::ostream &m_stream;
@@ -3503,7 +3509,7 @@ private:
     {
         static_cast<MetafileStreamWriter *>(data)->flushBuffer();
         return 0;
-    }
+    }    
 };
 
 class BinaryMetafileWriter : public MetafileStreamWriter
@@ -3593,6 +3599,11 @@ void MetafileStreamWriter::colorValueExtent(int redMin, int redMax, int greenMin
 {
     auto dbl = [](float val) { return static_cast<double>(val); };
     m_context.funcs.colorValueExtent(&m_context, dbl(redMin), dbl(redMax), dbl(greenMin), dbl(greenMax), dbl(blueMin), dbl(blueMax));
+}
+
+void MetafileStreamWriter::metafileElementList()
+{
+    m_context.funcs.metafileElementList(&m_context);
 }
 
 void MetafileStreamWriter::flushBuffer()

@@ -87,6 +87,20 @@ TEST_CASE("clear text encoding")
 
         REQUIRE(stream.str() == "ColrValueExt 0 0 0 63 63 63;\n");
     }
+    SECTION("metafile element list")
+    {
+        writer->metafileElementList();
+
+        REQUIRE(stream.str() == 
+            "MFElemList \"BegMF EndMF BegPic BegPicBody EndPic MFVersion MFDesc VDCType \n"
+            "   IntegerPrec RealPrec IndexPrec ColrPrec ColrIndexPrec MaxColrIndex \n"
+            "   ColrValueExt MFElemList FontList CharCoding ScaleMode ColrMode \n"
+            "   LineWidthMode MarkerSizeMode VDCExt BackColr VDCIntegerPrec Transparency \n"
+            "   ClipRect Clip Line Marker Text Polygon CellArray LineType LineWidth \n"
+            "   LineColr MarkerType MarkerSize MarkerColr TextFontIndex TextPrec CharExpan \n"
+            "   CharSpace TextColr CharHeight CharOri TextPath TextAlign IntStyle FillColr \n"
+            "   HatchIndex PatIndex ColrTable\";\n");
+    }
 }
 
 //TEST_CASE("begin binary, end")
