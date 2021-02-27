@@ -94,6 +94,7 @@ struct cgm_funcs
     void (*colorPrecisionClearText)(cgm_context *p, int max);
     void (*colorIndexPrecisionClearText)(cgm_context *p, int max);
     void (*maximumColorIndex)(cgm_context *p, int max);
+    void (*colorValueExtent)(cgm_context *p, int redMin, int redMax, int greenMin, int greenMax, int blueMin, int blueMax);
 };
 
 struct cgm_context
@@ -594,24 +595,23 @@ static void cgmt_cindprec(void)
 
 
 /* Colour value extent */
+static void cgmt_cvextent_p(cgm_context *ctx, int minRed, int maxRed, int minGreen, int maxGreen, int minBlue, int maxBlue)
+{
+    cgmt_start_cmd(ctx, 1, (int) CVExtent);
 
+    cgmt_int(ctx, minRed);
+    cgmt_int(ctx, minGreen);
+    cgmt_int(ctx, minBlue);
+    cgmt_int(ctx, maxRed);
+    cgmt_int(ctx, maxGreen);
+    cgmt_int(ctx, maxBlue);
+
+    cgmt_flush_cmd(ctx, final_flush);
+}
 static void cgmt_cvextent(void)
 {
-  int i;
-
-  cgmt_start_cmd(1, (int) CVExtent);
-
-  for (i = 0; i < 3; ++i)
-    {
-      cgmt_int(0);
-    }
-
-  for (i = 0; i < 3; ++i)
-    {
-      cgmt_int(max_colors - 1);
-    }
-
-  cgmt_flush_cmd(final_flush);
+    const int maxColor = max_colors - 1;
+    cgmt_cvextent_p(g_p, 0, maxColor, 0, maxColor, 0, maxColor);
 }
 
 
@@ -3070,6 +3070,7 @@ static void setup_clear_text_context(cgm_context *ctx)
     ctx->funcs.colorPrecisionClearText = cgmt_colprec_p;
     ctx->funcs.colorIndexPrecisionClearText = cgmt_cindprec_p;
     ctx->funcs.maximumColorIndex = cgmt_maxcind_p;
+    ctx->funcs.colorValueExtent = cgmt_cvextent_p;
   ctx->cgm[begin] = CGM_FUNC cgmt_begin;
   ctx->cgm[end] = CGM_FUNC cgmt_end;
   ctx->cgm[bp] = CGM_FUNC cgmt_bp;
@@ -3488,6 +3489,8 @@ public:
     void colorPrecisionClearText(int max) override;
     void colorIndexPrecisionClearText(int max) override;
     void maximumColorIndex(int max) override;
+    void colorValueExtent(int redMin, int redMax, int greenMin, int greenMax, int blueMin,
+        int blueMax) override;
 
 protected:
     std::ostream &m_stream;
@@ -3583,6 +3586,13 @@ void MetafileStreamWriter::colorIndexPrecisionClearText(int max)
 void MetafileStreamWriter::maximumColorIndex(int max)
 {
     m_context.funcs.maximumColorIndex(&m_context, max);
+}
+
+void MetafileStreamWriter::colorValueExtent(int redMin, int redMax, int greenMin, int greenMax, int blueMin,
+    int blueMax)
+{
+    auto dbl = [](float val) { return static_cast<double>(val); };
+    m_context.funcs.colorValueExtent(&m_context, dbl(redMin), dbl(redMax), dbl(greenMin), dbl(greenMax), dbl(blueMin), dbl(blueMax));
 }
 
 void MetafileStreamWriter::flushBuffer()

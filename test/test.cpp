@@ -53,7 +53,7 @@ TEST_CASE("clear text encoding")
     }
     SECTION("real precision")
     {
-        writer->realPrecisionClearText(-32767, 32767, 4);
+        writer->realPrecisionClearText(-32767.f, 32767.f, 4);
 
         REQUIRE(stream.str() == "RealPrec -32767.000000 32767.000000 4;\n");
     }
@@ -80,6 +80,12 @@ TEST_CASE("clear text encoding")
         writer->maximumColorIndex(63);
 
         REQUIRE(stream.str() == "MaxColrIndex 63;\n");
+    }
+    SECTION("color value extent")
+    {
+        writer->colorValueExtent(0, 63, 0, 63, 0, 63);
+
+        REQUIRE(stream.str() == "ColrValueExt 0 0 0 63 63 63;\n");
     }
 }
 
