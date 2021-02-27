@@ -98,6 +98,8 @@ struct cgm_funcs
     void (*metafileElementList)(cgm_context *p);
     void (*metafileDefaultsReplacement)(cgm_context *p);
     void (*fontList)(cgm_context *p, int numFonts, const char **fontNames);
+    // character set list
+    void (*characterCodingAnnouncer)(cgm_context *p, int value);
 };
 
 struct cgm_context
@@ -664,6 +666,7 @@ static void cgmt_mfellist(void)
 
 
 /* Metafile Defaults Replacement */
+// TODO: finish this off?
 void cgmt_defaultsReplacement(cgm_context *ctx)
 {
     cgmt_out_string(ctx, "Beg");
@@ -707,14 +710,25 @@ static void cgmt_fontlist(void)
 
 
 /* Character announcer */
+static void cgmt_cannounce_p(cgm_context *ctx, int value)
+{
+    const char *announcerNames[] = {
+        "Basic7Bit",
+        "Basic8Bit",
+        "Extd7Bit",
+        "Extd8Bit"
+    };
+    cgmt_start_cmd(ctx, 1, (int) CharAnnounce);
 
+    cgmt_outc(ctx, ' ');
+    cgmt_out_string(ctx, announcerNames[value]);
+
+    cgmt_flush_cmd(ctx, final_flush);
+
+}
 static void cgmt_cannounce(void)
 {
-  cgmt_start_cmd(1, (int) CharAnnounce);
-
-  cgmt_out_string(" Extd8Bit");
-
-  cgmt_flush_cmd(final_flush);
+    cgmt_cannounce_p(g_p, 3);
 }
 
 
@@ -3099,6 +3113,7 @@ static void setup_clear_text_context(cgm_context *ctx)
     ctx->funcs.metafileElementList = cgmt_mfellist_p;
     ctx->funcs.metafileDefaultsReplacement = cgmt_defaultsReplacement;
     ctx->funcs.fontList = cgmt_fontlist_p;
+    ctx->funcs.characterCodingAnnouncer = cgmt_cannounce_p;
   ctx->cgm[begin] = CGM_FUNC cgmt_begin;
   ctx->cgm[end] = CGM_FUNC cgmt_end;
   ctx->cgm[bp] = CGM_FUNC cgmt_bp;
@@ -3522,6 +3537,7 @@ public:
     void metafileElementList() override;
     void metafileDefaultsReplacement() override;
     void fontList(std::vector<std::string> const &fonts) override;
+    void characterCodingAnnouncer(CharCodeAnnouncer value) override;
 
 protected:
     std::ostream &m_stream;
@@ -3644,6 +3660,11 @@ void MetafileStreamWriter::fontList(std::vector<std::string> const &fonts)
         fontNames.push_back(font.c_str());
     }
     m_context.funcs.fontList(&m_context, static_cast<int>(fonts.size()), fontNames.data());
+}
+
+void MetafileStreamWriter::characterCodingAnnouncer(CharCodeAnnouncer value)
+{
+    m_context.funcs.characterCodingAnnouncer(&m_context, static_cast<int>(value));
 }
 
 void MetafileStreamWriter::flushBuffer()

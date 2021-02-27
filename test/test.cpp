@@ -115,6 +115,13 @@ TEST_CASE("clear text encoding")
 
         REQUIRE(stream.str() == "FontList 'Hershey Simplex', 'Hershey Roman';\n");
     }
+    // character set list
+    SECTION("character coding announcer")
+    {
+        writer->characterCodingAnnouncer(cgm::CharCodeAnnouncer::Extended8Bit);
+
+        REQUIRE(stream.str() == "CharCoding Extd8Bit;\n");
+    }
 }
 
 //TEST_CASE("begin binary, end")
