@@ -93,6 +93,7 @@ struct cgm_funcs
     void (*indexPrecisionClearText)(cgm_context *p, int min, int max);
     void (*colorPrecisionClearText)(cgm_context *p, int max);
     void (*colorIndexPrecisionClearText)(cgm_context *p, int max);
+    void (*maximumColorIndex)(cgm_context *p, int max);
 };
 
 struct cgm_context
@@ -616,14 +617,17 @@ static void cgmt_cvextent(void)
 
 
 /* Maximum colour index */
+static void cgmt_maxcind_p(cgm_context *ctx, int max)
+{
+    cgmt_start_cmd(ctx, 1, (int) MaxCInd);
 
+    cgmt_int(ctx, max);
+
+    cgmt_flush_cmd(ctx, final_flush);
+}
 static void cgmt_maxcind(void)
 {
-  cgmt_start_cmd(1, (int) MaxCInd);
-
-  cgmt_int(MAX_COLOR - 1);
-
-  cgmt_flush_cmd(final_flush);
+    cgmt_maxcind_p(g_p, MAX_COLOR - 1);
 }
 
 
@@ -3065,6 +3069,7 @@ static void setup_clear_text_context(cgm_context *ctx)
     ctx->funcs.indexPrecisionClearText = cgmt_indexprec_p;
     ctx->funcs.colorPrecisionClearText = cgmt_colprec_p;
     ctx->funcs.colorIndexPrecisionClearText = cgmt_cindprec_p;
+    ctx->funcs.maximumColorIndex = cgmt_maxcind_p;
   ctx->cgm[begin] = CGM_FUNC cgmt_begin;
   ctx->cgm[end] = CGM_FUNC cgmt_end;
   ctx->cgm[bp] = CGM_FUNC cgmt_bp;
@@ -3482,6 +3487,7 @@ public:
     void indexPrecisionClearText(int min, int max) override;
     void colorPrecisionClearText(int max) override;
     void colorIndexPrecisionClearText(int max) override;
+    void maximumColorIndex(int max) override;
 
 protected:
     std::ostream &m_stream;
@@ -3572,6 +3578,11 @@ void MetafileStreamWriter::colorPrecisionClearText(int max)
 void MetafileStreamWriter::colorIndexPrecisionClearText(int max)
 {
     m_context.funcs.colorIndexPrecisionClearText(&m_context, max);
+}
+
+void MetafileStreamWriter::maximumColorIndex(int max)
+{
+    m_context.funcs.maximumColorIndex(&m_context, max);
 }
 
 void MetafileStreamWriter::flushBuffer()

@@ -75,6 +75,12 @@ TEST_CASE("clear text encoding")
 
         REQUIRE(stream.str() == "ColrIndexPrec 32767;\n");
     }
+    SECTION("maximum color index")
+    {
+        writer->maximumColorIndex(63);
+
+        REQUIRE(stream.str() == "MaxColrIndex 63;\n");
+    }
 }
 
 //TEST_CASE("begin binary, end")
