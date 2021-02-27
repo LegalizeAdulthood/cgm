@@ -126,13 +126,13 @@ TEST_CASE("clear text encoding")
     {
         SECTION("abstract")
         {
-            writer->scalingMode(cgm::ScalingMode::Abstract, 1.0f);
+            writer->scaleMode(cgm::ScaleMode::Abstract, 1.0f);
 
             REQUIRE(stream.str() == "ScaleMode Abstract 1.000000;\n");
         }
         SECTION("metric")
         {
-            writer->scalingMode(cgm::ScalingMode::Metric, 1.0f);
+            writer->scaleMode(cgm::ScaleMode::Metric, 1.0f);
 
             REQUIRE(stream.str() == "ScaleMode Metric 1.000000;\n");
         }
@@ -141,15 +141,30 @@ TEST_CASE("clear text encoding")
     {
         SECTION("indexed")
         {
-            writer->colorSelectionMode(cgm::ColorSelectionMode::Indexed);
+            writer->colorMode(cgm::ColorMode::Indexed);
 
             REQUIRE(stream.str() == "ColrMode Indexed;\n");
         }
         SECTION("direct")
         {
-            writer->colorSelectionMode(cgm::ColorSelectionMode::Direct);
+            writer->colorMode(cgm::ColorMode::Direct);
 
             REQUIRE(stream.str() == "ColrMode Direct;\n");
+        }
+    }
+    SECTION("line width specification mode")
+    {
+        SECTION("absolute")
+        {
+            writer->lineWidthMode(cgm::LineWidthMode::Absolute);
+
+            REQUIRE(stream.str() == "LineWidthMode Absolute;\n");
+        }
+        SECTION("scaled")
+        {
+            writer->lineWidthMode(cgm::LineWidthMode::Scaled);
+
+            REQUIRE(stream.str() == "LineWidthMode Scaled;\n");
         }
     }
 }

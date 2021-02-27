@@ -101,7 +101,8 @@ struct cgm_funcs
     // character set list
     void (*characterCodingAnnouncer)(cgm_context *p, int value);
     void (*scalingMode)(cgm_context *p, int mode, double value);
-    void (*colorSelectionMode)(cgm_context *p, int mode);
+    void (*colorMode)(cgm_context *p, int mode);
+    void (*lineWidthMode)(cgm_context *p, int mode);
 };
 
 struct cgm_context
@@ -365,13 +366,16 @@ static void cgmt_real(double xin)
 
 
 /* Write an integer point */
+static void cgmt_ipoint(cgm_context *ctx, int x, int y)
+{
+    char buffer[max_str];
 
+    sprintf(buffer, " %d,%d", x, y);
+    cgmt_out_string(ctx, buffer);
+}
 static void cgmt_ipoint(int x, int y)
 {
-  char buffer[max_str];
-
-  sprintf(buffer, " %d,%d", x, y);
-  cgmt_out_string(buffer);
+    cgmt_ipoint(g_p, x, y);
 }
 
 
@@ -777,41 +781,50 @@ static void cgmt_colselmode(void)
 
 
 /* Line width specification mode */
+static void cgmt_lwsmode_p(cgm_context *ctx, int mode)
+{
+    cgmt_start_cmd(ctx, 2, (int) LWidSpecMode);
 
+    cgmt_out_string(ctx, mode == 0 ? " Absolute" : " Scaled");
+
+    cgmt_flush_cmd(ctx, final_flush);
+}
 static void cgmt_lwsmode(void)
 {
-  cgmt_start_cmd(2, (int) LWidSpecMode);
-
-  cgmt_out_string(" Scaled");
-
-  cgmt_flush_cmd(final_flush);
+    cgmt_lwsmode_p(g_p, 1);
 }
 
 
 
 /* Marker size specification mode */
+static void cgmt_msmode_p(cgm_context *ctx, int mode)
+{
+    cgmt_start_cmd(ctx, 2, (int) MarkSizSpecMode);
 
+    cgmt_out_string(ctx, mode == 0 ? " Absolute" : " Scaled");
+
+    cgmt_flush_cmd(ctx, final_flush);
+}
 static void cgmt_msmode(void)
 {
-  cgmt_start_cmd(2, (int) MarkSizSpecMode);
-
-  cgmt_out_string(" Scaled");
-
-  cgmt_flush_cmd(final_flush);
+    cgmt_msmode_p(g_p, 1);
 }
 
 
 
 /* VDC extent */
+static void cgmt_vdcectent_p(cgm_context *ctx, int xmin, int xmax, int ymin, int ymax)
+{
+    cgmt_start_cmd(ctx, 2, (int) vdcExtent);
 
+    cgmt_ipoint(ctx, xmin, ymin);
+    cgmt_ipoint(ctx, xmax, ymax);
+
+    cgmt_flush_cmd(ctx, final_flush);
+}
 static void cgmt_vdcextent(void)
 {
-  cgmt_start_cmd(2, (int) vdcExtent);
-
-  cgmt_ipoint(0, 0);
-  cgmt_ipoint(g_p->xext, g_p->yext);
-
-  cgmt_flush_cmd(final_flush);
+    cgmt_vdcectent_p(g_p, 0, g_p->xext, 0, g_p->yext);
 }
 
 
@@ -3126,7 +3139,8 @@ static void setup_clear_text_context(cgm_context *ctx)
     ctx->funcs.fontList = cgmt_fontlist_p;
     ctx->funcs.characterCodingAnnouncer = cgmt_cannounce_p;
     ctx->funcs.scalingMode = cgmt_scalmode_p;
-    ctx->funcs.colorSelectionMode = cgmt_colselmode_p;
+    ctx->funcs.colorMode = cgmt_colselmode_p;
+    ctx->funcs.lineWidthMode = cgmt_lwsmode_p;
   ctx->cgm[begin] = CGM_FUNC cgmt_begin;
   ctx->cgm[end] = CGM_FUNC cgmt_end;
   ctx->cgm[bp] = CGM_FUNC cgmt_bp;
@@ -3551,8 +3565,9 @@ public:
     void metafileDefaultsReplacement() override;
     void fontList(std::vector<std::string> const &fonts) override;
     void characterCodingAnnouncer(CharCodeAnnouncer value) override;
-    void scalingMode(ScalingMode mode, float value) override;
-    void colorSelectionMode(ColorSelectionMode mode) override;
+    void scaleMode(ScaleMode mode, float value) override;
+    void colorMode(ColorMode mode) override;
+    void lineWidthMode(LineWidthMode mode) override;
 
 protected:
     std::ostream &m_stream;
@@ -3682,14 +3697,19 @@ void MetafileStreamWriter::characterCodingAnnouncer(CharCodeAnnouncer value)
     m_context.funcs.characterCodingAnnouncer(&m_context, static_cast<int>(value));
 }
 
-void MetafileStreamWriter::scalingMode(ScalingMode mode, float value)
+void MetafileStreamWriter::scaleMode(ScaleMode mode, float value)
 {
     m_context.funcs.scalingMode(&m_context, static_cast<int>(mode), static_cast<double>(value));
 }
 
-void MetafileStreamWriter::colorSelectionMode(ColorSelectionMode mode)
+void MetafileStreamWriter::colorMode(ColorMode mode)
 {
-    m_context.funcs.colorSelectionMode(&m_context, static_cast<int>(mode));
+    m_context.funcs.colorMode(&m_context, static_cast<int>(mode));
+}
+
+void MetafileStreamWriter::lineWidthMode(LineWidthMode mode)
+{
+    m_context.funcs.lineWidthMode(&m_context, static_cast<int>(mode));
 }
 
 void MetafileStreamWriter::flushBuffer()

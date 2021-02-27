@@ -29,16 +29,22 @@ enum class CharCodeAnnouncer
     Extended8Bit
 };
 
-enum class ScalingMode
+enum class ScaleMode
 {
     Abstract,
     Metric
 };
 
-enum class ColorSelectionMode
+enum class ColorMode
 {
     Indexed,
     Direct
+};
+
+enum class LineWidthMode
+{
+    Absolute,
+    Scaled
 };
 
 class MetafileWriter
@@ -62,8 +68,9 @@ public:
     virtual void metafileDefaultsReplacement() = 0;
     virtual void fontList(std::vector<std::string> const & fonts) = 0;
     virtual void characterCodingAnnouncer(CharCodeAnnouncer value) = 0;
-    virtual void scalingMode(ScalingMode mode, float value) = 0;
-    virtual void colorSelectionMode(ColorSelectionMode mode) = 0;
+    virtual void scaleMode(ScaleMode mode, float value) = 0;
+    virtual void colorMode(ColorMode mode) = 0;
+    virtual void lineWidthMode(LineWidthMode mode) = 0;
 };
 
 std::unique_ptr<MetafileWriter> create(std::ostream &stream, Encoding enc);
