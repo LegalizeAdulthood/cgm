@@ -90,6 +90,7 @@ struct cgm_funcs
     void (*vdcType)(cgm_context *p, cgm::VdcType type);
     void (*intPrecisionClearText)(cgm_context *p, int min, int max);
     void (*realPrecisionClearText)(cgm_context *p, double minReal, double maxReal, int digits);
+    void (*indexPrecisionClearText)(cgm_context *p, int min, int max);
 };
 
 struct cgm_context
@@ -541,15 +542,18 @@ static void cgmt_realprec(void)
 
 
 /* Index precision */
+static void cgmt_indexprec_p(cgm_context *ctx, int min, int max)
+{
+    cgmt_start_cmd(ctx, 1, (int) IndexPrec);
 
+    cgmt_int(ctx, min);
+    cgmt_int(ctx, max);
+
+    cgmt_flush_cmd(ctx, final_flush);
+}
 static void cgmt_indexprec(void)
 {
-  cgmt_start_cmd(1, (int) IndexPrec);
-
-  cgmt_int(-32768);
-  cgmt_int(32767);
-
-  cgmt_flush_cmd(final_flush);
+    cgmt_indexprec_p(g_p, -32768, 32767);
 }
 
 
@@ -3050,6 +3054,7 @@ static void setup_clear_text_context(cgm_context *ctx)
     ctx->funcs.vdcType = cgmt_vdctype_p;
     ctx->funcs.intPrecisionClearText = cgmt_intprec_p;
     ctx->funcs.realPrecisionClearText = cgmt_realprec_p;
+    ctx->funcs.indexPrecisionClearText = cgmt_indexprec_p;
   ctx->cgm[begin] = CGM_FUNC cgmt_begin;
   ctx->cgm[end] = CGM_FUNC cgmt_end;
   ctx->cgm[bp] = CGM_FUNC cgmt_bp;
@@ -3464,6 +3469,7 @@ public:
     void vdcType(VdcType type) override;
     void intPrecisionClearText(int min, int max) override;
     void realPrecisionClearText(float minReal, float maxReal, int digits) override;
+    void indexPrecisionClearText(int min, int max) override;
 
 protected:
     std::ostream &m_stream;
@@ -3539,6 +3545,11 @@ void MetafileStreamWriter::intPrecisionClearText(int min, int max)
 void MetafileStreamWriter::realPrecisionClearText(float minReal, float maxReal, int digits)
 {
     m_context.funcs.realPrecisionClearText(&m_context, static_cast<double>(minReal), static_cast<double>(maxReal), digits);
+}
+
+void MetafileStreamWriter::indexPrecisionClearText(int min, int max)
+{
+    m_context.funcs.indexPrecisionClearText(&m_context, min, max);
 }
 
 void MetafileStreamWriter::flushBuffer()

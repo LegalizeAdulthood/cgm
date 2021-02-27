@@ -21,9 +21,6 @@ enum class VdcType
     Real
 };
 
-void beginMetafile(FILE *file, Encoding enc);
-void endMetafile(FILE *file);
-
 class MetafileWriter
 {
 public:
@@ -36,6 +33,7 @@ public:
     virtual void vdcType(VdcType type) = 0;
     virtual void intPrecisionClearText(int min, int max) = 0;
     virtual void realPrecisionClearText(float minReal, float maxReal, int digits) = 0;
+    virtual void indexPrecisionClearText(int min, int max) = 0;
 };
 
 std::unique_ptr<MetafileWriter> create(std::ostream &stream, Encoding enc);

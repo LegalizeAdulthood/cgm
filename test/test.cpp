@@ -57,6 +57,12 @@ TEST_CASE("clear text encoding")
 
         REQUIRE(stream.str() == "RealPrec -32767.000000 32767.000000 4;\n");
     }
+    SECTION("index precision")
+    {
+        writer->indexPrecisionClearText(0, 127);
+
+        REQUIRE(stream.str() == "IndexPrec 0 127;\n");
+    }
 }
 
 //TEST_CASE("begin binary, end")
