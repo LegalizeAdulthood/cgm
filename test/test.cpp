@@ -69,6 +69,12 @@ TEST_CASE("clear text encoding")
 
         REQUIRE(stream.str() == "ColrPrec 255;\n");
     }
+    SECTION("color index precision")
+    {
+        writer->colorIndexPrecisionClearText(32767);
+
+        REQUIRE(stream.str() == "ColrIndexPrec 32767;\n");
+    }
 }
 
 //TEST_CASE("begin binary, end")

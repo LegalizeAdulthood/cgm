@@ -35,6 +35,7 @@ public:
     virtual void realPrecisionClearText(float minReal, float maxReal, int digits) = 0;
     virtual void indexPrecisionClearText(int min, int max) = 0;
     virtual void colorPrecisionClearText(int max) = 0;
+    virtual void colorIndexPrecisionClearText(int max) = 0;
 };
 
 std::unique_ptr<MetafileWriter> create(std::ostream &stream, Encoding enc);
