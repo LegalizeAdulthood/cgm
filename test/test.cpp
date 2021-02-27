@@ -45,6 +45,12 @@ TEST_CASE("clear text encoding")
 
         REQUIRE(stream.str() == "VDCType Real;\n");
     }
+    SECTION("integer precision")
+    {
+        writer->intPrecision(1, 32767);
+
+        REQUIRE(stream.str() == "IntegerPrec 1 32767;\n");
+    }
 }
 
 //TEST_CASE("begin binary, end")

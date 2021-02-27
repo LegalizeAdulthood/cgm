@@ -88,6 +88,7 @@ struct cgm_funcs
     void (*metafileVersion)(cgm_context *p, int value);
     void (*metafileDescription)(cgm_context *p, const char *value);
     void (*vdcType)(cgm_context *p, cgm::VdcType type);
+    void (*intPrecision)(cgm_context *p, int min, int max);
 };
 
 struct cgm_context
@@ -494,15 +495,18 @@ static void cgmt_vdctype(void)
 
 
 /* Integer precision */
-
-static void cgmt_intprec(void)
+static void cgmt_intprec_p(cgm_context *ctx, int min, int max)
 {
-  cgmt_start_cmd(1, (int) IntPrec);
+    cgmt_start_cmd(ctx, 1, (int) IntPrec);
 
-  cgmt_int(-32768);
-  cgmt_int(32767);
+    cgmt_int(ctx, min);
+    cgmt_int(ctx, max);
 
-  cgmt_flush_cmd(final_flush);
+    cgmt_flush_cmd(ctx, final_flush);
+}
+static void cgmt_intprec()
+{
+    cgmt_intprec_p(g_p, -32768, 32767);
 }
 
 
@@ -3031,6 +3035,7 @@ static void setup_clear_text_context(cgm_context *ctx)
     ctx->funcs.metafileVersion = cgmt_mfversion_p;
     ctx->funcs.metafileDescription = cgmt_mfdescrip_p;
     ctx->funcs.vdcType = cgmt_vdctype_p;
+    ctx->funcs.intPrecision = cgmt_intprec_p;
   ctx->cgm[begin] = CGM_FUNC cgmt_begin;
   ctx->cgm[end] = CGM_FUNC cgmt_end;
   ctx->cgm[bp] = CGM_FUNC cgmt_bp;
@@ -3443,6 +3448,7 @@ public:
     void metafileVersion(int value) override;
     void metafileDescription(char const *value) override;
     void vdcType(VdcType type) override;
+    void intPrecision(int min, int max) override;
 
 protected:
     std::ostream &m_stream;
@@ -3508,6 +3514,11 @@ void MetafileStreamWriter::metafileDescription(char const *value)
 void MetafileStreamWriter::vdcType(VdcType type)
 {
     m_context.funcs.vdcType(&m_context, type);
+}
+
+void MetafileStreamWriter::intPrecision(int min, int max)
+{
+    m_context.funcs.intPrecision(&m_context, min, max);
 }
 
 void MetafileStreamWriter::flushBuffer()
