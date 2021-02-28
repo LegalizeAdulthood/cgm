@@ -2078,23 +2078,26 @@ static void cgmb_end(void)
 
 
 /* Start picture */
-
-static void cgmb_bp(char *pic_name)
+static void cgmb_bp_p(cgm_context *ctx, const char *pic_name)
 {
-  cgmb_start_cmd(0, (int) B_Pic);
+  cgmb_start_cmd(ctx, 0, (int) B_Pic);
 
   if (*pic_name)
     {
-      cgmb_string(pic_name, strlen(pic_name));
+      cgmb_string(ctx, pic_name, strlen(pic_name));
     }
   else
     {
-      cgmb_string(NULL, 0);
+      cgmb_string(ctx, NULL, 0);
     }
 
-  cgmb_flush_cmd(final_flush);
+  cgmb_flush_cmd(ctx, final_flush);
+  cgmb_fb(ctx);
 }
-
+static void cgmb_bp(const char *pic_name)
+{
+    cgmb_bp_p(g_p, pic_name);
+}
 
 
 /* Start picture body */
@@ -3381,6 +3384,7 @@ static void setup_binary_context(cgm_context *ctx)
 {
     ctx->funcs.beginMetafile = cgmb_begin_p;
     ctx->funcs.endMetafile = cgmb_end_p;
+    ctx->funcs.beginPicture = cgmb_bp_p;
   ctx->cgm[begin] = CGM_FUNC cgmb_begin;
   ctx->cgm[end] = CGM_FUNC cgmb_end;
   ctx->cgm[bp] = CGM_FUNC cgmb_bp;

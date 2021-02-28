@@ -3,7 +3,6 @@
 #include <catch2/catch.hpp>
 
 #include <array>
-#include <cstdint>
 #include <sstream>
 
 namespace
@@ -13,6 +12,36 @@ template <typename T, int N>
 int numOf(T (&ary)[N])
 {
     return N;
+}
+
+struct OpCode
+{
+    int classCode;
+    int opCode;
+    int paramLength;
+};
+
+bool operator==(OpCode lhs, OpCode rhs)
+{
+    return lhs.classCode == rhs.classCode
+        || lhs.opCode == rhs.opCode
+        || lhs.paramLength == rhs.paramLength;
+}
+
+OpCode header(const std::string &str)
+{
+    const auto first = static_cast<unsigned char>(str[0]);
+    const auto second = static_cast<unsigned char>(str[1]);
+    return OpCode{
+        first >> 4 & 0xF,
+        (first & 0xF) << 3 | (second & 0xE0) >> 5,
+        second & 0x1F
+    };
+}
+
+std::string unpack(const std::string &str, int offset)
+{
+    return str.substr(offset + 1, str[offset]);
 }
 
 }
@@ -31,19 +60,32 @@ TEST_CASE("binary encoding")
         const int encodedLength = numOf(ident) - 1;
         REQUIRE(str.size() == std::size_t(3 + encodedLength));
         const char *data = str.data();
-        REQUIRE(int(data[0]) == 0);
-        REQUIRE(int(data[1]) == 46);
+        const OpCode op = header(str);
+        REQUIRE(op.classCode == 0);
+        REQUIRE(op.opCode == 1);
+        REQUIRE(op.paramLength == numOf(ident));
         REQUIRE(int(data[2]) == encodedLength);
-        REQUIRE(str.substr(3) == "cgm unit test");
+        REQUIRE(unpack(str, 2) == "cgm unit test"); 
     }
     SECTION("end metafile")
     {
         writer->endMetafile();
 
         const std::string str = stream.str();
+        REQUIRE(header(str) == OpCode{0, 2, 0});
+    }
+    SECTION("begin picture")
+    {
+        const char ident[]{"cgm unit test"};
+        writer->beginPicture(ident);
+
+        const std::string str = stream.str();
+        const int encodedLength = numOf(ident) - 1;
+        REQUIRE(str.size() == std::size_t(3 + encodedLength));
         const char *data = str.data();
-        REQUIRE(int(data[0]) == 0);
-        REQUIRE(int(data[1]) == 64);
+        REQUIRE(header(str) == OpCode{0, 3, numOf(ident)});
+        REQUIRE(int(data[2]) == encodedLength);
+        REQUIRE(str.substr(3) == "cgm unit test");
     }
 }
 
@@ -52,12 +94,6 @@ TEST_CASE("TODO", "[.]")
     std::ostringstream stream;
     std::unique_ptr<cgm::MetafileWriter> writer{create(stream, cgm::Encoding::Binary)};
 
-    SECTION("begin picture")
-    {
-        writer->beginPicture("cgm unit test");
-
-        REQUIRE(stream.str() == "BegPic \"cgm unit test\";\n");
-    }
     SECTION("begin picture body")
     {
         writer->beginPictureBody();
