@@ -133,6 +133,7 @@ struct cgm_funcs
     void (*textPath)(cgm_context * p, int value);
     void (*textAlignment)(cgm_context * p, int horiz, int vert, double contHoriz, double contVert);
     void (*interiorStyle)(cgm_context * p, int value);
+    void (*fillColor)(cgm_context * p, int value);
 };
 
 struct cgm_context
@@ -1425,14 +1426,17 @@ static void cgmt_intstyle(int style)
 
 
 /* Fill colour */
+static void cgmt_fillcolor_p(cgm_context *ctx, int index)
+{
+    cgmt_start_cmd(ctx, 5, (int) FillColour);
 
+    cgmt_int(ctx, index);
+
+    cgmt_flush_cmd(ctx, final_flush);
+}
 static void cgmt_fillcolour(int index)
 {
-  cgmt_start_cmd(5, (int) FillColour);
-
-  cgmt_int(index);
-
-  cgmt_flush_cmd(final_flush);
+    cgmt_fillcolor_p(g_p, index);
 }
 
 
@@ -3259,6 +3263,7 @@ static void setup_clear_text_context(cgm_context *ctx)
     ctx->funcs.textPath = cgmt_tpath_p;
     ctx->funcs.textAlignment = cgmt_talign_p;
     ctx->funcs.interiorStyle = cgmt_intstyle_p;
+    ctx->funcs.fillColor = cgmt_fillcolor_p;
   ctx->cgm[begin] = CGM_FUNC cgmt_begin;
   ctx->cgm[end] = CGM_FUNC cgmt_end;
   ctx->cgm[bp] = CGM_FUNC cgmt_bp;
@@ -3724,6 +3729,7 @@ public:
     void textPath(TextPath value) override;
     void textAlignment(HorizAlign horiz, VertAlign vert, float contHoriz, float contVert) override;
     void interiorStyle(InteriorStyle value) override;
+    void fillColor(int value) override;
 };
 
 class BinaryMetafileWriter : public MetafileStreamWriter
@@ -4003,6 +4009,11 @@ void MetafileStreamWriter::textAlignment(HorizAlign horiz, VertAlign vert, float
 void MetafileStreamWriter::interiorStyle(InteriorStyle value)
 {
     m_context.funcs.interiorStyle(&m_context, static_cast<int>(value));
+}
+
+void MetafileStreamWriter::fillColor(int value)
+{
+    m_context.funcs.fillColor(&m_context, value);
 }
 
 void MetafileStreamWriter::flushBuffer()

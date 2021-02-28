@@ -505,7 +505,12 @@ TEST_CASE("clear text encoding")
             REQUIRE(stream.str() == "IntStyle Empty;\n");
         }
     }
-    // fill color
+    SECTION("fill color")
+    {
+        writer->fillColor(6);
+
+        REQUIRE(stream.str() == "FillColr 6;\n");
+    }
     // hatch index
     // pattern index
     // edge bundle index
