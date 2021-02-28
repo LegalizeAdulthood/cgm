@@ -320,6 +320,12 @@ TEST_CASE("clear text encoding")
         REQUIRE(stream.str() == "LineColr 6;\n");
     }
     // marker bundle index
+    SECTION("marker type")
+    {
+        writer->markerType(6);
+
+        REQUIRE(stream.str() == "MarkerType 6;\n");
+    }
     // marker size
     // marker color
     // text bundle index
