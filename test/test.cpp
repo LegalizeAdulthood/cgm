@@ -373,7 +373,12 @@ TEST_CASE("clear text encoding")
 
         REQUIRE(stream.str() == "CharExpan 0.100000;\n");
     }
-    // character spacing
+    SECTION("character spacing")
+    {
+        writer->charSpacing(0.1f);
+
+        REQUIRE(stream.str() == "CharSpace 0.100000;\n");
+    }
     // text color
     // character height
     // character orientation
