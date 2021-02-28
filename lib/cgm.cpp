@@ -121,6 +121,7 @@ struct cgm_funcs
     void (*lineWidth)(cgm_context *p, double rmul);
     void (*lineColor)(cgm_context *p, int index);
     void (*markerType)(cgm_context *p, int marker_type);
+    void (*markerSize)(cgm_context *p, double size);
 };
 
 struct cgm_context
@@ -1110,27 +1111,33 @@ static void cgmt_mtype(int marker)
 
 
 /* Marker size */
+static void cgmt_msize_p(cgm_context *ctx, double rmul)
+{
+    cgmt_start_cmd(ctx, 5, (int) MSize);
 
+    cgmt_real(ctx, rmul);
+
+    cgmt_flush_cmd(ctx, final_flush);
+}
 static void cgmt_msize(double rmul)
 {
-  cgmt_start_cmd(5, (int) MSize);
-
-  cgmt_real(rmul);
-
-  cgmt_flush_cmd(final_flush);
+    cgmt_msize_p(g_p, rmul);
 }
 
 
 
 /* Marker colour */
+static void cgmt_mcolor_p(cgm_context *ctx, int index)
+{
+    cgmt_start_cmd(ctx, 5, (int) MColour);
 
+    cgmt_int(ctx, index);
+
+    cgmt_flush_cmd(ctx, final_flush);
+}
 static void cgmt_mcolour(int index)
 {
-  cgmt_start_cmd(5, (int) MColour);
-
-  cgmt_int(index);
-
-  cgmt_flush_cmd(final_flush);
+    cgmt_mcolor_p(g_p, index);
 }
 
 
@@ -3249,6 +3256,7 @@ static void setup_clear_text_context(cgm_context *ctx)
     ctx->funcs.lineWidth = cgmt_lwidth_p;
     ctx->funcs.lineColor = cgmt_lcolor_p;
     ctx->funcs.markerType = cgmt_mtype_p;
+    ctx->funcs.markerSize = cgmt_msize_p;
   ctx->cgm[begin] = CGM_FUNC cgmt_begin;
   ctx->cgm[end] = CGM_FUNC cgmt_end;
   ctx->cgm[bp] = CGM_FUNC cgmt_bp;
@@ -3694,6 +3702,7 @@ public:
     void lineWidth(float value) override;
     void lineColor(int value) override;
     void markerType(int value) override;
+    void markerSize(float value) override;
 
 protected:
     std::ostream &m_stream;
@@ -3921,6 +3930,11 @@ void MetafileStreamWriter::lineColor(int value)
 void MetafileStreamWriter::markerType(int value)
 {
     m_context.funcs.markerType(&m_context, value);
+}
+
+void MetafileStreamWriter::markerSize(float value)
+{
+    m_context.funcs.markerSize(&m_context, static_cast<double>(value));
 }
 
 void MetafileStreamWriter::flushBuffer()

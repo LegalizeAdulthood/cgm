@@ -327,6 +327,12 @@ TEST_CASE("clear text encoding")
         REQUIRE(stream.str() == "MarkerType 6;\n");
     }
     // marker size
+    SECTION("marker size")
+    {
+        writer->markerSize(0.1f);
+
+        REQUIRE(stream.str() == "MarkerSize 0.100000;\n");
+    }
     // marker color
     // text bundle index
     // text font index
