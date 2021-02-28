@@ -3,6 +3,7 @@
 #include <catch2/catch.hpp>
 
 #include <array>
+#include <cstdint>
 #include <sstream>
 
 namespace
@@ -16,17 +17,30 @@ int numOf(T (&ary)[N])
 
 }
 
-TEST_CASE("binary encoding", "[.]")
+TEST_CASE("binary encoding")
 {
     std::ostringstream stream;
     std::unique_ptr<cgm::MetafileWriter> writer{create(stream, cgm::Encoding::Binary)};
 
     SECTION("begin metafile")
     {
-        writer->beginMetafile("cgm unit test");
+        const char ident[]{"cgm unit test"};
+        writer->beginMetafile(ident);
 
-        REQUIRE(stream.str() == "BegMF \"cgm unit test\";\n");
+        const std::string str = stream.str();
+        const char *data = str.data();
+        REQUIRE(int(data[0]) == 0);
+        REQUIRE(int(data[1]) == 46);
+        REQUIRE(int(data[2]) == numOf(ident)-1);
+        REQUIRE(str.substr(3) == "cgm unit test");
     }
+}
+
+TEST_CASE("TODO", "[.]")
+{
+    std::ostringstream stream;
+    std::unique_ptr<cgm::MetafileWriter> writer{create(stream, cgm::Encoding::Binary)};
+
     SECTION("end metafile")
     {
         writer->endMetafile();

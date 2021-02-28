@@ -83,7 +83,7 @@ struct cgm_context;
 
 struct cgm_funcs
 {
-    int (*beginMetafile)(cgm_context *p, const char *identifier);
+    void (*beginMetafile)(cgm_context *p, const char *identifier);
     void (*endMetafile)(cgm_context *p);
     void (*beginPicture)(cgm_context *p, const char *identifier);
     void (*beginPictureBody)(cgm_context *p);
@@ -415,7 +415,7 @@ static void cgmt_ipoint(int x, int y)
 
 
 /* Begin metafile */
-static int cgmt_begin_p(cgm_context *p, const char *comment)
+static void cgmt_begin_p(cgm_context *p, const char *comment)
 {
     cgmt_start_cmd(p, 0, (int) B_Mf);
 
@@ -425,8 +425,6 @@ static int cgmt_begin_p(cgm_context *p, const char *comment)
         cgmt_string(p, nullptr, 0);
 
     cgmt_flush_cmd(p, final_flush);
-
-    return 0;
 }
 
 static void cgmt_begin(const char *comment)
@@ -1573,54 +1571,59 @@ static void cgmb_fb()
 
 /* Write one byte to buffer */
 
+static void cgmb_outc(cgm_context *ctx, char chr)
+{
+  if (ctx->buffer_ind >= max_buffer)
+    cgmb_fb(ctx);
+
+  ctx->buffer[ctx->buffer_ind++] = chr;
+}
 static void cgmb_outc(char chr)
 {
-  if (g_p->buffer_ind >= max_buffer)
-    cgmb_fb();
-
-  g_p->buffer[g_p->buffer_ind++] = chr;
+    cgmb_outc(g_p, chr);
 }
 
 
-
 /* Start output command */
-
-static void cgmb_start_cmd(int cl, int el)
+static void cgmb_start_cmd(cgm_context *ctx, int cl, int el)
 {
 #define cl_max 15
 #define el_max 127
 
-  g_p->cmd_hdr = g_p->cmd_buffer + g_p->bfr_index;
-  g_p->cmd_data = g_p->cmd_hdr + hdr_long;
-  g_p->bfr_index += hdr_long;
+    ctx->cmd_hdr = ctx->cmd_buffer + ctx->bfr_index;
+    ctx->cmd_data = ctx->cmd_hdr + hdr_long;
+    ctx->bfr_index += hdr_long;
 
-  g_p->cmd_hdr[0] = (cl << 4) | (el >> 3);
-  g_p->cmd_hdr[1] = el << 5;
-  g_p->cmd_index = 0;
-  g_p->partition = 1;
+    ctx->cmd_hdr[0] = static_cast<char>(cl << 4 | el >> 3);
+    ctx->cmd_hdr[1] = static_cast<char>(el << 5);
+    ctx->cmd_index = 0;
+    ctx->partition = 1;
 
 #undef cl_max
 #undef el_max
+}
+static void cgmb_start_cmd(int cl, int el)
+{
+    cgmb_start_cmd(g_p, cl, el);
 }
 
 
 
 /* Flush output command */
-
-static void cgmb_flush_cmd(int this_flush)
+static void cgmb_flush_cmd(cgm_context *ctx, int this_flush)
 {
   int i;
 
-  if ((this_flush == final_flush) && (g_p->partition == 1) &&
-      (g_p->cmd_index <= max_short))
+  if ((this_flush == final_flush) && (ctx->partition == 1) &&
+      (ctx->cmd_index <= max_short))
     {
-      g_p->cmd_hdr[1] |= g_p->cmd_index;
+      ctx->cmd_hdr[1] |= ctx->cmd_index;
 
       /* flush out the header */
 
       for (i = 0; i < hdr_short; ++i)
 	{
-	  cgmb_outc(g_p->cmd_hdr[i]);
+	  cgmb_outc(ctx, ctx->cmd_hdr[i]);
 	}
 
     }
@@ -1628,157 +1631,168 @@ static void cgmb_flush_cmd(int this_flush)
     {
       /* need a long form */
 
-      if (g_p->partition == 1)
+      if (ctx->partition == 1)
 	{
 	  /* first one */
 
-	  g_p->cmd_hdr[1] |= 31;
+	  ctx->cmd_hdr[1] |= 31;
 
 	  for (i = 0; i < hdr_short; ++i)
 	    {
-	      cgmb_outc(g_p->cmd_hdr[i]);
+	      cgmb_outc(ctx, ctx->cmd_hdr[i]);
 	    }
 	}
 
-      g_p->cmd_hdr[2] = g_p->cmd_index >> 8;
-      g_p->cmd_hdr[3] = g_p->cmd_index & 255;
+      ctx->cmd_hdr[2] = ctx->cmd_index >> 8;
+      ctx->cmd_hdr[3] = ctx->cmd_index & 255;
 
       if (this_flush == int_flush)
 	{
-	  g_p->cmd_hdr[2] |= 1 << 7;	/* more come */
+	  ctx->cmd_hdr[2] |= 1 << 7;	/* more come */
 	}
 
       /* flush out the header */
 
       for (i = hdr_short; i < hdr_long; ++i)
 	{
-	  cgmb_outc(g_p->cmd_hdr[i]);
+	  cgmb_outc(ctx, ctx->cmd_hdr[i]);
 	}
     }
 
 
   /* now flush out the data */
 
-  for (i = 0; i < g_p->cmd_index; ++i)
+  for (i = 0; i < ctx->cmd_index; ++i)
     {
-      cgmb_outc(g_p->cmd_data[i]);
+      cgmb_outc(ctx, ctx->cmd_data[i]);
     }
 
-  if (g_p->cmd_index % 2)
+  if (ctx->cmd_index % 2)
     {
-      cgmb_outc('\0');
+      cgmb_outc(ctx, '\0');
     }
 
-  g_p->cmd_index = 0;
-  g_p->bfr_index = 0;
-  ++g_p->partition;
+  ctx->cmd_index = 0;
+  ctx->bfr_index = 0;
+  ++ctx->partition;
+}
+static void cgmb_flush_cmd(int this_flush)
+{
+    cgmb_flush_cmd(g_p, this_flush);
 }
 
 
 
-
 /* Write one byte */
-
-static void cgmb_out_bc(int c)
+static void cgmb_out_bc(cgm_context *ctx, int c)
 {
-  if (g_p->cmd_index >= max_long)
+    if (ctx->cmd_index >= max_long)
     {
-      cgmb_flush_cmd(int_flush);
+        cgmb_flush_cmd(ctx, int_flush);
     }
 
-  g_p->cmd_data[g_p->cmd_index++] = c;
+    ctx->cmd_data[ctx->cmd_index++] = c;
+}
+static void cgmb_out_bc(int c)
+{
+    cgmb_out_bc(g_p, c);
 }
 
 
 
 
 /* Write multiple bytes */
-
-static void cgmb_out_bs(char *cptr, int n)
+static void cgmb_out_bs(cgm_context *ctx, const char *cptr, int n)
 {
   int to_do, space_left, i;
 
   to_do = n;
-  space_left = max_long - g_p->cmd_index;
+  space_left = max_long - ctx->cmd_index;
 
   while (to_do > space_left)
     {
       for (i = 0; i < space_left; ++i)
 	{
-	  g_p->cmd_data[g_p->cmd_index++] = *cptr++;
+	  ctx->cmd_data[ctx->cmd_index++] = *cptr++;
 	}
 
-      cgmb_flush_cmd(int_flush);
+      cgmb_flush_cmd(ctx, int_flush);
       to_do -= space_left;
       space_left = max_long;
     }
 
   for (i = 0; i < to_do; ++i)
     {
-      g_p->cmd_data[g_p->cmd_index++] = *cptr++;
+      ctx->cmd_data[ctx->cmd_index++] = *cptr++;
     }
+}
+static void cgmb_out_bs(const char *cptr, int n)
+{
+    cgmb_out_bs(g_p, cptr, n);
 }
 
 
 
-
 /* Write a CGM binary string */
-
-static void cgmb_string(char *cptr, int slen)
+static void cgmb_string(cgm_context *ctx, const char *cptr, int slen)
 {
-  int to_do;
-  unsigned char byte1, byte2;
+    int to_do;
+    unsigned char byte1, byte2;
 
-  /* put out null strings, however */
+    /* put out null strings, however */
 
-  if (slen == 0)
+    if (slen == 0)
     {
-      cgmb_out_bc(0);
-      return;
+        cgmb_out_bc(ctx, 0);
+        return;
     }
 
-  /* now non-trivial stuff */
+    /* now non-trivial stuff */
 
-  if (slen < 255)
+    if (slen < 255)
     {
-      /* simple case */
+        /* simple case */
 
-      cgmb_out_bc(slen);
-      cgmb_out_bs(cptr, slen);
+        cgmb_out_bc(ctx, slen);
+        cgmb_out_bs(ctx, cptr, slen);
     }
-  else
+    else
     {
-      cgmb_out_bc(255);
-      to_do = slen;
+        cgmb_out_bc(ctx, 255);
+        to_do = slen;
 
-      while (to_do > 0)
-	{
-	  if (to_do < max_long)
-	    {
-	      /* last one */
+        while (to_do > 0)
+        {
+            if (to_do < max_long)
+            {
+                /* last one */
 
-	      byte1 = to_do >> 8;
-	      byte2 = to_do & 255;
+                byte1 = to_do >> 8;
+                byte2 = to_do & 255;
 
-	      cgmb_out_bc(byte1);
-	      cgmb_out_bc(byte2);
-	      cgmb_out_bs(cptr, to_do);
+                cgmb_out_bc(ctx, byte1);
+                cgmb_out_bc(ctx, byte2);
+                cgmb_out_bs(ctx, cptr, to_do);
 
-	      to_do = 0;
-	    }
-	  else
-	    {
-	      byte1 = (max_long >> 8) | (1 << 7);
-	      byte2 = max_long & 255;
+                to_do = 0;
+            }
+            else
+            {
+                byte1 = (max_long >> 8) | (1 << 7);
+                byte2 = max_long & 255;
 
-	      cgmb_out_bc(byte1);
-	      cgmb_out_bc(byte2);
-	      cgmb_out_bs(cptr, max_long);
+                cgmb_out_bc(ctx, byte1);
+                cgmb_out_bc(ctx, byte2);
+                cgmb_out_bs(ctx, cptr, max_long);
 
-	      to_do -= max_long;
-	    }
-	}
+                to_do -= max_long;
+            }
+        }
     }
+}
+static void cgmb_string(const char *cptr, int slen)
+{
+    cgmb_string(g_p, cptr, slen);
 }
 
 
@@ -2021,23 +2035,26 @@ static void cgmb_eint(int xin)
 
 
 /* Begin metafile */
-
-static void cgmb_begin(char *comment)
+static void cgmb_begin_p(cgm_context *ctx, const char *identifier)
 {
-  cgmb_start_cmd(0, (int) B_Mf);
+    cgmb_start_cmd(ctx, 0, (int) B_Mf);
 
-  if (*comment)
+    if (*identifier)
     {
-      cgmb_string(comment, strlen(comment));
+        cgmb_string(ctx, identifier, strlen(identifier));
     }
-  else
+    else
     {
-      cgmb_string(NULL, 0);
+        cgmb_string(ctx, NULL, 0);
     }
 
-  cgmb_flush_cmd(final_flush);
+    cgmb_flush_cmd(ctx, final_flush);
 
-  cgmb_fb();
+    cgmb_fb(ctx);
+}
+static void cgmb_begin(const char *comment)
+{
+    cgmb_begin_p(g_p, comment);
 }
 
 
@@ -3360,6 +3377,7 @@ static void setup_clear_text_context()
 
 static void setup_binary_context(cgm_context *ctx)
 {
+    ctx->funcs.beginMetafile = cgmb_begin_p;
   ctx->cgm[begin] = CGM_FUNC cgmb_begin;
   ctx->cgm[end] = CGM_FUNC cgmb_end;
   ctx->cgm[bp] = CGM_FUNC cgmb_bp;
