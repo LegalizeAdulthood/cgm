@@ -397,7 +397,33 @@ TEST_CASE("clear text encoding")
 
         REQUIRE(stream.str() == "CharOri 0 1 1 0;\n");
     }
-    // text path
+    SECTION("text path")
+    {
+        SECTION("right")
+        {
+            writer->textPath(cgm::TextPath::Right);
+
+            REQUIRE(stream.str() == "TextPath Right;\n");
+        }
+        SECTION("left")
+        {
+            writer->textPath(cgm::TextPath::Left);
+
+            REQUIRE(stream.str() == "TextPath Left;\n");
+        }
+        SECTION("up")
+        {
+            writer->textPath(cgm::TextPath::Up);
+
+            REQUIRE(stream.str() == "TextPath Up;\n");
+        }
+        SECTION("down")
+        {
+            writer->textPath(cgm::TextPath::Down);
+
+            REQUIRE(stream.str() == "TextPath Down;\n");
+        }
+    }
     // text alignment
     // character set index
     // alternate character set index

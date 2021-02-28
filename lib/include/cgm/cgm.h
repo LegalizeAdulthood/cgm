@@ -66,6 +66,14 @@ enum class TextPrecision
     Stroke
 };
 
+enum class TextPath
+{
+    Right,
+    Left,
+    Up,
+    Down
+};
+
 template <typename T>
 struct Point
 {
@@ -124,6 +132,7 @@ public:
     virtual void textColor(int index) = 0;
     virtual void charHeight(int value) = 0;
     virtual void charOrientation(int upX, int upY, int baseX, int baseY) = 0;
+    virtual void textPath(TextPath value) = 0;
 };
 
 std::unique_ptr<MetafileWriter> create(std::ostream &stream, Encoding enc);

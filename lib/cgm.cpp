@@ -130,6 +130,7 @@ struct cgm_funcs
     void (*textColor)(cgm_context *p, int index);
     void (*charHeight)(cgm_context *p, int value);
     void (*charOrientation)(cgm_context *p, int upX, int upY, int baseX, int baseY);
+    void (*textPath)(cgm_context * p, int value);
 };
 
 struct cgm_context
@@ -1279,39 +1280,34 @@ static void cgmt_corient(int x_up, int y_up, int x_base, int y_base)
 
 
 /* Text path */
-
-static void cgmt_tpath(int new_path)
+static void cgmt_tpath_p(cgm_context *ctx, int new_path)
 {
-  cgmt_start_cmd(5, (int) TPath);
+    cgmt_start_cmd(ctx, 5, (int) TPath);
 
-  switch (new_path)
+    switch (new_path)
     {
     case right:
-      {
-	cgmt_out_string(" Right");
-	break;
-      }
+        cgmt_out_string(ctx, " Right");
+        break;
 
     case left:
-      {
-	cgmt_out_string(" Left");
-	break;
-      }
+        cgmt_out_string(ctx, " Left");
+        break;
 
     case up:
-      {
-	cgmt_out_string(" Up");
-	break;
-      }
+        cgmt_out_string(ctx, " Up");
+        break;
 
     case down:
-      {
-	cgmt_out_string(" Down");
-	break;
-      }
+        cgmt_out_string(ctx, " Down");
+        break;
     }
 
-  cgmt_flush_cmd(final_flush);
+    cgmt_flush_cmd(ctx, final_flush);
+}
+static void cgmt_tpath(int new_path)
+{
+    cgmt_tpath_p(g_p, new_path);
 }
 
 
@@ -3287,6 +3283,7 @@ static void setup_clear_text_context(cgm_context *ctx)
     ctx->funcs.textColor = cgmt_tcolor_p;
     ctx->funcs.charHeight = cgmt_cheight_p;
     ctx->funcs.charOrientation = cgmt_corient_p;
+    ctx->funcs.textPath = cgmt_tpath_p;
   ctx->cgm[begin] = CGM_FUNC cgmt_begin;
   ctx->cgm[end] = CGM_FUNC cgmt_end;
   ctx->cgm[bp] = CGM_FUNC cgmt_bp;
@@ -3749,6 +3746,7 @@ public:
     void textColor(int index) override;
     void charHeight(int value) override;
     void charOrientation(int upX, int upY, int baseX, int baseY) override;
+    void textPath(TextPath value) override;
 };
 
 class BinaryMetafileWriter : public MetafileStreamWriter
@@ -4013,6 +4011,11 @@ void MetafileStreamWriter::charHeight(int value)
 void MetafileStreamWriter::charOrientation(int upX, int upY, int baseX, int baseY)
 {
     m_context.funcs.charOrientation(&m_context, upX, upY, baseX, baseY);
+}
+
+void MetafileStreamWriter::textPath(TextPath value)
+{
+    m_context.funcs.textPath(&m_context, static_cast<int>(value));
 }
 
 void MetafileStreamWriter::flushBuffer()
