@@ -119,6 +119,7 @@ public:
     virtual void markerColor(int value) = 0;
     virtual void textFontIndex(int value) = 0;
     virtual void textPrecision(TextPrecision value) = 0;
+    virtual void charExpansion(float value) = 0;
 };
 
 std::unique_ptr<MetafileWriter> create(std::ostream &stream, Encoding enc);

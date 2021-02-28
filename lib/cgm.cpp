@@ -125,6 +125,7 @@ struct cgm_funcs
     void (*markerColor)(cgm_context *p, int index);
     void (*textFontIndex)(cgm_context *p, int index);
     void (*textPrecision)(cgm_context *p, int value);
+    void (*charExpansion)(cgm_context *p, double value);
 };
 
 struct cgm_context
@@ -1191,14 +1192,17 @@ static void cgmt_tprec(int precision)
 
 
 /* Character expansion factor */
+static void cgmt_cexpfac_p(cgm_context *ctx, double factor)
+{
+    cgmt_start_cmd(ctx, 5, (int) CExpFac);
 
+    cgmt_real(ctx, factor);
+
+    cgmt_flush_cmd(ctx, final_flush);
+}
 static void cgmt_cexpfac(double factor)
 {
-  cgmt_start_cmd(5, (int) CExpFac);
-
-  cgmt_real(factor);
-
-  cgmt_flush_cmd(final_flush);
+    cgmt_cexpfac_p(g_p, factor);
 }
 
 
@@ -3262,6 +3266,7 @@ static void setup_clear_text_context(cgm_context *ctx)
     ctx->funcs.markerColor = cgmt_mcolor_p;
     ctx->funcs.textFontIndex = cgmt_tfindex_p;
     ctx->funcs.textPrecision = cgmt_tprec_p;
+    ctx->funcs.charExpansion = cgmt_cexpfac_p;
   ctx->cgm[begin] = CGM_FUNC cgmt_begin;
   ctx->cgm[end] = CGM_FUNC cgmt_end;
   ctx->cgm[bp] = CGM_FUNC cgmt_bp;
@@ -3719,6 +3724,7 @@ public:
     void markerColor(int value) override;
     void textFontIndex(int value) override;
     void textPrecision(TextPrecision value) override;
+    void charExpansion(float value) override;
 };
 
 class BinaryMetafileWriter : public MetafileStreamWriter
@@ -3958,6 +3964,11 @@ void MetafileStreamWriter::textFontIndex(int value)
 void MetafileStreamWriter::textPrecision(TextPrecision value)
 {
     m_context.funcs.textPrecision(&m_context, static_cast<int>(value));
+}
+
+void MetafileStreamWriter::charExpansion(float value)
+{
+    m_context.funcs.charExpansion(&m_context, static_cast<double>(value));
 }
 
 void MetafileStreamWriter::flushBuffer()

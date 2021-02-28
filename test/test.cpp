@@ -367,7 +367,12 @@ TEST_CASE("clear text encoding")
             REQUIRE(stream.str() == "TextPrec Stroke;\n");
         }
     }
-    // character expansion factor
+    SECTION("character expansion factor")
+    {
+        writer->charExpansion(0.1f);
+
+        REQUIRE(stream.str() == "CharExpan 0.100000;\n");
+    }
     // character spacing
     // text color
     // character height
