@@ -118,6 +118,7 @@ struct cgm_funcs
     void (*polygonInt)(cgm_context *p, int numPoints, const cgm::Point<int> *points);
     void (*cellArray)(cgm_context *p, int c1x, int c1y, int c2x, int c2y, int c3x, int c3y, int nx, int ny, int dimx, int *colors);
     void (*lineType)(cgm_context *p, int line_type);
+    void (*lineWidth)(cgm_context *p, double rmul);
 };
 
 struct cgm_context
@@ -1059,14 +1060,17 @@ static void cgmt_ltype(int line_type)
 
 
 /* Line width */
+static void cgmt_lwidth_p(cgm_context *ctx, double rmul)
+{
+    cgmt_start_cmd(ctx, 5, (int) LWidth);
 
+    cgmt_real(ctx, rmul);
+
+    cgmt_flush_cmd(ctx, final_flush);
+}
 static void cgmt_lwidth(double rmul)
 {
-  cgmt_start_cmd(5, (int) LWidth);
-
-  cgmt_real(rmul);
-
-  cgmt_flush_cmd(final_flush);
+    cgmt_lwidth_p(g_p, rmul);
 }
 
 
@@ -3234,6 +3238,7 @@ static void setup_clear_text_context(cgm_context *ctx)
     ctx->funcs.polygonInt = cgmt_pgon_pt;
     ctx->funcs.cellArray = cgmt_carray_p;
     ctx->funcs.lineType = cgmt_ltype_p;
+    ctx->funcs.lineWidth = cgmt_lwidth_p;
   ctx->cgm[begin] = CGM_FUNC cgmt_begin;
   ctx->cgm[end] = CGM_FUNC cgmt_end;
   ctx->cgm[bp] = CGM_FUNC cgmt_bp;
@@ -3676,6 +3681,7 @@ public:
     void polygon(const std::vector<Point<int>> &points) override;
     void cellArray(Point<int> c1, Point<int> c2, Point<int> c3, int nx, int ny, int *colors) override;
     void lineType(int value) override;
+    void lineWidth(float value) override;
 
 protected:
     std::ostream &m_stream;
@@ -3888,6 +3894,11 @@ void MetafileStreamWriter::cellArray(Point<int> c1, Point<int> c2, Point<int> c3
 void MetafileStreamWriter::lineType(int value)
 {
     m_context.funcs.lineType(&m_context, value);
+}
+
+void MetafileStreamWriter::lineWidth(float value)
+{
+    m_context.funcs.lineWidth(&m_context, static_cast<double>(value));
 }
 
 void MetafileStreamWriter::flushBuffer()
