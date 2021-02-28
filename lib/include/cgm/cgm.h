@@ -53,6 +53,12 @@ enum class MarkerSizeMode
     Scaled
 };
 
+enum class TextFlag
+{
+    NotFinal,
+    Final
+};
+
 template <typename T>
 struct Point
 {
@@ -95,6 +101,7 @@ public:
     virtual void clipIndicator(bool enabled) = 0;
     virtual void polyline(const std::vector<Point<int>> &points) = 0;
     virtual void polymarker(const std::vector<Point<int>> &points) = 0;
+    virtual void text(Point<int> point, TextFlag flag, const char *text) = 0;
 };
 
 std::unique_ptr<MetafileWriter> create(std::ostream &stream, Encoding enc);

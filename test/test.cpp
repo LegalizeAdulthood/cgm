@@ -262,6 +262,12 @@ TEST_CASE("clear text encoding")
 
         REQUIRE(stream.str() == "Marker 10,10 20,20;\n");
     }
+    SECTION("text")
+    {
+        writer->text({10, 10}, cgm::TextFlag::Final, "Hello, world!");
+
+        REQUIRE(stream.str() == "Text 10,10 Final \"Hello, world!\";\n");
+    }
 }
 
 //TEST_CASE("begin binary, end")

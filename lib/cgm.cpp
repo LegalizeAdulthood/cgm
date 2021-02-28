@@ -114,6 +114,7 @@ struct cgm_funcs
     void (*clipIndicator)(cgm_context *p, int clip_ind);
     void (*polylineInt)(cgm_context *p, int numPoints, const cgm::Point<int> *points);
     void (*polymarkerInt)(cgm_context *p, int numPoints, const cgm::Point<int> *points);
+    void (*textInt)(cgm_context *p, int x, int y, int flag, const char *text);
 };
 
 struct cgm_context
@@ -985,25 +986,21 @@ static void cgmt_pmarker(int no_pairs, int *x1_ptr, int *y1_ptr)
 
 
 /* Text */
-
-static void cgmt_text(int x, int y, int final, char *buffer)
+static void cgmt_text_p(cgm_context *ctx, int x, int y, int final, const char *buffer)
 {
-  cgmt_start_cmd(4, (int) Text);
+    cgmt_start_cmd(ctx, 4, (int) Text);
 
-  cgmt_ipoint(x, y);
+    cgmt_ipoint(ctx, x, y);
 
-  if (final)
-    {
-      cgmt_out_string(" Final");
-    }
-  else
-    {
-      cgmt_out_string(" NotFinal");
-    }
+    cgmt_out_string(ctx, final ? " Final" : " NotFinal");
 
-  cgmt_string(buffer, strlen(buffer));
+    cgmt_string(ctx, buffer, strlen(buffer));
 
-  cgmt_flush_cmd(final_flush);
+    cgmt_flush_cmd(ctx, final_flush);
+}
+static void cgmt_text(int x, int y, int final, const char *buffer)
+{
+    cgmt_text_p(g_p, x, y, final, buffer);
 }
 
 
@@ -3208,6 +3205,7 @@ static void setup_clear_text_context(cgm_context *ctx)
     ctx->funcs.clipIndicator = cgmt_clipindic_p;
     ctx->funcs.polylineInt = cgmt_pline_pt;
     ctx->funcs.polymarkerInt = cgmt_pmarker_pt;
+    ctx->funcs.textInt = cgmt_text_p;
   ctx->cgm[begin] = CGM_FUNC cgmt_begin;
   ctx->cgm[end] = CGM_FUNC cgmt_end;
   ctx->cgm[bp] = CGM_FUNC cgmt_bp;
@@ -3646,6 +3644,7 @@ public:
     void clipIndicator(bool enabled) override;
     void polyline(const std::vector<Point<int>> &points) override;
     void polymarker(const std::vector<Point<int>> &points) override;
+    void text(Point<int> point, TextFlag flag, const char *text) override;
 
 protected:
     std::ostream &m_stream;
@@ -3840,6 +3839,11 @@ void MetafileStreamWriter::polymarker(const std::vector<Point<int>> &points)
     m_context.funcs.polymarkerInt(&m_context, static_cast<int>(points.size()), points.data());
 }
 
+void MetafileStreamWriter::text(Point<int> point, TextFlag flag, const char *text)
+{
+    m_context.funcs.textInt(&m_context, point.x, point.y, static_cast<int>(flag), text);
+}
+
 void MetafileStreamWriter::flushBuffer()
 {
     m_stream.write(m_context.buffer, m_context.buffer_ind);
@@ -3852,6 +3856,7 @@ int MetafileStreamWriter::flushBufferCb(cgm_context *ctx, void *data)
     static_cast<MetafileStreamWriter*>(data)->flushBuffer();
     return 0;
 }
+
 }
 
 std::unique_ptr<MetafileWriter> create(std::ostream &stream, Encoding enc)
