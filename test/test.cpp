@@ -268,6 +268,17 @@ TEST_CASE("clear text encoding")
 
         REQUIRE(stream.str() == "Text 10,10 Final \"Hello, world!\";\n");
     }
+    // restricted text
+    // append text
+    SECTION("polygon")
+    {
+        const std::vector<cgm::Point<int>> points{{10, 10}, {20, 10}, {20, 20}, {10, 20}};
+
+        writer->polygon(points);
+
+        REQUIRE(stream.str() == "Polygon 10,10 20,10 20,20 10,20;\n");
+    }
+    // polygon set
 }
 
 //TEST_CASE("begin binary, end")
