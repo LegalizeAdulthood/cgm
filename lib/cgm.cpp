@@ -119,6 +119,7 @@ struct cgm_funcs
     void (*cellArray)(cgm_context *p, int c1x, int c1y, int c2x, int c2y, int c3x, int c3y, int nx, int ny, int dimx, int *colors);
     void (*lineType)(cgm_context *p, int line_type);
     void (*lineWidth)(cgm_context *p, double rmul);
+    void (*lineColor)(cgm_context *p, int index);
 };
 
 struct cgm_context
@@ -1076,14 +1077,17 @@ static void cgmt_lwidth(double rmul)
 
 
 /* Line colour */
+static void cgmt_lcolor_p(cgm_context *ctx, int index)
+{
+    cgmt_start_cmd(ctx, 5, (int) LColour);
 
+    cgmt_int(ctx, index);
+
+    cgmt_flush_cmd(ctx, final_flush);
+}
 static void cgmt_lcolour(int index)
 {
-  cgmt_start_cmd(5, (int) LColour);
-
-  cgmt_int(index);
-
-  cgmt_flush_cmd(final_flush);
+    cgmt_lcolor_p(g_p, index);
 }
 
 
@@ -3239,6 +3243,7 @@ static void setup_clear_text_context(cgm_context *ctx)
     ctx->funcs.cellArray = cgmt_carray_p;
     ctx->funcs.lineType = cgmt_ltype_p;
     ctx->funcs.lineWidth = cgmt_lwidth_p;
+    ctx->funcs.lineColor = cgmt_lcolor_p;
   ctx->cgm[begin] = CGM_FUNC cgmt_begin;
   ctx->cgm[end] = CGM_FUNC cgmt_end;
   ctx->cgm[bp] = CGM_FUNC cgmt_bp;
@@ -3682,6 +3687,7 @@ public:
     void cellArray(Point<int> c1, Point<int> c2, Point<int> c3, int nx, int ny, int *colors) override;
     void lineType(int value) override;
     void lineWidth(float value) override;
+    void lineColor(int value) override;
 
 protected:
     std::ostream &m_stream;
@@ -3899,6 +3905,11 @@ void MetafileStreamWriter::lineType(int value)
 void MetafileStreamWriter::lineWidth(float value)
 {
     m_context.funcs.lineWidth(&m_context, static_cast<double>(value));
+}
+
+void MetafileStreamWriter::lineColor(int value)
+{
+    m_context.funcs.lineColor(&m_context, value);
 }
 
 void MetafileStreamWriter::flushBuffer()
