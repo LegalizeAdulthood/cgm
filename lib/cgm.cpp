@@ -127,6 +127,7 @@ struct cgm_funcs
     void (*textPrecision)(cgm_context *p, int value);
     void (*charExpansion)(cgm_context *p, double value);
     void (*charSpacing)(cgm_context * p, double value);
+    void (*textColor)(cgm_context * p, int index);
 };
 
 struct cgm_context
@@ -1225,14 +1226,17 @@ static void cgmt_cspace(double space)
 
 
 /* Text colour */
+static void cgmt_tcolor_p(cgm_context *ctx, int index)
+{
+    cgmt_start_cmd(ctx, 5, (int) TColour);
 
+    cgmt_int(ctx, index);
+
+    cgmt_flush_cmd(ctx, final_flush);
+}
 static void cgmt_tcolour(int index)
 {
-  cgmt_start_cmd(5, (int) TColour);
-
-  cgmt_int(index);
-
-  cgmt_flush_cmd(final_flush);
+    cgmt_tcolor_p(g_p, index);
 }
 
 
@@ -3272,6 +3276,7 @@ static void setup_clear_text_context(cgm_context *ctx)
     ctx->funcs.textPrecision = cgmt_tprec_p;
     ctx->funcs.charExpansion = cgmt_cexpfac_p;
     ctx->funcs.charSpacing = cgmt_cspace_p;
+    ctx->funcs.textColor = cgmt_tcolor_p;
   ctx->cgm[begin] = CGM_FUNC cgmt_begin;
   ctx->cgm[end] = CGM_FUNC cgmt_end;
   ctx->cgm[bp] = CGM_FUNC cgmt_bp;
@@ -3731,6 +3736,7 @@ public:
     void textPrecision(TextPrecision value) override;
     void charExpansion(float value) override;
     void charSpacing(float value) override;
+    void textColor(int index) override;
 };
 
 class BinaryMetafileWriter : public MetafileStreamWriter
@@ -3980,6 +3986,11 @@ void MetafileStreamWriter::charExpansion(float value)
 void MetafileStreamWriter::charSpacing(float value)
 {
     m_context.funcs.charSpacing(&m_context, static_cast<double>(value));
+}
+
+void MetafileStreamWriter::textColor(int index)
+{
+    m_context.funcs.textColor(&m_context, index);
 }
 
 void MetafileStreamWriter::flushBuffer()

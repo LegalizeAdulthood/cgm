@@ -379,7 +379,12 @@ TEST_CASE("clear text encoding")
 
         REQUIRE(stream.str() == "CharSpace 0.100000;\n");
     }
-    // text color
+    SECTION("text color")
+    {
+        writer->textColor(6);
+
+        REQUIRE(stream.str() == "TextColr 6;\n");
+    }
     // character height
     // character orientation
     // text path
