@@ -112,6 +112,7 @@ struct cgm_funcs
     void (*vdcIntegerPrecision)(cgm_context *p, int min, int max);
     void (*clipRectangle)(cgm_context *p, int llx, int lly, int urx, int ury);
     void (*clipIndicator)(cgm_context *p, int clip_ind);
+    void (*polylineInt)(cgm_context *p, int numPoints, const cgm::Point<int> *points);
 };
 
 struct cgm_context
@@ -916,19 +917,35 @@ static void cgmt_clipindic(int clip_ind)
 
 
 /* Polyline */
-
-static void cgmt_pline(int no_pairs, int *x1_ptr, int *y1_ptr)
+static void cgmt_pline_pt(cgm_context *ctx, int numPoints, const cgm::Point<int> *points)
 {
-  int i;
+    int i;
 
-  cgmt_start_cmd(4, (int) PolyLine);
+    cgmt_start_cmd(ctx, 4, (int) PolyLine);
 
-  for (i = 0; i < no_pairs; ++i)
+    for (i = 0; i < numPoints; ++i)
     {
-      cgmt_ipoint(x1_ptr[i], y1_ptr[i]);
+        cgmt_ipoint(ctx, points[i].x, points[i].y);
     }
 
-  cgmt_flush_cmd(final_flush);
+    cgmt_flush_cmd(ctx, final_flush);
+}
+static void cgmt_pline_p(cgm_context *ctx, int no_pairs, int *x1_ptr, int *y1_ptr)
+{
+    int i;
+
+    cgmt_start_cmd(ctx, 4, (int) PolyLine);
+
+    for (i = 0; i < no_pairs; ++i)
+    {
+        cgmt_ipoint(ctx, x1_ptr[i], y1_ptr[i]);
+    }
+
+    cgmt_flush_cmd(ctx, final_flush);
+}
+static void cgmt_pline(int no_pairs, int *x1_ptr, int *y1_ptr)
+{
+    cgmt_pline_p(g_p, no_pairs, x1_ptr, y1_ptr);
 }
 
 
@@ -3173,6 +3190,7 @@ static void setup_clear_text_context(cgm_context *ctx)
     ctx->funcs.vdcIntegerPrecision = cgmt_vdcintprec_p;
     ctx->funcs.clipRectangle = cgmt_cliprect_p;
     ctx->funcs.clipIndicator = cgmt_clipindic_p;
+    ctx->funcs.polylineInt = cgmt_pline_pt;
   ctx->cgm[begin] = CGM_FUNC cgmt_begin;
   ctx->cgm[end] = CGM_FUNC cgmt_end;
   ctx->cgm[bp] = CGM_FUNC cgmt_bp;
@@ -3609,6 +3627,8 @@ public:
     void vdcIntegerPrecision(int min, int max) override;
     void clipRectangle(int llx, int lly, int urx, int ury) override;
     void clipIndicator(bool enabled) override;
+    void polyline(const std::vector<Point<int>> &points) override;
+    void polyline(const std::vector<Point<float>> &points) override;
 
 protected:
     std::ostream &m_stream;
@@ -3791,6 +3811,15 @@ void MetafileStreamWriter::clipRectangle(int llx, int lly, int urx, int ury)
 void MetafileStreamWriter::clipIndicator(bool enabled)
 {
     m_context.funcs.clipIndicator(&m_context, static_cast<int>(enabled));
+}
+
+void MetafileStreamWriter::polyline(const std::vector<Point<int>> &points)
+{
+    m_context.funcs.polylineInt(&m_context, static_cast<int>(points.size()), points.data());
+}
+
+void MetafileStreamWriter::polyline(const std::vector<Point<float>> &points)
+{
 }
 
 void MetafileStreamWriter::flushBuffer()

@@ -53,6 +53,13 @@ enum class MarkerSizeMode
     Scaled
 };
 
+template <typename T>
+struct Point
+{
+    T x;
+    T y;
+};
+
 class MetafileWriter
 {
 public:
@@ -86,6 +93,8 @@ public:
     virtual void vdcIntegerPrecision(int min, int max) = 0;
     virtual void clipRectangle(int llx, int lly, int urx, int ury) = 0;
     virtual void clipIndicator(bool enabled) = 0;
+    virtual void polyline(const std::vector<Point<int>> &points) = 0;
+    virtual void polyline(const std::vector<Point<float>> &points) = 0;
 };
 
 std::unique_ptr<MetafileWriter> create(std::ostream &stream, Encoding enc);

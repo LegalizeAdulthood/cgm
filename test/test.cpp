@@ -4,6 +4,17 @@
 
 #include <sstream>
 
+namespace
+{
+
+template <typename T, int N>
+int numOf(T (&ary)[N])
+{
+    return N;
+}
+
+}
+
 TEST_CASE("clear text encoding")
 {
     std::ostringstream stream;
@@ -233,6 +244,14 @@ TEST_CASE("clear text encoding")
         writer->clipIndicator(true);
 
         REQUIRE(stream.str() == "Clip On;\n");
+    }
+    SECTION("polyline")
+    {
+        const std::vector<cgm::Point<int>> points{{10, 10}, {20, 20}};
+
+        writer->polyline(points);
+
+        REQUIRE(stream.str() == "Line 10,10 20,20;\n");
     }
 }
 
