@@ -511,8 +511,18 @@ TEST_CASE("clear text encoding")
 
         REQUIRE(stream.str() == "FillColr 6;\n");
     }
-    // hatch index
-    // pattern index
+    SECTION("hatch index")
+    {
+        writer->hatchIndex(6);
+
+        REQUIRE(stream.str() == "HatchIndex 6;\n");
+    }
+    SECTION("pattern index")
+    {
+        writer->patternIndex(6);
+
+        REQUIRE(stream.str() == "PatIndex 6;\n");
+    }
     // edge bundle index
     // edge type
     // edge width

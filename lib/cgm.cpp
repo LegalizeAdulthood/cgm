@@ -134,6 +134,8 @@ struct cgm_funcs
     void (*textAlignment)(cgm_context * p, int horiz, int vert, double contHoriz, double contVert);
     void (*interiorStyle)(cgm_context * p, int value);
     void (*fillColor)(cgm_context * p, int value);
+    void (*hatchIndex)(cgm_context * p, int value);
+    void (*patternIndex)(cgm_context * p, int value);
 };
 
 struct cgm_context
@@ -1442,23 +1444,29 @@ static void cgmt_fillcolour(int index)
 
 
 /* Hatch index */
-
+static void cgmt_hindex_p(cgm_context *ctx, int new_index)
+{
+    cgmt_start_cmd(ctx, 5, (int) HatchIndex);
+    cgmt_int(ctx, new_index);
+    cgmt_flush_cmd(ctx, final_flush);
+}
 static void cgmt_hindex(int new_index)
 {
-  cgmt_start_cmd(5, (int) HatchIndex);
-  cgmt_int(new_index);
-  cgmt_flush_cmd(final_flush);
+    cgmt_hindex_p(g_p, new_index);
 }
 
 
 
 /* Pattern index */
-
+static void cgmt_pindex_p(cgm_context *ctx, int new_index)
+{
+    cgmt_start_cmd(ctx, 5, (int) PatIndex);
+    cgmt_int(ctx, new_index);
+    cgmt_flush_cmd(ctx, final_flush);
+}
 static void cgmt_pindex(int new_index)
 {
-  cgmt_start_cmd(5, (int) PatIndex);
-  cgmt_int(new_index);
-  cgmt_flush_cmd(final_flush);
+    cgmt_pindex_p(g_p, new_index);
 }
 
 
@@ -3264,6 +3272,8 @@ static void setup_clear_text_context(cgm_context *ctx)
     ctx->funcs.textAlignment = cgmt_talign_p;
     ctx->funcs.interiorStyle = cgmt_intstyle_p;
     ctx->funcs.fillColor = cgmt_fillcolor_p;
+    ctx->funcs.hatchIndex = cgmt_hindex_p;
+    ctx->funcs.patternIndex = cgmt_pindex_p;
   ctx->cgm[begin] = CGM_FUNC cgmt_begin;
   ctx->cgm[end] = CGM_FUNC cgmt_end;
   ctx->cgm[bp] = CGM_FUNC cgmt_bp;
@@ -3730,6 +3740,8 @@ public:
     void textAlignment(HorizAlign horiz, VertAlign vert, float contHoriz, float contVert) override;
     void interiorStyle(InteriorStyle value) override;
     void fillColor(int value) override;
+    void hatchIndex(int value) override;
+    void patternIndex(int value) override;
 };
 
 class BinaryMetafileWriter : public MetafileStreamWriter
@@ -4014,6 +4026,16 @@ void MetafileStreamWriter::interiorStyle(InteriorStyle value)
 void MetafileStreamWriter::fillColor(int value)
 {
     m_context.funcs.fillColor(&m_context, value);
+}
+
+void MetafileStreamWriter::hatchIndex(int value)
+{
+    m_context.funcs.hatchIndex(&m_context, value);
+}
+
+void MetafileStreamWriter::patternIndex(int value)
+{
+    m_context.funcs.patternIndex(&m_context, value);
 }
 
 void MetafileStreamWriter::flushBuffer()

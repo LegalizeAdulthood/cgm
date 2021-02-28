@@ -165,6 +165,8 @@ public:
     virtual void textAlignment(HorizAlign horiz, VertAlign vert, float contHoriz, float contVert) = 0;
     virtual void interiorStyle(InteriorStyle value) = 0;
     virtual void fillColor(int value) = 0;
+    virtual void hatchIndex(int value) = 0;
+    virtual void patternIndex(int value) = 0;
 };
 
 std::unique_ptr<MetafileWriter> create(std::ostream &stream, Encoding enc);
