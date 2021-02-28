@@ -60,6 +60,9 @@ public:
 
     virtual void beginMetafile(const char *id) = 0;
     virtual void endMetafile() = 0;
+    virtual void beginPicture(char const *identifier) = 0;
+    virtual void beginPictureBody() = 0;
+    virtual void endPicture() = 0;
     virtual void metafileVersion(int value) = 0;
     virtual void metafileDescription(char const *value) = 0;
     virtual void vdcType(VdcType type) = 0;

@@ -15,11 +15,29 @@ TEST_CASE("clear text encoding")
 
         REQUIRE(stream.str() == "BegMF \"cgm unit test\";\n");
     }
-    SECTION("metafile end")
+    SECTION("end metafile")
     {
         writer->endMetafile();
 
         REQUIRE(stream.str() == "EndMF;\n");
+    }
+    SECTION("begin picture")
+    {
+        writer->beginPicture("cgm unit test");
+
+        REQUIRE(stream.str() == "BegPic \"cgm unit test\";\n");
+    }
+    SECTION("begin picture body")
+    {
+        writer->beginPictureBody();
+
+        REQUIRE(stream.str() == "BegPicBody;\n");
+    }
+    SECTION("end picture")
+    {
+        writer->endPicture();
+
+        REQUIRE(stream.str() == "EndPic;\n");
     }
     SECTION("metafile version")
     {

@@ -83,8 +83,11 @@ struct cgm_context;
 
 struct cgm_funcs
 {
-    int (*begin)(cgm_context *p, const char *comment);
-    void (*end)(cgm_context *p);
+    int (*beginMetafile)(cgm_context *p, const char *identifier);
+    void (*endMetafile)(cgm_context *p);
+    void (*beginPicture)(cgm_context *p, const char *identifier);
+    void (*beginPictureBody)(cgm_context *p);
+    void (*endPicture)(cgm_context *p);
     void (*metafileVersion)(cgm_context *p, int value);
     void (*metafileDescription)(cgm_context *p, const char *value);
     void (*vdcType)(cgm_context *p, cgm::VdcType type);
@@ -427,39 +430,48 @@ static void cgmt_end(void)
 
 
 /* Begin picture */
-
-static void cgmt_bp(char *pic_name)
+static void cgmt_bp_p(cgm_context *ctx, const char *pic_name)
 {
-  cgmt_start_cmd(0, (int) B_Pic);
+    cgmt_start_cmd(ctx, 0, (int) B_Pic);
 
-  if (*pic_name)
-    cgmt_string(pic_name, strlen(pic_name));
-  else
-    cgmt_string(NULL, 0);
+    if (*pic_name)
+        cgmt_string(ctx, pic_name, strlen(pic_name));
+    else
+        cgmt_string(ctx, NULL, 0);
 
-  cgmt_flush_cmd(final_flush);
+    cgmt_flush_cmd(ctx, final_flush);
+}
+static void cgmt_bp(const char *pic_name)
+{
+    cgmt_bp_p(g_p, pic_name);
 }
 
 
 
 /* Begin picture body */
+static void cgmt_bpage_p(cgm_context *ctx)
+{
+    cgmt_start_cmd(ctx, 0, (int) B_Pic_Body);
 
+    cgmt_flush_cmd(ctx, final_flush);
+}
 static void cgmt_bpage(void)
 {
-  cgmt_start_cmd(0, (int) B_Pic_Body);
-
-  cgmt_flush_cmd(final_flush);
+    cgmt_bpage_p(g_p);
 }
 
 
 
 /* End picture */
+static void cgmt_epage_p(cgm_context *ctx)
+{
+    cgmt_start_cmd(ctx, 0, (int) E_Pic);
 
+    cgmt_flush_cmd(ctx, final_flush);
+}
 static void cgmt_epage(void)
 {
-  cgmt_start_cmd(0, (int) E_Pic);
-
-  cgmt_flush_cmd(final_flush);
+    cgmt_epage_p(g_p);
 }
 
 
@@ -3133,8 +3145,11 @@ static char *local_time(void)
 
 static void setup_clear_text_context(cgm_context *ctx)
 {
-    ctx->funcs.begin = cgmt_begin_p;
-    ctx->funcs.end = cgmt_end_p;
+    ctx->funcs.beginMetafile = cgmt_begin_p;
+    ctx->funcs.endMetafile = cgmt_end_p;
+    ctx->funcs.beginPicture = cgmt_bp_p;
+    ctx->funcs.beginPictureBody = cgmt_bpage_p;
+    ctx->funcs.endPicture = cgmt_epage_p;
     ctx->funcs.metafileVersion = cgmt_mfversion_p;
     ctx->funcs.metafileDescription = cgmt_mfdescrip_p;
     ctx->funcs.vdcType = cgmt_vdctype_p;
@@ -3567,6 +3582,9 @@ public:
 
     void beginMetafile(const char *identifier) override;
     void endMetafile() override;
+    void beginPicture(char const *identifier) override;
+    void beginPictureBody() override;
+    void endPicture() override;
     void metafileVersion(int value) override;
     void metafileDescription(char const *value) override;
     void vdcType(VdcType type) override;
@@ -3598,12 +3616,7 @@ protected:
 
 private:
     void flushBuffer();
-
-    static int flushBufferCb(cgm_context *ctx, void *data)
-    {
-        static_cast<MetafileStreamWriter *>(data)->flushBuffer();
-        return 0;
-    }
+    static int flushBufferCb(cgm_context *ctx, void *data);
 };
 
 class BinaryMetafileWriter : public MetafileStreamWriter
@@ -3635,12 +3648,27 @@ void MetafileStreamWriter::beginMetafile(const char *identifier)
     else
         m_context.mm = 0;
 
-    m_context.funcs.begin(&m_context, identifier);
+    m_context.funcs.beginMetafile(&m_context, identifier);
 }
 
 void MetafileStreamWriter::endMetafile()
 {
-    m_context.funcs.end(&m_context);
+    m_context.funcs.endMetafile(&m_context);
+}
+
+void MetafileStreamWriter::beginPicture(char const *identifier)
+{
+    m_context.funcs.beginPicture(&m_context, identifier);
+}
+
+void MetafileStreamWriter::beginPictureBody()
+{
+    m_context.funcs.beginPictureBody(&m_context);
+}
+
+void MetafileStreamWriter::endPicture()
+{
+    m_context.funcs.endPicture(&m_context);
 }
 
 void MetafileStreamWriter::metafileVersion(int value)
@@ -3772,6 +3800,11 @@ void MetafileStreamWriter::flushBuffer()
     m_context.buffer[0] = 0;
 }
 
+int MetafileStreamWriter::flushBufferCb(cgm_context *ctx, void *data)
+{
+    static_cast<MetafileStreamWriter*>(data)->flushBuffer();
+    return 0;
+}
 }
 
 std::unique_ptr<MetafileWriter> create(std::ostream &stream, Encoding enc)
