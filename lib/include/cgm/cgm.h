@@ -110,6 +110,13 @@ struct Point
     T y;
 };
 
+struct Color
+{
+    float red;
+    float green;
+    float blue;
+};
+
 class MetafileWriter
 {
 public:
@@ -167,6 +174,7 @@ public:
     virtual void fillColor(int value) = 0;
     virtual void hatchIndex(int value) = 0;
     virtual void patternIndex(int value) = 0;
+    virtual void colorTable(int startIndex, std::vector<Color> const &colors) = 0;
 };
 
 std::unique_ptr<MetafileWriter> create(std::ostream &stream, Encoding enc);

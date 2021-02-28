@@ -3,11 +3,11 @@
 #define quote_char	    '\"'	    /* std. quote character */
 #define max_str		    128		    /* max length of std. strings */
 
-#define stand_col	    8		    /* nummber of standard colors */
+#define stand_col	    8		    /* number of standard colors */
 #define shared_col	    120		    /* number of extended colors */
 #define cprec		    8		    /* bits used for color precision */
 #define cxprec  	    16		    /*     and color index precision */
-#define max_colors	    (01<<cprec)	    /* number of adressable colors */
+#define max_colors	    (01<<cprec)	    /* number of addressable colors */
 
 #define max_pbuffer	    512		    /* number of points in buffer */
 

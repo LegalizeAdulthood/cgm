@@ -531,7 +531,13 @@ TEST_CASE("clear text encoding")
     // fill reference point
     // pattern table
     // pattern size
-    // color table
+    SECTION("color table")
+    {
+        std::vector<cgm::Color> colors{{0.0f, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f}};
+        writer->colorTable(6, colors);
+
+        REQUIRE(stream.str() == "ColrTable 6 0 0 0 255 0 0 0 255 0 0 0 255 255 255 255;\n");
+    }
     // aspect source flags
     // escape
     // message

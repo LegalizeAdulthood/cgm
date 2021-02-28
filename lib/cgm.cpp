@@ -136,6 +136,7 @@ struct cgm_funcs
     void (*fillColor)(cgm_context * p, int value);
     void (*hatchIndex)(cgm_context * p, int value);
     void (*patternIndex)(cgm_context * p, int value);
+    void (*colorTable)(cgm_context * p, int startIndex, int numColors, const cgm::Color *colors);
 };
 
 struct cgm_context
@@ -1472,23 +1473,42 @@ static void cgmt_pindex(int new_index)
 
 
 /* Colour table */
-
-static void cgmt_coltab(int beg_index, int no_entries, double *ctab)
+static void cgmt_coltab_c(cgm_context *ctx, int startIndex, int numColors, const cgm::Color *colors)
 {
-  int i, j;
+    int i, j;
 
-  cgmt_start_cmd(5, (int) ColTab);
-  cgmt_int(beg_index);
+    cgmt_start_cmd(ctx, 5, (int) ColTab);
+    cgmt_int(ctx, startIndex);
 
-  for (i = beg_index; i < (beg_index + no_entries); ++i)
+    for (i = startIndex; i < (startIndex + numColors); ++i)
     {
-      for (j = 0; j < 3; ++j)
-	{
-	  cgmt_int((int) (ctab[(i - beg_index) * 3 + j] * (max_colors - 1)));
-	}
+        cgmt_int(ctx, (int) (colors[(i - startIndex)].red * (max_colors - 1)));
+        cgmt_int(ctx, (int) (colors[(i - startIndex)].green * (max_colors - 1)));
+        cgmt_int(ctx, (int) (colors[(i - startIndex)].blue * (max_colors - 1)));
     }
 
-  cgmt_flush_cmd(final_flush);
+    cgmt_flush_cmd(ctx, final_flush);
+}
+static void cgmt_coltab_p(cgm_context *ctx, int beg_index, int no_entries, double *ctab)
+{
+    int i, j;
+
+    cgmt_start_cmd(ctx, 5, (int) ColTab);
+    cgmt_int(ctx, beg_index);
+
+    for (i = beg_index; i < (beg_index + no_entries); ++i)
+    {
+        for (j = 0; j < 3; ++j)
+        {
+            cgmt_int(ctx, (int) (ctab[(i - beg_index) * 3 + j] * (max_colors - 1)));
+        }
+    }
+
+    cgmt_flush_cmd(ctx, final_flush);
+}
+static void cgmt_coltab(int beg_index, int no_entries, double *ctab)
+{
+    cgmt_coltab_p(g_p, beg_index, no_entries, ctab);
 }
 
 
@@ -3274,6 +3294,7 @@ static void setup_clear_text_context(cgm_context *ctx)
     ctx->funcs.fillColor = cgmt_fillcolor_p;
     ctx->funcs.hatchIndex = cgmt_hindex_p;
     ctx->funcs.patternIndex = cgmt_pindex_p;
+    ctx->funcs.colorTable = cgmt_coltab_c;
   ctx->cgm[begin] = CGM_FUNC cgmt_begin;
   ctx->cgm[end] = CGM_FUNC cgmt_end;
   ctx->cgm[bp] = CGM_FUNC cgmt_bp;
@@ -3742,6 +3763,7 @@ public:
     void fillColor(int value) override;
     void hatchIndex(int value) override;
     void patternIndex(int value) override;
+    void colorTable(int startIndex, std::vector<Color> const &colors) override;
 };
 
 class BinaryMetafileWriter : public MetafileStreamWriter
@@ -4036,6 +4058,11 @@ void MetafileStreamWriter::hatchIndex(int value)
 void MetafileStreamWriter::patternIndex(int value)
 {
     m_context.funcs.patternIndex(&m_context, value);
+}
+
+void MetafileStreamWriter::colorTable(int startIndex, std::vector<Color> const &colors)
+{
+    m_context.funcs.colorTable(&m_context, startIndex, static_cast<int>(colors.size()), colors.data());
 }
 
 void MetafileStreamWriter::flushBuffer()
