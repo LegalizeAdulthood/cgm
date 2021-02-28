@@ -124,6 +124,7 @@ struct cgm_funcs
     void (*markerSize)(cgm_context *p, double size);
     void (*markerColor)(cgm_context *p, int index);
     void (*textFontIndex)(cgm_context *p, int index);
+    void (*textPrecision)(cgm_context *p, int value);
 };
 
 struct cgm_context
@@ -1161,34 +1162,30 @@ static void cgmt_tfindex(int index)
 
 
 /* Text precision */
-
-static void cgmt_tprec(int precision)
+static void cgmt_tprec_p(cgm_context *ctx, int precision)
 {
-  cgmt_start_cmd(5, (int) TPrec);
+    cgmt_start_cmd(ctx, 5, (int) TPrec);
 
-  switch (precision)
+    switch (precision)
     {
-
     case string:
-      {
-	cgmt_out_string(" String");
-	break;
-      }
+        cgmt_out_string(ctx, " String");
+        break;
 
     case character:
-      {
-	cgmt_out_string(" Character");
-	break;
-      }
+        cgmt_out_string(ctx, " Character");
+        break;
 
     case stroke:
-      {
-	cgmt_out_string(" Stroke");
-	break;
-      }
+        cgmt_out_string(ctx, " Stroke");
+        break;
     }
 
-  cgmt_flush_cmd(final_flush);
+    cgmt_flush_cmd(ctx, final_flush);
+}
+static void cgmt_tprec(int precision)
+{
+    cgmt_tprec_p(g_p, precision);
 }
 
 
@@ -3264,6 +3261,7 @@ static void setup_clear_text_context(cgm_context *ctx)
     ctx->funcs.markerSize = cgmt_msize_p;
     ctx->funcs.markerColor = cgmt_mcolor_p;
     ctx->funcs.textFontIndex = cgmt_tfindex_p;
+    ctx->funcs.textPrecision = cgmt_tprec_p;
   ctx->cgm[begin] = CGM_FUNC cgmt_begin;
   ctx->cgm[end] = CGM_FUNC cgmt_end;
   ctx->cgm[bp] = CGM_FUNC cgmt_bp;
@@ -3662,6 +3660,14 @@ namespace
 
 class MetafileStreamWriter : public MetafileWriter
 {
+protected:
+    std::ostream &m_stream;
+    cgm_context m_context;
+
+private:
+    void flushBuffer();
+    static int flushBufferCb(cgm_context *ctx, void *data);
+
 public:
     MetafileStreamWriter(std::ostream &stream)
         : m_stream(stream),
@@ -3712,14 +3718,7 @@ public:
     void markerSize(float value) override;
     void markerColor(int value) override;
     void textFontIndex(int value) override;
-
-protected:
-    std::ostream &m_stream;
-    cgm_context m_context;
-
-private:
-    void flushBuffer();
-    static int flushBufferCb(cgm_context *ctx, void *data);
+    void textPrecision(TextPrecision value) override;
 };
 
 class BinaryMetafileWriter : public MetafileStreamWriter
@@ -3954,6 +3953,11 @@ void MetafileStreamWriter::markerColor(int value)
 void MetafileStreamWriter::textFontIndex(int value)
 {
     m_context.funcs.textFontIndex(&m_context, value);
+}
+
+void MetafileStreamWriter::textPrecision(TextPrecision value)
+{
+    m_context.funcs.textPrecision(&m_context, static_cast<int>(value));
 }
 
 void MetafileStreamWriter::flushBuffer()

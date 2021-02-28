@@ -346,7 +346,27 @@ TEST_CASE("clear text encoding")
 
         REQUIRE(stream.str() == "TextFontIndex 6;\n");
     }
-    // text precision
+    SECTION("text precision")
+    {
+        SECTION("string")
+        {
+            writer->textPrecision(cgm::TextPrecision::String);
+
+            REQUIRE(stream.str() == "TextPrec String;\n");
+        }
+        SECTION("character")
+        {
+            writer->textPrecision(cgm::TextPrecision::Character);
+
+            REQUIRE(stream.str() == "TextPrec Character;\n");
+        }
+        SECTION("stroke")
+        {
+            writer->textPrecision(cgm::TextPrecision::Stroke);
+
+            REQUIRE(stream.str() == "TextPrec Stroke;\n");
+        }
+    }
     // character expansion factor
     // character spacing
     // text color

@@ -59,6 +59,13 @@ enum class TextFlag
     Final
 };
 
+enum class TextPrecision
+{
+    String,
+    Character,
+    Stroke
+};
+
 template <typename T>
 struct Point
 {
@@ -111,6 +118,7 @@ public:
     virtual void markerSize(float value) = 0;
     virtual void markerColor(int value) = 0;
     virtual void textFontIndex(int value) = 0;
+    virtual void textPrecision(TextPrecision value) = 0;
 };
 
 std::unique_ptr<MetafileWriter> create(std::ostream &stream, Encoding enc);
