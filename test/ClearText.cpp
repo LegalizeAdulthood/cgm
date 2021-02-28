@@ -575,15 +575,3 @@ TEST_CASE("clear text encoding")
     // segment display priority
     // segment pick priority
 }
-
-//TEST_CASE("begin binary, end")
-//{
-//    std::ostringstream stream;
-//    std::unique_ptr<cgm::MetafileWriter> writer{create(stream, cgm::Encoding::Binary)};
-//    writer.begin();
-//
-//    FILE *file = fopen("Binary.cgm", "wb");
-//    cgm::beginMetafile(file, cgm::Encoding::Binary);
-//    cgm::endMetafile(file);
-//    fclose(file);
-//}

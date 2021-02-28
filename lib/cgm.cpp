@@ -3774,6 +3774,11 @@ public:
     {
         m_context.encode = cgm_binary;
         setup_binary_context(&m_context);
+
+        if (((char *) gks_getenv("GKS_SCALE_MODE_METRIC")) != NULL)
+            m_context.mm = 0.19685 / max_coord * 1000;
+        else
+            m_context.mm = 0;
     }
 };
 
@@ -3790,11 +3795,6 @@ public:
 
 void MetafileStreamWriter::beginMetafile(const char *identifier)
 {
-    if (((char *) gks_getenv("GKS_SCALE_MODE_METRIC")) != NULL)
-        m_context.mm = 0.19685 / max_coord * 1000;
-    else
-        m_context.mm = 0;
-
     m_context.funcs.beginMetafile(&m_context, identifier);
 }
 
