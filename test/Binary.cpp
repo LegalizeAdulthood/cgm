@@ -28,11 +28,22 @@ TEST_CASE("binary encoding")
         writer->beginMetafile(ident);
 
         const std::string str = stream.str();
+        const int encodedLength = numOf(ident) - 1;
+        REQUIRE(str.size() == std::size_t(3 + encodedLength));
         const char *data = str.data();
         REQUIRE(int(data[0]) == 0);
         REQUIRE(int(data[1]) == 46);
-        REQUIRE(int(data[2]) == numOf(ident)-1);
+        REQUIRE(int(data[2]) == encodedLength);
         REQUIRE(str.substr(3) == "cgm unit test");
+    }
+    SECTION("end metafile")
+    {
+        writer->endMetafile();
+
+        const std::string str = stream.str();
+        const char *data = str.data();
+        REQUIRE(int(data[0]) == 0);
+        REQUIRE(int(data[1]) == 64);
     }
 }
 
@@ -41,12 +52,6 @@ TEST_CASE("TODO", "[.]")
     std::ostringstream stream;
     std::unique_ptr<cgm::MetafileWriter> writer{create(stream, cgm::Encoding::Binary)};
 
-    SECTION("end metafile")
-    {
-        writer->endMetafile();
-
-        REQUIRE(stream.str() == "EndMF;\n");
-    }
     SECTION("begin picture")
     {
         writer->beginPicture("cgm unit test");

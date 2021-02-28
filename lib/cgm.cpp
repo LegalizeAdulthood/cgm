@@ -2060,19 +2060,21 @@ static void cgmb_begin(const char *comment)
 
 
 /* End metafile */
-
-static void cgmb_end(void)
+static void cgmb_end_p(cgm_context *ctx)
 {
   /* put out the end metafile command */
 
-  cgmb_start_cmd(0, (int) E_Mf);
-  cgmb_flush_cmd(final_flush);
+  cgmb_start_cmd(ctx, 0, (int) E_Mf);
+  cgmb_flush_cmd(ctx, final_flush);
 
   /* flush out the buffer */
 
-  cgmb_fb();
+  cgmb_fb(ctx);
 }
-
+static void cgmb_end(void)
+{
+    cgmb_end_p(g_p);
+}
 
 
 /* Start picture */
@@ -3378,6 +3380,7 @@ static void setup_clear_text_context()
 static void setup_binary_context(cgm_context *ctx)
 {
     ctx->funcs.beginMetafile = cgmb_begin_p;
+    ctx->funcs.endMetafile = cgmb_end_p;
   ctx->cgm[begin] = CGM_FUNC cgmb_begin;
   ctx->cgm[end] = CGM_FUNC cgmb_end;
   ctx->cgm[bp] = CGM_FUNC cgmb_bp;
