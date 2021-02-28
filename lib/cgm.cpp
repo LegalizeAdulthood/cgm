@@ -117,6 +117,7 @@ struct cgm_funcs
     void (*textInt)(cgm_context *p, int x, int y, int flag, const char *text);
     void (*polygonInt)(cgm_context *p, int numPoints, const cgm::Point<int> *points);
     void (*cellArray)(cgm_context *p, int c1x, int c1y, int c2x, int c2y, int c3x, int c3y, int nx, int ny, int dimx, int *colors);
+    void (*lineType)(cgm_context *p, int line_type);
 };
 
 struct cgm_context
@@ -1042,14 +1043,17 @@ static void cgmt_pgon(int no_pairs, int *x1_ptr, int *y1_ptr)
 
 
 /* Line type */
+static void cgmt_ltype_p(cgm_context *ctx, int line_type)
+{
+  cgmt_start_cmd(ctx, 5, (int) LType);
 
+  cgmt_int(ctx, (int) line_type);
+
+  cgmt_flush_cmd(ctx, final_flush);
+}
 static void cgmt_ltype(int line_type)
 {
-  cgmt_start_cmd(5, (int) LType);
-
-  cgmt_int((int) line_type);
-
-  cgmt_flush_cmd(final_flush);
+    cgmt_ltype_p(g_p, line_type);
 }
 
 
@@ -3229,6 +3233,7 @@ static void setup_clear_text_context(cgm_context *ctx)
     ctx->funcs.textInt = cgmt_text_p;
     ctx->funcs.polygonInt = cgmt_pgon_pt;
     ctx->funcs.cellArray = cgmt_carray_p;
+    ctx->funcs.lineType = cgmt_ltype_p;
   ctx->cgm[begin] = CGM_FUNC cgmt_begin;
   ctx->cgm[end] = CGM_FUNC cgmt_end;
   ctx->cgm[bp] = CGM_FUNC cgmt_bp;
@@ -3670,6 +3675,7 @@ public:
     void text(Point<int> point, TextFlag flag, const char *text) override;
     void polygon(const std::vector<Point<int>> &points) override;
     void cellArray(Point<int> c1, Point<int> c2, Point<int> c3, int nx, int ny, int *colors) override;
+    void lineType(int value) override;
 
 protected:
     std::ostream &m_stream;
@@ -3877,6 +3883,11 @@ void MetafileStreamWriter::polygon(const std::vector<Point<int>> &points)
 void MetafileStreamWriter::cellArray(Point<int> c1, Point<int> c2, Point<int> c3, int nx, int ny, int *colors)
 {
     m_context.funcs.cellArray(&m_context, c1.x, c1.y, c2.x, c2.y, c3.x, c3.y, nx, ny, nx, colors);
+}
+
+void MetafileStreamWriter::lineType(int value)
+{
+    m_context.funcs.lineType(&m_context, value);
 }
 
 void MetafileStreamWriter::flushBuffer()

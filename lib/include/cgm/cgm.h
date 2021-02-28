@@ -104,6 +104,7 @@ public:
     virtual void text(Point<int> point, TextFlag flag, const char *text) = 0;
     virtual void polygon(const std::vector<Point<int>> &points) = 0;
     virtual void cellArray(Point<int> c1, Point<int> c2, Point<int> c3, int nx, int ny, int *colors) = 0;
+    virtual void lineType(int value) = 0;
 };
 
 std::unique_ptr<MetafileWriter> create(std::ostream &stream, Encoding enc);

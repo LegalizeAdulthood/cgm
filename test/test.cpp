@@ -300,7 +300,12 @@ TEST_CASE("clear text encoding")
     // elliptical arc
     // elliptical arc close
     // line bundle index
-    // line type
+    SECTION("line type")
+    {
+        writer->lineType(1);
+
+        REQUIRE(stream.str() == "LineType 1;\n");
+    }
     // line width
     // line color
     // marker bundle index
