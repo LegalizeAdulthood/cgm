@@ -385,7 +385,12 @@ TEST_CASE("clear text encoding")
 
         REQUIRE(stream.str() == "TextColr 6;\n");
     }
-    // character height
+    SECTION("character height")
+    {
+        writer->charHeight(12);
+
+        REQUIRE(stream.str() == "CharHeight 12;\n");
+    }
     // character orientation
     // text path
     // text alignment

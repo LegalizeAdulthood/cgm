@@ -128,6 +128,7 @@ struct cgm_funcs
     void (*charExpansion)(cgm_context *p, double value);
     void (*charSpacing)(cgm_context * p, double value);
     void (*textColor)(cgm_context * p, int index);
+    void (*charHeight)(cgm_context * p, int value);
 };
 
 struct cgm_context
@@ -1242,14 +1243,17 @@ static void cgmt_tcolour(int index)
 
 
 /* Character height */
+static void cgmt_cheight_p(cgm_context *ctx, int height)
+{
+    cgmt_start_cmd(ctx, 5, (int) CHeight);
 
+    cgmt_int(ctx, height);
+
+    cgmt_flush_cmd(ctx, final_flush);
+}
 static void cgmt_cheight(int height)
 {
-  cgmt_start_cmd(5, (int) CHeight);
-
-  cgmt_int(height);
-
-  cgmt_flush_cmd(final_flush);
+    cgmt_cheight_p(g_p, height);
 }
 
 
@@ -3277,6 +3281,7 @@ static void setup_clear_text_context(cgm_context *ctx)
     ctx->funcs.charExpansion = cgmt_cexpfac_p;
     ctx->funcs.charSpacing = cgmt_cspace_p;
     ctx->funcs.textColor = cgmt_tcolor_p;
+    ctx->funcs.charHeight = cgmt_cheight_p;
   ctx->cgm[begin] = CGM_FUNC cgmt_begin;
   ctx->cgm[end] = CGM_FUNC cgmt_end;
   ctx->cgm[bp] = CGM_FUNC cgmt_bp;
@@ -3737,6 +3742,7 @@ public:
     void charExpansion(float value) override;
     void charSpacing(float value) override;
     void textColor(int index) override;
+    void charHeight(int value) override;
 };
 
 class BinaryMetafileWriter : public MetafileStreamWriter
@@ -3991,6 +3997,11 @@ void MetafileStreamWriter::charSpacing(float value)
 void MetafileStreamWriter::textColor(int index)
 {
     m_context.funcs.textColor(&m_context, index);
+}
+
+void MetafileStreamWriter::charHeight(int value)
+{
+    m_context.funcs.charHeight(&m_context, value);
 }
 
 void MetafileStreamWriter::flushBuffer()
