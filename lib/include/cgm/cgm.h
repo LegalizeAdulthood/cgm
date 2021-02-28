@@ -123,6 +123,7 @@ public:
     virtual void charSpacing(float value) = 0;
     virtual void textColor(int index) = 0;
     virtual void charHeight(int value) = 0;
+    virtual void charOrientation(int upX, int upY, int baseX, int baseY) = 0;
 };
 
 std::unique_ptr<MetafileWriter> create(std::ostream &stream, Encoding enc);

@@ -126,9 +126,10 @@ struct cgm_funcs
     void (*textFontIndex)(cgm_context *p, int index);
     void (*textPrecision)(cgm_context *p, int value);
     void (*charExpansion)(cgm_context *p, double value);
-    void (*charSpacing)(cgm_context * p, double value);
-    void (*textColor)(cgm_context * p, int index);
-    void (*charHeight)(cgm_context * p, int value);
+    void (*charSpacing)(cgm_context *p, double value);
+    void (*textColor)(cgm_context *p, int index);
+    void (*charHeight)(cgm_context *p, int value);
+    void (*charOrientation)(cgm_context *p, int upX, int upY, int baseX, int baseY);
 };
 
 struct cgm_context
@@ -1259,17 +1260,20 @@ static void cgmt_cheight(int height)
 
 
 /* Character orientation */
+static void cgmt_corient_p(cgm_context *ctx, int x_up, int y_up, int x_base, int y_base)
+{
+    cgmt_start_cmd(ctx, 5, (int) COrient);
 
+    cgmt_int(ctx, x_up);
+    cgmt_int(ctx, y_up);
+    cgmt_int(ctx, x_base);
+    cgmt_int(ctx, y_base);
+
+    cgmt_flush_cmd(ctx, final_flush);
+}
 static void cgmt_corient(int x_up, int y_up, int x_base, int y_base)
 {
-  cgmt_start_cmd(5, (int) COrient);
-
-  cgmt_int(x_up);
-  cgmt_int(y_up);
-  cgmt_int(x_base);
-  cgmt_int(y_base);
-
-  cgmt_flush_cmd(final_flush);
+    cgmt_corient_p(g_p, x_up, y_up, x_base, y_base);
 }
 
 
@@ -3282,6 +3286,7 @@ static void setup_clear_text_context(cgm_context *ctx)
     ctx->funcs.charSpacing = cgmt_cspace_p;
     ctx->funcs.textColor = cgmt_tcolor_p;
     ctx->funcs.charHeight = cgmt_cheight_p;
+    ctx->funcs.charOrientation = cgmt_corient_p;
   ctx->cgm[begin] = CGM_FUNC cgmt_begin;
   ctx->cgm[end] = CGM_FUNC cgmt_end;
   ctx->cgm[bp] = CGM_FUNC cgmt_bp;
@@ -3743,6 +3748,7 @@ public:
     void charSpacing(float value) override;
     void textColor(int index) override;
     void charHeight(int value) override;
+    void charOrientation(int upX, int upY, int baseX, int baseY) override;
 };
 
 class BinaryMetafileWriter : public MetafileStreamWriter
@@ -4002,6 +4008,11 @@ void MetafileStreamWriter::textColor(int index)
 void MetafileStreamWriter::charHeight(int value)
 {
     m_context.funcs.charHeight(&m_context, value);
+}
+
+void MetafileStreamWriter::charOrientation(int upX, int upY, int baseX, int baseY)
+{
+    m_context.funcs.charOrientation(&m_context, upX, upY, baseX, baseY);
 }
 
 void MetafileStreamWriter::flushBuffer()

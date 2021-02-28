@@ -391,7 +391,12 @@ TEST_CASE("clear text encoding")
 
         REQUIRE(stream.str() == "CharHeight 12;\n");
     }
-    // character orientation
+    SECTION("character orientation")
+    {
+        writer->charOrientation(0, 1, 1, 0);
+
+        REQUIRE(stream.str() == "CharOri 0 1 1 0;\n");
+    }
     // text path
     // text alignment
     // character set index
