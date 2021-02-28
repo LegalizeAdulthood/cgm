@@ -116,6 +116,7 @@ struct cgm_funcs
     void (*polymarkerInt)(cgm_context *p, int numPoints, const cgm::Point<int> *points);
     void (*textInt)(cgm_context *p, int x, int y, int flag, const char *text);
     void (*polygonInt)(cgm_context *p, int numPoints, const cgm::Point<int> *points);
+    void (*cellArray)(cgm_context *p, int c1x, int c1y, int c2x, int c2y, int c3x, int c3y, int nx, int ny, int dimx, int *colors);
 };
 
 struct cgm_context
@@ -1467,37 +1468,40 @@ static void cgmt_coltab(int beg_index, int no_entries, double *ctab)
 
 
 /* Cell array */
+static void cgmt_carray_p(cgm_context *ctx, int c1x, int c1y, int c2x, int c2y, int c3x, int c3y, int nx, int ny, int dimx, int *array)
+{
+    int ix, iy, c;
 
+    cgmt_start_cmd(ctx, 4, (int) Cell_Array);
+
+    cgmt_ipoint(ctx, c1x, c1y);
+    cgmt_ipoint(ctx, c2x, c2y);
+    cgmt_ipoint(ctx, c3x, c3y);
+    cgmt_int(ctx, nx);
+    cgmt_int(ctx, ny);
+    cgmt_int(ctx, max_colors - 1);
+
+    for (iy = 0; iy < ny; iy++)
+    {
+        cgmt_fb(ctx);
+
+        for (ix = 0; ix < nx; ix++)
+        {
+            c = array[dimx * iy + ix];
+            c = Color8Bit(c);
+            cgmt_int(ctx, c);
+
+            if (ix < nx - 1)
+                cgmt_outc(ctx, ',');
+        }
+    }
+
+    cgmt_flush_cmd(ctx, final_flush);
+}
 static void cgmt_carray(int xmin, int xmax, int ymin, int ymax, int dx,
 			int dy, int dimx, int *array)
 {
-  int ix, iy, c;
-
-  cgmt_start_cmd(4, (int) Cell_Array);
-
-  cgmt_ipoint(xmin, ymin);
-  cgmt_ipoint(xmax, ymax);
-  cgmt_ipoint(xmax, ymin);
-  cgmt_int(dx);
-  cgmt_int(dy);
-  cgmt_int(max_colors - 1);
-
-  for (iy = 0; iy < dy; iy++)
-    {
-      cgmt_fb();
-
-      for (ix = 0; ix < dx; ix++)
-	{
-	  c = array[dimx * iy + ix];
-	  c = Color8Bit(c);
-	  cgmt_int(c);
-
-	  if (ix < dx - 1)
-	    cgmt_outc(',');
-	}
-    }
-
-  cgmt_flush_cmd(final_flush);
+    cgmt_carray_p(g_p, xmin, ymin, xmax, ymax, xmax, ymin, dx, dy, dimx, array);
 }
 
 
@@ -3224,6 +3228,7 @@ static void setup_clear_text_context(cgm_context *ctx)
     ctx->funcs.polymarkerInt = cgmt_pmarker_pt;
     ctx->funcs.textInt = cgmt_text_p;
     ctx->funcs.polygonInt = cgmt_pgon_pt;
+    ctx->funcs.cellArray = cgmt_carray_p;
   ctx->cgm[begin] = CGM_FUNC cgmt_begin;
   ctx->cgm[end] = CGM_FUNC cgmt_end;
   ctx->cgm[bp] = CGM_FUNC cgmt_bp;
@@ -3664,6 +3669,7 @@ public:
     void polymarker(const std::vector<Point<int>> &points) override;
     void text(Point<int> point, TextFlag flag, const char *text) override;
     void polygon(const std::vector<Point<int>> &points) override;
+    void cellArray(Point<int> c1, Point<int> c2, Point<int> c3, int nx, int ny, int *colors) override;
 
 protected:
     std::ostream &m_stream;
@@ -3866,6 +3872,11 @@ void MetafileStreamWriter::text(Point<int> point, TextFlag flag, const char *tex
 void MetafileStreamWriter::polygon(const std::vector<Point<int>> &points)
 {
     m_context.funcs.polygonInt(&m_context, static_cast<int>(points.size()), points.data());
+}
+
+void MetafileStreamWriter::cellArray(Point<int> c1, Point<int> c2, Point<int> c3, int nx, int ny, int *colors)
+{
+    m_context.funcs.cellArray(&m_context, c1.x, c1.y, c2.x, c2.y, c3.x, c3.y, nx, ny, nx, colors);
 }
 
 void MetafileStreamWriter::flushBuffer()

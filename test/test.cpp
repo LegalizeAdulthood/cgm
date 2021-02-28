@@ -2,6 +2,7 @@
 
 #include <catch2/catch.hpp>
 
+#include <array>
 #include <sstream>
 
 namespace
@@ -279,6 +280,94 @@ TEST_CASE("clear text encoding")
         REQUIRE(stream.str() == "Polygon 10,10 20,10 20,20 10,20;\n");
     }
     // polygon set
+    SECTION("cell array")
+    {
+        std::array<int, 16> cellArray{0, 0, 0, 0,
+            0, 1, 0, 0,
+            0, 0, 1, 0,
+            0, 0, 0, 0};
+
+        writer->cellArray({0, 0}, {10, 0}, {10, 10}, 4, 4, cellArray.data());
+    }
+    // generalized drawing primitive
+    // rectangle
+    // circle
+    // circular arc 3 point
+    // circular arc 3 point close
+    // circular arc center
+    // circular arc center close
+    // ellipse
+    // elliptical arc
+    // elliptical arc close
+    // line bundle index
+    // line type
+    // line width
+    // line color
+    // marker bundle index
+    // marker size
+    // marker color
+    // text bundle index
+    // text font index
+    // text precision
+    // character expansion factor
+    // character spacing
+    // text color
+    // character height
+    // character orientation
+    // text path
+    // text alignment
+    // character set index
+    // alternate character set index
+    // full bundle index
+    // interior style
+    // fill color
+    // hatch index
+    // pattern index
+    // edge bundle index
+    // edge type
+    // edge width
+    // edge color
+    // edge visibility
+    // fill reference point
+    // pattern table
+    // pattern size
+    // color table
+    // aspect source flags
+    // escape
+    // message
+    // application data
+    //----- Addendum 1
+    // begin segment
+    // end segment
+    // name precision
+    // maximum vdc extent
+    // segment priority extent
+    // device viewport
+    // device viewport specification mode
+    // device viewport mapping
+    // line representation
+    // marker representation
+    // text representation
+    // fill representation
+    // edge representation
+    // line clipping mode
+    // marker clipping mode
+    // edge clipping mode
+    // begin figure
+    // end figure
+    // new region
+    // save primitive context
+    // restore primitive context
+    // circular arc center reversed
+    // connecting edge
+    // pick identifier
+    // copy segment
+    // inheritance filter
+    // clip inheritance
+    // segment transformation
+    // segment highlighting
+    // segment display priority
+    // segment pick priority
 }
 
 //TEST_CASE("begin binary, end")
