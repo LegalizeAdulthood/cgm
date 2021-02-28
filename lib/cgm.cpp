@@ -122,6 +122,7 @@ struct cgm_funcs
     void (*lineColor)(cgm_context *p, int index);
     void (*markerType)(cgm_context *p, int marker_type);
     void (*markerSize)(cgm_context *p, double size);
+    void (*markerColor)(cgm_context *p, int index);
 };
 
 struct cgm_context
@@ -3257,6 +3258,7 @@ static void setup_clear_text_context(cgm_context *ctx)
     ctx->funcs.lineColor = cgmt_lcolor_p;
     ctx->funcs.markerType = cgmt_mtype_p;
     ctx->funcs.markerSize = cgmt_msize_p;
+    ctx->funcs.markerColor = cgmt_mcolor_p;
   ctx->cgm[begin] = CGM_FUNC cgmt_begin;
   ctx->cgm[end] = CGM_FUNC cgmt_end;
   ctx->cgm[bp] = CGM_FUNC cgmt_bp;
@@ -3703,6 +3705,7 @@ public:
     void lineColor(int value) override;
     void markerType(int value) override;
     void markerSize(float value) override;
+    void markerColor(int value) override;
 
 protected:
     std::ostream &m_stream;
@@ -3935,6 +3938,11 @@ void MetafileStreamWriter::markerType(int value)
 void MetafileStreamWriter::markerSize(float value)
 {
     m_context.funcs.markerSize(&m_context, static_cast<double>(value));
+}
+
+void MetafileStreamWriter::markerColor(int value)
+{
+    m_context.funcs.markerColor(&m_context, value);
 }
 
 void MetafileStreamWriter::flushBuffer()

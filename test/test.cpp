@@ -333,7 +333,12 @@ TEST_CASE("clear text encoding")
 
         REQUIRE(stream.str() == "MarkerSize 0.100000;\n");
     }
-    // marker color
+    SECTION("marker color")
+    {
+        writer->markerColor(6);
+
+        REQUIRE(stream.str() == "MarkerColr 6;\n");
+    }
     // text bundle index
     // text font index
     // text precision

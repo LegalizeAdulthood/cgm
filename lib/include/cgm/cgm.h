@@ -109,6 +109,7 @@ public:
     virtual void lineColor(int value) = 0;
     virtual void markerType(int value) = 0;
     virtual void markerSize(float value) = 0;
+    virtual void markerColor(int value) = 0;
 };
 
 std::unique_ptr<MetafileWriter> create(std::ostream &stream, Encoding enc);
