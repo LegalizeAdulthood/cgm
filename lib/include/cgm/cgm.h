@@ -74,6 +74,26 @@ enum class TextPath
     Down
 };
 
+enum class HorizAlign
+{
+    Normal,
+    Left,
+    Center,
+    Right,
+    Continuous
+};
+
+enum class VertAlign
+{
+    Normal,
+    Top,
+    Cap,
+    Half,
+    Base,
+    Bottom,
+    Continuous
+};
+
 template <typename T>
 struct Point
 {
@@ -133,6 +153,7 @@ public:
     virtual void charHeight(int value) = 0;
     virtual void charOrientation(int upX, int upY, int baseX, int baseY) = 0;
     virtual void textPath(TextPath value) = 0;
+    virtual void textAlignment(HorizAlign horiz, VertAlign vert, float contHoriz, float contVert) = 0;
 };
 
 std::unique_ptr<MetafileWriter> create(std::ostream &stream, Encoding enc);

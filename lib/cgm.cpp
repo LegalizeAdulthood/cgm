@@ -131,6 +131,7 @@ struct cgm_funcs
     void (*charHeight)(cgm_context *p, int value);
     void (*charOrientation)(cgm_context *p, int upX, int upY, int baseX, int baseY);
     void (*textPath)(cgm_context * p, int value);
+    void (*textAlignment)(cgm_context * p, int horiz, int vert, double contHoriz, double contVert);
 };
 
 struct cgm_context
@@ -1314,94 +1315,72 @@ static void cgmt_tpath(int new_path)
 
 
 /* Text alignment */
-
-static void cgmt_talign(int hor, int ver)
+static void cgmt_talign_p(cgm_context *ctx, int hor, int ver, double contHoriz, double contVert)
 {
-  cgmt_start_cmd(5, (int) TAlign);
+    cgmt_start_cmd(ctx, 5, (int) TAlign);
 
-  switch (hor)
+    switch (hor)
     {
     case normal_h:
-      {
-	cgmt_out_string(" NormHoriz");
-	break;
-      }
+        cgmt_out_string(ctx, " NormHoriz");
+        break;
 
     case left_h:
-      {
-	cgmt_out_string(" Left");
-	break;
-      }
+        cgmt_out_string(ctx, " Left");
+        break;
 
     case center_h:
-      {
-	cgmt_out_string(" Ctr");
-	break;
-      }
+        cgmt_out_string(ctx, " Ctr");
+        break;
 
     case right_h:
-      {
-	cgmt_out_string(" Right");
-	break;
-      }
+        cgmt_out_string(ctx, " Right");
+        break;
 
     case cont_h:
-      {
-	cgmt_out_string(" ContHoriz");
-	break;
-      }
+        cgmt_out_string(ctx, " ContHoriz");
+        break;
     }
 
-  switch (ver)
+    switch (ver)
     {
-
     case normal_v:
-      {
-	cgmt_out_string(" NormVert");
-	break;
-      }
+        cgmt_out_string(ctx, " NormVert");
+        break;
 
     case top_v:
-      {
-	cgmt_out_string(" Top");
-	break;
-      }
+        cgmt_out_string(ctx, " Top");
+        break;
 
     case cap_v:
-      {
-	cgmt_out_string(" Cap");
-	break;
-      }
+        cgmt_out_string(ctx, " Cap");
+        break;
 
     case half_v:
-      {
-	cgmt_out_string(" Half");
-	break;
-      }
+        cgmt_out_string(ctx, " Half");
+        break;
 
     case base_v:
-      {
-	cgmt_out_string(" Base");
-	break;
-      }
+        cgmt_out_string(ctx, " Base");
+        break;
 
     case bottom_v:
-      {
-	cgmt_out_string(" Bottom");
-	break;
-      }
+        cgmt_out_string(ctx, " Bottom");
+        break;
 
     case cont_v:
-      {
-	cgmt_out_string(" ContVert");
-	break;
-      }
+        cgmt_out_string(ctx, " ContVert");
+        break;
     }
 
-  cgmt_real(0.0);
-  cgmt_real(0.0);
+    cgmt_real(ctx, contHoriz);
+    cgmt_real(ctx, contVert);
 
-  cgmt_flush_cmd(final_flush);
+    cgmt_flush_cmd(ctx, final_flush);
+}
+static void cgmt_talign(int hor, int ver)
+{
+    cgmt_talign_p(g_p, hor, ver, 0.0, 0.0);
 }
 
 
@@ -3284,6 +3263,7 @@ static void setup_clear_text_context(cgm_context *ctx)
     ctx->funcs.charHeight = cgmt_cheight_p;
     ctx->funcs.charOrientation = cgmt_corient_p;
     ctx->funcs.textPath = cgmt_tpath_p;
+    ctx->funcs.textAlignment = cgmt_talign_p;
   ctx->cgm[begin] = CGM_FUNC cgmt_begin;
   ctx->cgm[end] = CGM_FUNC cgmt_end;
   ctx->cgm[bp] = CGM_FUNC cgmt_bp;
@@ -3747,6 +3727,7 @@ public:
     void charHeight(int value) override;
     void charOrientation(int upX, int upY, int baseX, int baseY) override;
     void textPath(TextPath value) override;
+    void textAlignment(HorizAlign horiz, VertAlign vert, float contHoriz, float contVert) override;
 };
 
 class BinaryMetafileWriter : public MetafileStreamWriter
@@ -4016,6 +3997,11 @@ void MetafileStreamWriter::charOrientation(int upX, int upY, int baseX, int base
 void MetafileStreamWriter::textPath(TextPath value)
 {
     m_context.funcs.textPath(&m_context, static_cast<int>(value));
+}
+
+void MetafileStreamWriter::textAlignment(HorizAlign horiz, VertAlign vert, float contHoriz, float contVert)
+{
+    m_context.funcs.textAlignment(&m_context, static_cast<int>(horiz), static_cast<int>(vert), static_cast<double>(contHoriz), static_cast<double>(contVert));
 }
 
 void MetafileStreamWriter::flushBuffer()

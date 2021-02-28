@@ -424,7 +424,51 @@ TEST_CASE("clear text encoding")
             REQUIRE(stream.str() == "TextPath Down;\n");
         }
     }
-    // text alignment
+    SECTION("text alignment")
+    {
+        SECTION("normal, normal")
+        {
+            writer->textAlignment(cgm::HorizAlign::Normal, cgm::VertAlign::Normal, 0.1f, 0.2f);
+
+            REQUIRE(stream.str() == "TextAlign NormHoriz NormVert 0.100000 0.200000;\n");
+        }
+        SECTION("left, top")
+        {
+            writer->textAlignment(cgm::HorizAlign::Left, cgm::VertAlign::Top, 0.0f, 0.0f);
+
+            REQUIRE(stream.str() == "TextAlign Left Top 0.000000 0.000000;\n");
+        }
+        SECTION("center, cap")
+        {
+            writer->textAlignment(cgm::HorizAlign::Center, cgm::VertAlign::Cap, 0.0f, 0.0f);
+
+            REQUIRE(stream.str() == "TextAlign Ctr Cap 0.000000 0.000000;\n");
+        }
+        SECTION("right, half")
+        {
+            writer->textAlignment(cgm::HorizAlign::Right, cgm::VertAlign::Half, 0.0f, 0.0f);
+
+            REQUIRE(stream.str() == "TextAlign Right Half 0.000000 0.000000;\n");
+        }
+        SECTION("continuous, base")
+        {
+            writer->textAlignment(cgm::HorizAlign::Continuous, cgm::VertAlign::Base, 0.0f, 0.0f);
+
+            REQUIRE(stream.str() == "TextAlign ContHoriz Base 0.000000 0.000000;\n");
+        }
+        SECTION("normal, bottom")
+        {
+            writer->textAlignment(cgm::HorizAlign::Normal, cgm::VertAlign::Bottom, 0.0f, 0.0f);
+
+            REQUIRE(stream.str() == "TextAlign NormHoriz Bottom 0.000000 0.000000;\n");
+        }
+        SECTION("normal, continuous")
+        {
+            writer->textAlignment(cgm::HorizAlign::Normal, cgm::VertAlign::Continuous, 0.0f, 0.0f);
+
+            REQUIRE(stream.str() == "TextAlign NormHoriz ContVert 0.000000 0.000000;\n");
+        }
+    }
     // character set index
     // alternate character set index
     // full bundle index
