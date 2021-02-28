@@ -108,6 +108,7 @@ struct cgm_funcs
     void (*backgroundColor)(cgm_context *p, int red, int green, int blue);
     void (*vdcIntegerPrecision)(cgm_context *p, int min, int max);
     void (*clipRectangle)(cgm_context *p, int llx, int lly, int urx, int ury);
+    void (*clipIndicator)(cgm_context *p, int clip_ind);
 };
 
 struct cgm_context
@@ -887,21 +888,17 @@ static void cgmt_cliprect(int *int_coords)
 
 
 /* Clip indicator */
+static void cgmt_clipindic_p(cgm_context *ctx, int clip_ind)
+{
+    cgmt_start_cmd(ctx, 3, (int) ClipIndic);
 
+    cgmt_out_string(ctx, clip_ind ? " On" : " Off");
+
+    cgmt_flush_cmd(ctx, final_flush);
+}
 static void cgmt_clipindic(int clip_ind)
 {
-  cgmt_start_cmd(3, (int) ClipIndic);
-
-  if (clip_ind)
-    {
-      cgmt_out_string(" On");
-    }
-  else
-    {
-      cgmt_out_string(" Off");
-    }
-
-  cgmt_flush_cmd(final_flush);
+    cgmt_clipindic_p(g_p, clip_ind);
 }
 
 
@@ -3160,6 +3157,7 @@ static void setup_clear_text_context(cgm_context *ctx)
     ctx->funcs.backgroundColor = cgmt_backcol_p;
     ctx->funcs.vdcIntegerPrecision = cgmt_vdcintprec_p;
     ctx->funcs.clipRectangle = cgmt_cliprect_p;
+    ctx->funcs.clipIndicator = cgmt_clipindic_p;
   ctx->cgm[begin] = CGM_FUNC cgmt_begin;
   ctx->cgm[end] = CGM_FUNC cgmt_end;
   ctx->cgm[bp] = CGM_FUNC cgmt_bp;
@@ -3592,6 +3590,7 @@ public:
     void backgroundColor(int red, int green, int blue) override;
     void vdcIntegerPrecision(int min, int max) override;
     void clipRectangle(int llx, int lly, int urx, int ury) override;
+    void clipIndicator(bool enabled) override;
 
 protected:
     std::ostream &m_stream;
@@ -3759,6 +3758,11 @@ void MetafileStreamWriter::vdcIntegerPrecision(int min, int max)
 void MetafileStreamWriter::clipRectangle(int llx, int lly, int urx, int ury)
 {
     m_context.funcs.clipRectangle(&m_context, llx, lly, urx, ury);
+}
+
+void MetafileStreamWriter::clipIndicator(bool enabled)
+{
+    m_context.funcs.clipIndicator(&m_context, static_cast<int>(enabled));
 }
 
 void MetafileStreamWriter::flushBuffer()

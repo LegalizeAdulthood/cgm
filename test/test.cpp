@@ -210,6 +210,12 @@ TEST_CASE("clear text encoding")
 
         REQUIRE(stream.str() == "ClipRect 20,20 64,64;\n");
     }
+    SECTION("clip indicator")
+    {
+        writer->clipIndicator(true);
+
+        REQUIRE(stream.str() == "Clip On;\n");
+    }
 }
 
 //TEST_CASE("begin binary, end")
