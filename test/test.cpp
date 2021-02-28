@@ -340,7 +340,12 @@ TEST_CASE("clear text encoding")
         REQUIRE(stream.str() == "MarkerColr 6;\n");
     }
     // text bundle index
-    // text font index
+    SECTION("text font index")
+    {
+        writer->textFontIndex(6);
+
+        REQUIRE(stream.str() == "TextFontIndex 6;\n");
+    }
     // text precision
     // character expansion factor
     // character spacing

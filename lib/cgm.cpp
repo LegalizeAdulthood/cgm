@@ -123,6 +123,7 @@ struct cgm_funcs
     void (*markerType)(cgm_context *p, int marker_type);
     void (*markerSize)(cgm_context *p, double size);
     void (*markerColor)(cgm_context *p, int index);
+    void (*textFontIndex)(cgm_context *p, int index);
 };
 
 struct cgm_context
@@ -1144,14 +1145,17 @@ static void cgmt_mcolour(int index)
 
 
 /* Text font index */
+static void cgmt_tfindex_p(cgm_context *ctx, int index)
+{
+    cgmt_start_cmd(ctx, 5, (int) TFIndex);
 
+    cgmt_int(ctx, index);
+
+    cgmt_flush_cmd(ctx, final_flush);
+}
 static void cgmt_tfindex(int index)
 {
-  cgmt_start_cmd(5, (int) TFIndex);
-
-  cgmt_int(index);
-
-  cgmt_flush_cmd(final_flush);
+    cgmt_tfindex_p(g_p, index);
 }
 
 
@@ -3259,6 +3263,7 @@ static void setup_clear_text_context(cgm_context *ctx)
     ctx->funcs.markerType = cgmt_mtype_p;
     ctx->funcs.markerSize = cgmt_msize_p;
     ctx->funcs.markerColor = cgmt_mcolor_p;
+    ctx->funcs.textFontIndex = cgmt_tfindex_p;
   ctx->cgm[begin] = CGM_FUNC cgmt_begin;
   ctx->cgm[end] = CGM_FUNC cgmt_end;
   ctx->cgm[bp] = CGM_FUNC cgmt_bp;
@@ -3706,6 +3711,7 @@ public:
     void markerType(int value) override;
     void markerSize(float value) override;
     void markerColor(int value) override;
+    void textFontIndex(int value) override;
 
 protected:
     std::ostream &m_stream;
@@ -3943,6 +3949,11 @@ void MetafileStreamWriter::markerSize(float value)
 void MetafileStreamWriter::markerColor(int value)
 {
     m_context.funcs.markerColor(&m_context, value);
+}
+
+void MetafileStreamWriter::textFontIndex(int value)
+{
+    m_context.funcs.textFontIndex(&m_context, value);
 }
 
 void MetafileStreamWriter::flushBuffer()
