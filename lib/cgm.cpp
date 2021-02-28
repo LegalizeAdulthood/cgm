@@ -107,6 +107,7 @@ struct cgm_funcs
     void (*vdcExtentInt)(cgm_context *p, int llx, int lly, int urx, int ury);
     void (*backgroundColor)(cgm_context *p, int red, int green, int blue);
     void (*vdcIntegerPrecision)(cgm_context *p, int min, int max);
+    void (*clipRectangle)(cgm_context *p, int llx, int lly, int urx, int ury);
 };
 
 struct cgm_context
@@ -869,15 +870,18 @@ static void cgmt_vdcintprec(void)
 
 
 /* Clip rectangle */
+static void cgmt_cliprect_p(cgm_context *ctx, int llx, int lly, int urx, int ury)
+{
+    cgmt_start_cmd(ctx, 3, (int) ClipRect);
 
+    cgmt_ipoint(ctx, llx, lly);
+    cgmt_ipoint(ctx, urx, ury);
+
+    cgmt_flush_cmd(ctx, final_flush);
+}
 static void cgmt_cliprect(int *int_coords)
 {
-  cgmt_start_cmd(3, (int) ClipRect);
-
-  cgmt_ipoint(int_coords[0], int_coords[1]);
-  cgmt_ipoint(int_coords[2], int_coords[3]);
-
-  cgmt_flush_cmd(final_flush);
+    cgmt_cliprect_p(g_p, int_coords[0], int_coords[1], int_coords[2], int_coords[3]);
 }
 
 
@@ -3155,6 +3159,7 @@ static void setup_clear_text_context(cgm_context *ctx)
     ctx->funcs.vdcExtentInt = cgmt_vdcectent_p;
     ctx->funcs.backgroundColor = cgmt_backcol_p;
     ctx->funcs.vdcIntegerPrecision = cgmt_vdcintprec_p;
+    ctx->funcs.clipRectangle = cgmt_cliprect_p;
   ctx->cgm[begin] = CGM_FUNC cgmt_begin;
   ctx->cgm[end] = CGM_FUNC cgmt_end;
   ctx->cgm[bp] = CGM_FUNC cgmt_bp;
@@ -3586,6 +3591,7 @@ public:
     void vdcExtent(int llx, int lly, int urx, int ury) override;
     void backgroundColor(int red, int green, int blue) override;
     void vdcIntegerPrecision(int min, int max) override;
+    void clipRectangle(int llx, int lly, int urx, int ury) override;
 
 protected:
     std::ostream &m_stream;
@@ -3748,6 +3754,11 @@ void MetafileStreamWriter::backgroundColor(int red, int green, int blue)
 void MetafileStreamWriter::vdcIntegerPrecision(int min, int max)
 {
     m_context.funcs.vdcIntegerPrecision(&m_context, min, max);
+}
+
+void MetafileStreamWriter::clipRectangle(int llx, int lly, int urx, int ury)
+{
+    m_context.funcs.clipRectangle(&m_context, llx, lly, urx, ury);
 }
 
 void MetafileStreamWriter::flushBuffer()

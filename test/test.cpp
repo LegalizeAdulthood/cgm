@@ -201,6 +201,15 @@ TEST_CASE("clear text encoding")
 
         REQUIRE(stream.str() == "VDCIntegerPrec -128 128;\n");
     }
+    // vdc real precision
+    // auxiliary color
+    // transparency
+    SECTION("clip rectangle")
+    {
+        writer->clipRectangle(20, 20, 64, 64);
+
+        REQUIRE(stream.str() == "ClipRect 20,20 64,64;\n");
+    }
 }
 
 //TEST_CASE("begin binary, end")
