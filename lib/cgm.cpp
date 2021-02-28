@@ -113,6 +113,7 @@ struct cgm_funcs
     void (*clipRectangle)(cgm_context *p, int llx, int lly, int urx, int ury);
     void (*clipIndicator)(cgm_context *p, int clip_ind);
     void (*polylineInt)(cgm_context *p, int numPoints, const cgm::Point<int> *points);
+    void (*polymarkerInt)(cgm_context *p, int numPoints, const cgm::Point<int> *points);
 };
 
 struct cgm_context
@@ -951,21 +952,36 @@ static void cgmt_pline(int no_pairs, int *x1_ptr, int *y1_ptr)
 
 
 /* Polymarker */
+static void cgmt_pmarker_pt(cgm_context *ctx, int numPoints,  const cgm::Point<int> *points)
+{
+    int i;
 
-static void cgmt_pmarker(int no_pairs, int *x1_ptr, int *y1_ptr)
+    cgmt_start_cmd(ctx, 4, (int) PolyMarker);
+
+    for (i = 0; i < numPoints; ++i)
+    {
+        cgmt_ipoint(ctx, points[i].x, points[i].y);
+    }
+
+    cgmt_flush_cmd(ctx, final_flush);
+}
+static void cgmt_pmarker_p(cgm_context *ctx, int no_pairs, int *x1_ptr, int *y1_ptr)
 {
   int i;
 
-  cgmt_start_cmd(4, (int) PolyMarker);
+  cgmt_start_cmd(ctx, 4, (int) PolyMarker);
 
   for (i = 0; i < no_pairs; ++i)
     {
-      cgmt_ipoint(x1_ptr[i], y1_ptr[i]);
+      cgmt_ipoint(ctx, x1_ptr[i], y1_ptr[i]);
     }
 
-  cgmt_flush_cmd(final_flush);
+  cgmt_flush_cmd(ctx, final_flush);
 }
-
+static void cgmt_pmarker(int no_pairs, int *x1_ptr, int *y1_ptr)
+{
+    cgmt_pmarker_p(g_p, no_pairs, x1_ptr, y1_ptr);
+}
 
 
 /* Text */
@@ -3191,6 +3207,7 @@ static void setup_clear_text_context(cgm_context *ctx)
     ctx->funcs.clipRectangle = cgmt_cliprect_p;
     ctx->funcs.clipIndicator = cgmt_clipindic_p;
     ctx->funcs.polylineInt = cgmt_pline_pt;
+    ctx->funcs.polymarkerInt = cgmt_pmarker_pt;
   ctx->cgm[begin] = CGM_FUNC cgmt_begin;
   ctx->cgm[end] = CGM_FUNC cgmt_end;
   ctx->cgm[bp] = CGM_FUNC cgmt_bp;
@@ -3628,7 +3645,7 @@ public:
     void clipRectangle(int llx, int lly, int urx, int ury) override;
     void clipIndicator(bool enabled) override;
     void polyline(const std::vector<Point<int>> &points) override;
-    void polyline(const std::vector<Point<float>> &points) override;
+    void polymarker(const std::vector<Point<int>> &points) override;
 
 protected:
     std::ostream &m_stream;
@@ -3818,8 +3835,9 @@ void MetafileStreamWriter::polyline(const std::vector<Point<int>> &points)
     m_context.funcs.polylineInt(&m_context, static_cast<int>(points.size()), points.data());
 }
 
-void MetafileStreamWriter::polyline(const std::vector<Point<float>> &points)
+void MetafileStreamWriter::polymarker(const std::vector<Point<int>> &points)
 {
+    m_context.funcs.polymarkerInt(&m_context, static_cast<int>(points.size()), points.data());
 }
 
 void MetafileStreamWriter::flushBuffer()

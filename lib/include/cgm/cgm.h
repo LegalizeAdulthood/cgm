@@ -94,7 +94,7 @@ public:
     virtual void clipRectangle(int llx, int lly, int urx, int ury) = 0;
     virtual void clipIndicator(bool enabled) = 0;
     virtual void polyline(const std::vector<Point<int>> &points) = 0;
-    virtual void polyline(const std::vector<Point<float>> &points) = 0;
+    virtual void polymarker(const std::vector<Point<int>> &points) = 0;
 };
 
 std::unique_ptr<MetafileWriter> create(std::ostream &stream, Encoding enc);

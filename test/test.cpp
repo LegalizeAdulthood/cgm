@@ -253,6 +253,15 @@ TEST_CASE("clear text encoding")
 
         REQUIRE(stream.str() == "Line 10,10 20,20;\n");
     }
+    // disjoint polyline
+    SECTION("polymarker")
+    {
+        const std::vector<cgm::Point<int>> points{{10, 10}, {20, 20}};
+
+        writer->polymarker(points);
+
+        REQUIRE(stream.str() == "Marker 10,10 20,20;\n");
+    }
 }
 
 //TEST_CASE("begin binary, end")
