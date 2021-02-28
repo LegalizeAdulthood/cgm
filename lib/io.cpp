@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -106,5 +105,5 @@ int gks_close_file(int fd)
 
 const char *gks_getenv(const char *env)
 {
-    return nullptr;
+    return getenv(env);
 }
