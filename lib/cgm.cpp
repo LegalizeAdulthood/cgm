@@ -132,6 +132,7 @@ struct cgm_funcs
     void (*charOrientation)(cgm_context *p, int upX, int upY, int baseX, int baseY);
     void (*textPath)(cgm_context * p, int value);
     void (*textAlignment)(cgm_context * p, int horiz, int vert, double contHoriz, double contVert);
+    void (*interiorStyle)(cgm_context * p, int value);
 };
 
 struct cgm_context
@@ -1386,46 +1387,39 @@ static void cgmt_talign(int hor, int ver)
 
 
 /* Interior style */
-
-static void cgmt_intstyle(int style)
+static void cgmt_intstyle_p(cgm_context *ctx, int style)
 {
-  cgmt_start_cmd(5, (int) IntStyle);
+    cgmt_start_cmd(ctx, 5, (int) IntStyle);
 
-  switch (style)
+    switch (style)
     {
 
     case hollow:
-      {
-	cgmt_out_string(" Hollow");
-	break;
-      }
+        cgmt_out_string(ctx, " Hollow");
+        break;
 
     case solid_i:
-      {
-	cgmt_out_string(" Solid");
-	break;
-      }
+        cgmt_out_string(ctx, " Solid");
+        break;
 
     case pattern:
-      {
-	cgmt_out_string(" Pat");
-	break;
-      }
+        cgmt_out_string(ctx, " Pat");
+        break;
 
     case hatch:
-      {
-	cgmt_out_string(" Hatch");
-	break;
-      }
+        cgmt_out_string(ctx, " Hatch");
+        break;
 
     case empty:
-      {
-	cgmt_out_string(" Empty");
-	break;
-      }
+        cgmt_out_string(ctx, " Empty");
+        break;
     }
 
-  cgmt_flush_cmd(final_flush);
+    cgmt_flush_cmd(ctx, final_flush);
+}
+static void cgmt_intstyle(int style)
+{
+    cgmt_intstyle_p(g_p, style);
 }
 
 
@@ -3264,6 +3258,7 @@ static void setup_clear_text_context(cgm_context *ctx)
     ctx->funcs.charOrientation = cgmt_corient_p;
     ctx->funcs.textPath = cgmt_tpath_p;
     ctx->funcs.textAlignment = cgmt_talign_p;
+    ctx->funcs.interiorStyle = cgmt_intstyle_p;
   ctx->cgm[begin] = CGM_FUNC cgmt_begin;
   ctx->cgm[end] = CGM_FUNC cgmt_end;
   ctx->cgm[bp] = CGM_FUNC cgmt_bp;
@@ -3728,6 +3723,7 @@ public:
     void charOrientation(int upX, int upY, int baseX, int baseY) override;
     void textPath(TextPath value) override;
     void textAlignment(HorizAlign horiz, VertAlign vert, float contHoriz, float contVert) override;
+    void interiorStyle(InteriorStyle value) override;
 };
 
 class BinaryMetafileWriter : public MetafileStreamWriter
@@ -4002,6 +3998,11 @@ void MetafileStreamWriter::textPath(TextPath value)
 void MetafileStreamWriter::textAlignment(HorizAlign horiz, VertAlign vert, float contHoriz, float contVert)
 {
     m_context.funcs.textAlignment(&m_context, static_cast<int>(horiz), static_cast<int>(vert), static_cast<double>(contHoriz), static_cast<double>(contVert));
+}
+
+void MetafileStreamWriter::interiorStyle(InteriorStyle value)
+{
+    m_context.funcs.interiorStyle(&m_context, static_cast<int>(value));
 }
 
 void MetafileStreamWriter::flushBuffer()

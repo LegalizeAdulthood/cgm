@@ -94,6 +94,15 @@ enum class VertAlign
     Continuous
 };
 
+enum class InteriorStyle
+{
+    Hollow,
+    Solid,
+    Pattern,
+    Hatch,
+    Empty
+};
+
 template <typename T>
 struct Point
 {
@@ -154,6 +163,7 @@ public:
     virtual void charOrientation(int upX, int upY, int baseX, int baseY) = 0;
     virtual void textPath(TextPath value) = 0;
     virtual void textAlignment(HorizAlign horiz, VertAlign vert, float contHoriz, float contVert) = 0;
+    virtual void interiorStyle(InteriorStyle value) = 0;
 };
 
 std::unique_ptr<MetafileWriter> create(std::ostream &stream, Encoding enc);

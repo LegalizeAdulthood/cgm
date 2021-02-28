@@ -472,7 +472,39 @@ TEST_CASE("clear text encoding")
     // character set index
     // alternate character set index
     // full bundle index
-    // interior style
+    SECTION("interior style")
+    {
+        SECTION("hollow")
+        {
+            writer->interiorStyle(cgm::InteriorStyle::Hollow);
+
+            REQUIRE(stream.str() == "IntStyle Hollow;\n");
+        }
+        SECTION("solid")
+        {
+            writer->interiorStyle(cgm::InteriorStyle::Solid);
+
+            REQUIRE(stream.str() == "IntStyle Solid;\n");
+        }
+        SECTION("pattern")
+        {
+            writer->interiorStyle(cgm::InteriorStyle::Pattern);
+
+            REQUIRE(stream.str() == "IntStyle Pat;\n");
+        }
+        SECTION("hatch")
+        {
+            writer->interiorStyle(cgm::InteriorStyle::Hatch);
+
+            REQUIRE(stream.str() == "IntStyle Hatch;\n");
+        }
+        SECTION("empty")
+        {
+            writer->interiorStyle(cgm::InteriorStyle::Empty);
+
+            REQUIRE(stream.str() == "IntStyle Empty;\n");
+        }
+    }
     // fill color
     // hatch index
     // pattern index
