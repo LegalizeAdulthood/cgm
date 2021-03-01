@@ -100,6 +100,7 @@ struct cgm_funcs
     void (*colorPrecisionClearText)(cgm_context *p, int max);
     void (*colorPrecisionBinary)(cgm_context *p, int value);
     void (*colorIndexPrecisionClearText)(cgm_context *p, int max);
+    void (*colorIndexPrecisionBinary)(cgm_context *p, int value);
     void (*maximumColorIndex)(cgm_context *p, int max);
     void (*colorValueExtent)(cgm_context *p, int redMin, int redMax, int greenMin, int greenMax, int blueMin, int blueMax);
     void (*metafileElementList)(cgm_context *p);
@@ -2265,15 +2266,19 @@ static void cgmb_colprec(void)
 
 /* Colour index precision */
 
+static void cgmb_cindprec_p(cgm_context *ctx, int value)
+{
+  cgmb_start_cmd(ctx, 1, (int) CIndPrec);
+
+  cgmb_sint(ctx, value);
+
+  cgmb_flush_cmd(ctx, final_flush);
+  cgmb_fb(ctx);
+}
 static void cgmb_cindprec(void)
 {
-  cgmb_start_cmd(1, (int) CIndPrec);
-
-  cgmb_sint(cxprec);
-
-  cgmb_flush_cmd(final_flush);
+    cgmb_cindprec_p(g_p, cxprec);
 }
-
 
 
 /* Colour value extent */
@@ -3439,6 +3444,7 @@ static void setup_binary_context(cgm_context *ctx)
     ctx->funcs.realPrecisionBinary = cgmb_realprec_p;
     ctx->funcs.indexPrecisionBinary = cgmb_indexprec_p;
     ctx->funcs.colorPrecisionBinary = cgmb_colprec_p;
+    ctx->funcs.colorIndexPrecisionBinary = cgmb_cindprec_p;
   ctx->cgm[begin] = CGM_FUNC cgmb_begin;
   ctx->cgm[end] = CGM_FUNC cgmb_end;
   ctx->cgm[bp] = CGM_FUNC cgmb_bp;
@@ -3806,6 +3812,7 @@ public:
     void colorPrecisionClearText(int max) override;
     void colorPrecisionBinary(int value) override;
     void colorIndexPrecisionClearText(int max) override;
+    void colorIndexPrecisionBinary(int value) override;
     void maximumColorIndex(int max) override;
     void colorValueExtent(int redMin, int redMax, int greenMin, int greenMax, int blueMin,
         int blueMax) override;
@@ -3959,6 +3966,11 @@ void MetafileStreamWriter::colorPrecisionBinary(int value)
 void MetafileStreamWriter::colorIndexPrecisionClearText(int max)
 {
     m_context.funcs.colorIndexPrecisionClearText(&m_context, max);
+}
+
+void MetafileStreamWriter::colorIndexPrecisionBinary(int value)
+{
+    m_context.funcs.colorIndexPrecisionBinary(&m_context, value);
 }
 
 void MetafileStreamWriter::maximumColorIndex(int max)
