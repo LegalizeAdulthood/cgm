@@ -1800,7 +1800,7 @@ static void cgmb_string(const char *cptr, int slen)
 
 /* Write a signed integer variable */
 
-static void cgmb_gint(int xin, int precision)
+static void cgmb_gint(cgm_context *ctx, int xin, int precision)
 {
 
   int i, no_out, xshifted;
@@ -1820,9 +1820,12 @@ static void cgmb_gint(int xin, int precision)
       buffer[0] |= 1 << 7;	/* assuming two's complement */
     }
 
-  cgmb_out_bs(buffer, no_out);
+  cgmb_out_bs(ctx, buffer, no_out);
 }
-
+static void cgmb_gint(int xin, int precision)
+{
+    cgmb_gint(g_p, xin, precision);
+}
 
 
 
@@ -1994,12 +1997,14 @@ static void cgmb_vint(int xin)
 
 /* Write a standard CGM signed int */
 
+static void cgmb_sint(cgm_context *ctx, int xin)
+{
+  cgmb_gint(ctx, xin, 16);
+}
 static void cgmb_sint(int xin)
 {
-  cgmb_gint(xin, 16);
+    cgmb_sint(g_p, xin);
 }
-
-
 
 /* Write a signed int at index precision */
 
@@ -2133,16 +2138,19 @@ static void cgmb_epage()
 
 /* Metafile version */
 
-static void cgmb_mfversion(void)
+static void cgmb_mfversion_p(cgm_context *ctx, int version)
 {
-  cgmb_start_cmd(1, (int) MfVersion);
+  cgmb_start_cmd(ctx, 1, (int) MfVersion);
 
-  cgmb_sint(1);
+  cgmb_sint(ctx, version);
 
-  cgmb_flush_cmd(final_flush);
+  cgmb_flush_cmd(ctx, final_flush);
+  cgmb_fb(ctx);
 }
-
-
+static void cgmb_mfversion()
+{
+    cgmb_mfversion_p(g_p, 1);
+}
 
 /* Metafile description */
 
@@ -3396,6 +3404,7 @@ static void setup_binary_context(cgm_context *ctx)
     ctx->funcs.beginPicture = cgmb_bp_p;
     ctx->funcs.beginPictureBody = cgmb_bpage_p;
     ctx->funcs.endPicture = cgmb_epage_p;
+    ctx->funcs.metafileVersion = cgmb_mfversion_p;
   ctx->cgm[begin] = CGM_FUNC cgmb_begin;
   ctx->cgm[end] = CGM_FUNC cgmb_end;
   ctx->cgm[bp] = CGM_FUNC cgmb_bp;
