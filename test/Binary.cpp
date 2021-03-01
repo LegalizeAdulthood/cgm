@@ -171,9 +171,18 @@ TEST_CASE("binary encoding")
         writer->indexPrecisionBinary(16);
 
         const std::string str = stream.str();
-        const int paramLength = 6;
+        const int paramLength = 2;
         REQUIRE(header(str) == OpCode{1, 6, paramLength});
         REQUIRE(i16(str, 2) == 16);
+    }
+    SECTION("color precision")
+    {
+        writer->colorPrecisionBinary(8);
+
+        const std::string str = stream.str();
+        const int paramLength = 2;
+        REQUIRE(header(str) == OpCode{1, 7, paramLength});
+        REQUIRE(i16(str, 2) == 8);
     }
 }
 
@@ -182,12 +191,6 @@ TEST_CASE("TODO", "[.]")
     std::ostringstream stream;
     std::unique_ptr<cgm::MetafileWriter> writer{create(stream, cgm::Encoding::Binary)};
 
-    SECTION("color precision")
-    {
-        writer->colorPrecisionClearText(255);
-
-        REQUIRE(stream.str() == "ColrPrec 255;\n");
-    }
     SECTION("color index precision")
     {
         writer->colorIndexPrecisionClearText(32767);

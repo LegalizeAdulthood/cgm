@@ -142,6 +142,7 @@ public:
     virtual void realPrecisionBinary(RealPrecision prec, int expWidth, int mantWidth) = 0;
     virtual void indexPrecisionClearText(int min, int max) = 0;
     virtual void colorPrecisionClearText(int max) = 0;
+    virtual void colorPrecisionBinary(int value) = 0;
     virtual void colorIndexPrecisionClearText(int max) = 0;
     virtual void maximumColorIndex(int max) = 0;
     virtual void colorValueExtent(int redMin, int redMax, int greenMin, int greenMax, int blueMin, int blueMax) = 0;
