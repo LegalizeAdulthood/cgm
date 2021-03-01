@@ -245,6 +245,63 @@ int i16(const std::string &str, int offset)
     return *reinterpret_cast<const std::int16_t *>(bytes);
 }
 
+const int expectedMetafileElementList[] = {
+    54,
+    Delimiter, BeginMetafile,
+    Delimiter, EndMetafile,
+    Delimiter, BeginPicture,
+    Delimiter, BeginPictureBody,
+    Delimiter, EndPicture,
+    MetafileDescriptor, MetafileVersion,
+    MetafileDescriptor, MetafileDescription,
+    MetafileDescriptor, VdcType,
+    MetafileDescriptor, IntegerPrecision,
+    MetafileDescriptor, RealPrecision,
+    MetafileDescriptor, IndexPrecision,
+    MetafileDescriptor, ColorPrecision,
+    MetafileDescriptor, ColorIndexPrecision,
+    MetafileDescriptor, MaximumColorIndex,
+    MetafileDescriptor, ColorValueExtent,
+    MetafileDescriptor, MetafileElementList,
+    MetafileDescriptor, FontList,
+    MetafileDescriptor, CharacterCodingAnnouncer,
+    PictureDescriptor, ScalingMode,
+    PictureDescriptor, ColorMode,
+    PictureDescriptor, LineWidthMode,
+    PictureDescriptor, MarkerSizeMode,
+    PictureDescriptor, VdcExtent,
+    PictureDescriptor, BackgroundColor,
+    Control, VdcIntPrec,
+    Control, Transparency,
+    Control, ClipRect,
+    Control, ClipIndicator,
+    Primitive, Polyline,
+    Primitive, Polymarker,
+    Primitive, Text,
+    Primitive, Polygon,
+    Primitive, CellArray,
+    Attribute, LineType,
+    Attribute, LineWidth,
+    Attribute, LineColor,
+    Attribute, MarkerType,
+    Attribute, MarkerSize,
+    Attribute, MarkerColor,
+    Attribute, TextFontIndex,
+    Attribute, TextPrecision,
+    Attribute, CharExpansion,
+    Attribute, CharSpacing,
+    Attribute, TextColor,
+    Attribute, CharHeight,
+    Attribute, CharOrientation,
+    Attribute, TextPath,
+    Attribute, TextAlignment,
+    Attribute, InteriorStyle,
+    Attribute, FillColor,
+    Attribute, HatchIndex,
+    Attribute, PatternIndex,
+    Attribute, ColorTable
+};
+
 }
 
 TEST_CASE("binary encoding")
@@ -403,69 +460,33 @@ TEST_CASE("binary encoding")
         // 31 bytes?  Seems wrong....
         const int paramLength = 31;
         REQUIRE(header(str) == OpCode{MetafileDescriptor, MetafileElementList, paramLength});
-        const int expected[] = {
-            54,
-            Delimiter, BeginMetafile,
-            Delimiter, EndMetafile,
-            Delimiter, BeginPicture,
-            Delimiter, BeginPictureBody,
-            Delimiter, EndPicture,
-            MetafileDescriptor, MetafileVersion,
-            MetafileDescriptor, MetafileDescription,
-            MetafileDescriptor, VdcType,
-            MetafileDescriptor, IntegerPrecision,
-            MetafileDescriptor, RealPrecision,
-            MetafileDescriptor, IndexPrecision,
-            MetafileDescriptor, ColorPrecision,
-            MetafileDescriptor, ColorIndexPrecision,
-            MetafileDescriptor, MaximumColorIndex,
-            MetafileDescriptor, ColorValueExtent,
-            MetafileDescriptor, MetafileElementList,
-            MetafileDescriptor, FontList,
-            MetafileDescriptor, CharacterCodingAnnouncer,
-            PictureDescriptor, ScalingMode,
-            PictureDescriptor, ColorMode,
-            PictureDescriptor, LineWidthMode,
-            PictureDescriptor, MarkerSizeMode,
-            PictureDescriptor, VdcExtent,
-            PictureDescriptor, BackgroundColor,
-            Control, VdcIntPrec,
-            Control, Transparency,
-            Control, ClipRect,
-            Control, ClipIndicator,
-            Primitive, Polyline,
-            Primitive, Polymarker,
-            Primitive, Text,
-            Primitive, Polygon,
-            Primitive, CellArray,
-            Attribute, LineType,
-            Attribute, LineWidth,
-            Attribute, LineColor,
-            Attribute, MarkerType,
-            Attribute, MarkerSize,
-            Attribute, MarkerColor,
-            Attribute, TextFontIndex,
-            Attribute, TextPrecision,
-            Attribute, CharExpansion,
-            Attribute, CharSpacing,
-            Attribute, TextColor,
-            Attribute, CharHeight,
-            Attribute, CharOrientation,
-            Attribute, TextPath,
-            Attribute, TextAlignment,
-            Attribute, InteriorStyle,
-            Attribute, FillColor,
-            Attribute, HatchIndex,
-            Attribute, PatternIndex,
-            Attribute, ColorTable
-        };
         int offset = 4;
-        for (int value : expected)
+        for (int value : expectedMetafileElementList)
         {
             REQUIRE(i16(str, offset) == value);
             offset += 2;
         }
     }
+    // TODO: implement this?
+    //SECTION("metafile defaults replacement")
+    //{
+    //    writer->metafileDefaultsReplacement();
+
+    //    REQUIRE(stream.str() == "BegMFDefaults;\n"
+    //        "EndMFDefaults;\n");
+    //}
+    SECTION("font list")
+    {
+        std::vector<std::string> fonts{"Hershey Simplex", "Hershey Roman"};
+        writer->fontList(fonts);
+
+        const std::string str = stream.str();
+        const int paramLength = 30;
+        REQUIRE(header(str) == OpCode{MetafileDescriptor, FontList, paramLength});
+        // TODO: is this right?  Shouldn't it be 2 length encoded strings?
+        REQUIRE(unpack(str, 2) == "Hershey Simplex Hershey Roman");
+    }
+    // character set list
 }
 
 TEST_CASE("TODO", "[.]")
@@ -473,21 +494,6 @@ TEST_CASE("TODO", "[.]")
     std::ostringstream stream;
     std::unique_ptr<cgm::MetafileWriter> writer{create(stream, cgm::Encoding::Binary)};
 
-    SECTION("metafile defaults replacement")
-    {
-        writer->metafileDefaultsReplacement();
-
-        REQUIRE(stream.str() == "BegMFDefaults;\n"
-            "EndMFDefaults;\n");
-    }
-    SECTION("font list")
-    {
-        std::vector<std::string> fonts{"Hershey Simplex", "Hershey Roman"};
-        writer->fontList(fonts);
-
-        REQUIRE(stream.str() == "FontList 'Hershey Simplex', 'Hershey Roman';\n");
-    }
-    // character set list
     SECTION("character coding announcer")
     {
         writer->characterCodingAnnouncer(cgm::CharCodeAnnouncer::Extended8Bit);

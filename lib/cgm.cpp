@@ -2357,36 +2357,42 @@ static void cgmb_mfellist(void)
 
 /* Font List */
 
-static void cgmb_fontlist(void)
+static void cgmb_fontlist_p(cgm_context *ctx, int numFonts, const char *fontNames[])
 {
     register int i, slen;
     register char *s;
-    int font;
 
-    for (i = 0, slen = 0; i < max_std_textfont; i++)
+    for (i = 0, slen = 0; i < numFonts; i++)
     {
-        slen += (fonts[i] != nullptr ? strlen(fonts[i]) : 0) + 1;
+        slen += (fontNames[i] != nullptr ? strlen(fontNames[i]) : 0) + 1;
     }
   s = (char *) gks_malloc(slen);
 
   *s = '\0';
-  for (i = 0; i < max_std_textfont; i++)
+  for (i = 0; i < numFonts; i++)
     {
-      font = map[i];
-      strcat(s, fonts[font]);
-      if (i < max_std_textfont - 1)
+      strcat(s, fontNames[i]);
+      if (i < numFonts - 1)
 	strcat(s, " ");
     }
 
-  cgmb_start_cmd(1, (int) FontList);
+  cgmb_start_cmd(ctx, 1, (int) FontList);
 
-  cgmb_string(s, strlen(s));
+  cgmb_string(ctx, s, strlen(s));
 
-  cgmb_flush_cmd(final_flush);
-
+  cgmb_flush_cmd(ctx, final_flush);
+  cgmb_fb(ctx);
   free(s);
 }
-
+static void cgmb_fontlist(void)
+{
+    std::vector<const char *> fontNames;
+    for (int i = 0; i < max_std_textfont; ++i)
+    {
+        fontNames.push_back(fonts[map[i]]);
+    }
+    cgmb_fontlist_p(g_p, max_std_textfont, fontNames.data());
+}
 
 
 /* Character announcer */
@@ -3472,6 +3478,7 @@ static void setup_binary_context(cgm_context *ctx)
     ctx->funcs.maximumColorIndex = cgmb_maxcind_p;
     ctx->funcs.colorValueExtent = cgmb_cvextent_p;
     ctx->funcs.metafileElementList = cgmb_mfellist_p;
+    ctx->funcs.fontList = cgmb_fontlist_p;
   ctx->cgm[begin] = CGM_FUNC cgmb_begin;
   ctx->cgm[end] = CGM_FUNC cgmb_end;
   ctx->cgm[bp] = CGM_FUNC cgmb_bp;
