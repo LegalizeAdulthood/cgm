@@ -87,6 +87,20 @@ TEST_CASE("binary encoding")
         REQUIRE(int(data[2]) == encodedLength);
         REQUIRE(str.substr(3) == "cgm unit test");
     }
+    SECTION("begin picture body")
+    {
+        writer->beginPictureBody();
+
+        const std::string str = stream.str();
+        REQUIRE(header(str) == OpCode{0, 4, 0});
+    }
+    SECTION("end picture")
+    {
+        writer->endPicture();
+
+        const std::string str = stream.str();
+        REQUIRE(header(str) == OpCode{0, 5, 0});
+    }
 }
 
 TEST_CASE("TODO", "[.]")
@@ -94,18 +108,6 @@ TEST_CASE("TODO", "[.]")
     std::ostringstream stream;
     std::unique_ptr<cgm::MetafileWriter> writer{create(stream, cgm::Encoding::Binary)};
 
-    SECTION("begin picture body")
-    {
-        writer->beginPictureBody();
-
-        REQUIRE(stream.str() == "BegPicBody;\n");
-    }
-    SECTION("end picture")
-    {
-        writer->endPicture();
-
-        REQUIRE(stream.str() == "EndPic;\n");
-    }
     SECTION("metafile version")
     {
         writer->metafileVersion(2);

@@ -2101,23 +2101,32 @@ static void cgmb_bp(const char *pic_name)
 
 
 /* Start picture body */
-
-static void cgmb_bpage(void)
+static void cgmb_bpage_p(cgm_context *ctx)
 {
-  cgmb_start_cmd(0, (int) B_Pic_Body);
+  cgmb_start_cmd(ctx, 0, (int) B_Pic_Body);
 
-  cgmb_flush_cmd(final_flush);
+  cgmb_flush_cmd(ctx, final_flush);
+  cgmb_fb(ctx);
+}
+static void cgmb_bpage()
+{
+    cgmb_bpage_p(g_p);
 }
 
 
 
 /* End picture */
 
-static void cgmb_epage(void)
+static void cgmb_epage_p(cgm_context *ctx)
 {
-  cgmb_start_cmd(0, (int) E_Pic);
+  cgmb_start_cmd(ctx, 0, (int) E_Pic);
 
-  cgmb_flush_cmd(final_flush);
+  cgmb_flush_cmd(ctx, final_flush);
+  cgmb_fb(ctx);
+}
+static void cgmb_epage()
+{
+    cgmb_epage_p(g_p);
 }
 
 
@@ -3385,6 +3394,8 @@ static void setup_binary_context(cgm_context *ctx)
     ctx->funcs.beginMetafile = cgmb_begin_p;
     ctx->funcs.endMetafile = cgmb_end_p;
     ctx->funcs.beginPicture = cgmb_bp_p;
+    ctx->funcs.beginPictureBody = cgmb_bpage_p;
+    ctx->funcs.endPicture = cgmb_epage_p;
   ctx->cgm[begin] = CGM_FUNC cgmb_begin;
   ctx->cgm[end] = CGM_FUNC cgmb_end;
   ctx->cgm[bp] = CGM_FUNC cgmb_bp;
