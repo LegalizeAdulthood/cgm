@@ -2025,18 +2025,21 @@ static void cgmb_cxint(int xin)
 
 
 /* Write an integer at fixed (16 bit) precision */
+static void cgmb_eint(cgm_context *ctx, int xin)
 
-static void cgmb_eint(int xin)
 {
   char byte1;
   unsigned char byte2;
 
   byte1 = xin / 256;
   byte2 = xin & 255;
-  cgmb_out_bc(byte1);
-  cgmb_out_bc(byte2);
+  cgmb_out_bc(ctx, byte1);
+  cgmb_out_bc(ctx, byte2);
 }
-
+static void cgmb_eint(int xin)
+{
+    cgmb_eint(g_p, xin);
+}
 
 
 /* Begin metafile */
@@ -2171,15 +2174,19 @@ static void cgmb_mfdescrip()
 
 /* VDC type */
 
-static void cgmb_vdctype(void)
+static void cgmb_vdctype_p(cgm_context *ctx, cgm::VdcType value)
 {
-  cgmb_start_cmd(1, (int) vdcType);
+  cgmb_start_cmd(ctx, 1, (int) vdcType);
 
-  cgmb_eint((int) vdc_int);
+  cgmb_eint(ctx, (int) value);
 
-  cgmb_flush_cmd(final_flush);
+  cgmb_flush_cmd(ctx, final_flush);
+  cgmb_fb(ctx);
 }
-
+static void cgmb_vdctype()
+{
+    cgmb_vdctype_p(g_p, cgm::VdcType::Integer);
+}
 
 
 /* Integer precision */
@@ -3407,6 +3414,7 @@ static void setup_binary_context(cgm_context *ctx)
     ctx->funcs.endPicture = cgmb_epage_p;
     ctx->funcs.metafileVersion = cgmb_mfversion_p;
     ctx->funcs.metafileDescription = cgmb_mfdescrip_p;
+    ctx->funcs.vdcType = cgmb_vdctype_p;
   ctx->cgm[begin] = CGM_FUNC cgmb_begin;
   ctx->cgm[end] = CGM_FUNC cgmb_end;
   ctx->cgm[bp] = CGM_FUNC cgmb_bp;

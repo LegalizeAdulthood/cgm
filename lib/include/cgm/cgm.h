@@ -17,7 +17,7 @@ enum class Encoding
 
 enum class VdcType
 {
-    Integer = 1,
+    Integer = 0,
     Real
 };
 

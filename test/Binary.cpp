@@ -128,6 +128,24 @@ TEST_CASE("binary encoding")
         REQUIRE(header(str) == OpCode{1, 2, numOf(ident)});
         REQUIRE(unpack(str, 2) == ident);
     }
+    SECTION("vdc type integer")
+    {
+        writer->vdcType(cgm::VdcType::Integer);
+
+        const std::string str = stream.str();
+        const int paramLength = 1;
+        REQUIRE(header(str) == OpCode{1, 3, paramLength});
+        REQUIRE(i16(str, 2) == 0);
+    }
+    SECTION("vdc type real")
+    {
+        writer->vdcType(cgm::VdcType::Real);
+
+        const std::string str = stream.str();
+        const int paramLength = 1;
+        REQUIRE(header(str) == OpCode{1, 3, paramLength});
+        REQUIRE(i16(str, 2) == 1);
+    }
 }
 
 TEST_CASE("TODO", "[.]")
@@ -135,18 +153,6 @@ TEST_CASE("TODO", "[.]")
     std::ostringstream stream;
     std::unique_ptr<cgm::MetafileWriter> writer{create(stream, cgm::Encoding::Binary)};
 
-    SECTION("vdc type integer")
-    {
-        writer->vdcType(cgm::VdcType::Integer);
-
-        REQUIRE(stream.str() == "VDCType Integer;\n");
-    }
-    SECTION("vdc type real")
-    {
-        writer->vdcType(cgm::VdcType::Real);
-
-        REQUIRE(stream.str() == "VDCType Real;\n");
-    }
     SECTION("integer precision")
     {
         writer->intPrecisionClearText(1, 32767);
