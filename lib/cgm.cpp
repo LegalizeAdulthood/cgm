@@ -1986,10 +1986,13 @@ static void cgmb_float(double xin)
 
 
 /* Write direct colour value */
-
+static void cgmb_dcint(cgm_context *ctx, int xin)
+{
+  cgmb_uint(ctx, xin, cprec);
+}
 static void cgmb_dcint(int xin)
 {
-  cgmb_uint(xin, cprec);
+    cgmb_dcint(g_p, xin);
 }
 
 
@@ -2289,20 +2292,24 @@ static void cgmb_cindprec(void)
 
 /* Colour value extent */
 
+static void cgmb_cvextent_p(cgm_context *ctx, int minRed, int maxRed, int minGreen, int maxGreen, int minBlue, int maxBlue)
+{
+  cgmb_start_cmd(ctx, 1, (int) CVExtent);
+
+  cgmb_dcint(ctx, minRed);
+  cgmb_dcint(ctx, minGreen);
+  cgmb_dcint(ctx, minBlue);
+  cgmb_dcint(ctx, maxRed);
+  cgmb_dcint(ctx, maxGreen);
+  cgmb_dcint(ctx, maxBlue);
+
+  cgmb_flush_cmd(ctx, final_flush);
+  cgmb_fb(ctx);
+}
 static void cgmb_cvextent(void)
 {
-  cgmb_start_cmd(1, (int) CVExtent);
-
-  cgmb_dcint(0);
-  cgmb_dcint(0);
-  cgmb_dcint(0);
-  cgmb_dcint(max_colors - 1);
-  cgmb_dcint(max_colors - 1);
-  cgmb_dcint(max_colors - 1);
-
-  cgmb_flush_cmd(final_flush);
+    cgmb_cvextent_p(g_p, 0, max_colors - 1, 0, max_colors - 1, 0, max_colors - 1);
 }
-
 
 
 /* Maximum colour index */
@@ -3456,6 +3463,7 @@ static void setup_binary_context(cgm_context *ctx)
     ctx->funcs.colorPrecisionBinary = cgmb_colprec_p;
     ctx->funcs.colorIndexPrecisionBinary = cgmb_cindprec_p;
     ctx->funcs.maximumColorIndex = cgmb_maxcind_p;
+    ctx->funcs.colorValueExtent = cgmb_cvextent_p;
   ctx->cgm[begin] = CGM_FUNC cgmb_begin;
   ctx->cgm[end] = CGM_FUNC cgmb_end;
   ctx->cgm[bp] = CGM_FUNC cgmb_bp;
@@ -3992,8 +4000,7 @@ void MetafileStreamWriter::maximumColorIndex(int max)
 void MetafileStreamWriter::colorValueExtent(int redMin, int redMax, int greenMin, int greenMax, int blueMin,
     int blueMax)
 {
-    auto dbl = [](float val) { return static_cast<double>(val); };
-    m_context.funcs.colorValueExtent(&m_context, dbl(redMin), dbl(redMax), dbl(greenMin), dbl(greenMax), dbl(blueMin), dbl(blueMax));
+    m_context.funcs.colorValueExtent(&m_context, redMin, redMax, greenMin, greenMax, blueMin, blueMax);
 }
 
 void MetafileStreamWriter::metafileElementList()

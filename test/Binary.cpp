@@ -45,6 +45,11 @@ std::string unpack(const std::string &str, int offset)
     return str.substr(offset + 1, str[offset]);
 }
 
+int i8(const std::string &str, int offset)
+{
+    return static_cast<int>(str[offset]);
+}
+
 int i16(const std::string &str, int offset)
 {
     // This is x86 endian
@@ -202,6 +207,21 @@ TEST_CASE("binary encoding")
         REQUIRE(header(str) == OpCode{1, 9, paramLength});
         REQUIRE(i16(str, 2) == 63);
     }
+    SECTION("color value extent")
+    {
+        writer->colorValueExtent(0, 63, 2, 31, 4, 15);
+
+        const std::string str = stream.str();
+        // should be 6*1?
+        const int paramLength = 6*2;
+        REQUIRE(header(str) == OpCode{1, 10, paramLength});
+        REQUIRE(i8(str, 2) == 0);
+        REQUIRE(i8(str, 3) == 2);
+        REQUIRE(i8(str, 4) == 4);
+        REQUIRE(i8(str, 5) == 63);
+        REQUIRE(i8(str, 6) == 31);
+        REQUIRE(i8(str, 7) == 15);
+    }
 }
 
 TEST_CASE("TODO", "[.]")
@@ -209,12 +229,6 @@ TEST_CASE("TODO", "[.]")
     std::ostringstream stream;
     std::unique_ptr<cgm::MetafileWriter> writer{create(stream, cgm::Encoding::Binary)};
 
-    SECTION("color value extent")
-    {
-        writer->colorValueExtent(0, 63, 0, 63, 0, 63);
-
-        REQUIRE(stream.str() == "ColrValueExt 0 0 0 63 63 63;\n");
-    }
     SECTION("metafile element list")
     {
         writer->metafileElementList();
