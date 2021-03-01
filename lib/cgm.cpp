@@ -92,6 +92,7 @@ struct cgm_funcs
     void (*metafileDescription)(cgm_context *p, const char *value);
     void (*vdcType)(cgm_context *p, cgm::VdcType type);
     void (*intPrecisionClearText)(cgm_context *p, int min, int max);
+    void (*intPrecisionBinary)(cgm_context * p, int value);
     void (*realPrecisionClearText)(cgm_context *p, double minReal, double maxReal, int digits);
     void (*indexPrecisionClearText)(cgm_context *p, int min, int max);
     void (*colorPrecisionClearText)(cgm_context *p, int max);
@@ -2190,14 +2191,18 @@ static void cgmb_vdctype()
 
 
 /* Integer precision */
-
-static void cgmb_intprec(void)
+static void cgmb_intprec_p(cgm_context *ctx, int prec)
 {
-  cgmb_start_cmd(1, (int) IntPrec);
+  cgmb_start_cmd(ctx, 1, (int) IntPrec);
 
-  cgmb_sint(16);
+  cgmb_sint(ctx, prec);
 
-  cgmb_flush_cmd(final_flush);
+  cgmb_flush_cmd(ctx, final_flush);
+  cgmb_fb(ctx);
+}
+static void cgmb_intprec()
+{
+    cgmb_intprec_p(g_p, 16);
 }
 
 
@@ -3415,6 +3420,7 @@ static void setup_binary_context(cgm_context *ctx)
     ctx->funcs.metafileVersion = cgmb_mfversion_p;
     ctx->funcs.metafileDescription = cgmb_mfdescrip_p;
     ctx->funcs.vdcType = cgmb_vdctype_p;
+    ctx->funcs.intPrecisionBinary = cgmb_intprec_p;
   ctx->cgm[begin] = CGM_FUNC cgmb_begin;
   ctx->cgm[end] = CGM_FUNC cgmb_end;
   ctx->cgm[bp] = CGM_FUNC cgmb_bp;
@@ -3774,6 +3780,7 @@ public:
     void metafileDescription(char const *value) override;
     void vdcType(VdcType type) override;
     void intPrecisionClearText(int min, int max) override;
+    void intPrecisionBinary(int value) override;
     void realPrecisionClearText(float minReal, float maxReal, int digits) override;
     void indexPrecisionClearText(int min, int max) override;
     void colorPrecisionClearText(int max) override;
@@ -3891,6 +3898,11 @@ void MetafileStreamWriter::vdcType(VdcType type)
 void MetafileStreamWriter::intPrecisionClearText(int min, int max)
 {
     m_context.funcs.intPrecisionClearText(&m_context, min, max);
+}
+
+void MetafileStreamWriter::intPrecisionBinary(int value)
+{
+    m_context.funcs.intPrecisionBinary(&m_context, value);
 }
 
 void MetafileStreamWriter::realPrecisionClearText(float minReal, float maxReal, int digits)
