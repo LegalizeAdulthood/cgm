@@ -487,6 +487,13 @@ TEST_CASE("binary encoding")
         REQUIRE(unpack(str, 2) == "Hershey Simplex Hershey Roman");
     }
     // character set list
+    SECTION("character coding announcer")
+    {
+        writer->characterCodingAnnouncer(cgm::CharCodeAnnouncer::Extended8Bit);
+
+        const std::string str = stream.str();
+        REQUIRE(header(str) == OpCode{MetafileDescriptor, CharacterCodingAnnouncer, 2});
+    }
 }
 
 TEST_CASE("TODO", "[.]")
@@ -494,12 +501,6 @@ TEST_CASE("TODO", "[.]")
     std::ostringstream stream;
     std::unique_ptr<cgm::MetafileWriter> writer{create(stream, cgm::Encoding::Binary)};
 
-    SECTION("character coding announcer")
-    {
-        writer->characterCodingAnnouncer(cgm::CharCodeAnnouncer::Extended8Bit);
-
-        REQUIRE(stream.str() == "CharCoding Extd8Bit;\n");
-    }
     SECTION("scaling mode")
     {
         SECTION("abstract")

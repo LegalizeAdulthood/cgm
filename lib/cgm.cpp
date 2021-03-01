@@ -2397,15 +2397,19 @@ static void cgmb_fontlist(void)
 
 /* Character announcer */
 
+static void cgmb_cannounce_p(cgm_context *ctx, int value)
+{
+  cgmb_start_cmd(ctx, 1, (int) CharAnnounce);
+
+  cgmb_eint(ctx, value);
+
+  cgmb_flush_cmd(ctx, final_flush);
+  cgmb_fb(ctx);
+}
 static void cgmb_cannounce(void)
 {
-  cgmb_start_cmd(1, (int) CharAnnounce);
-
-  cgmb_eint(3);
-
-  cgmb_flush_cmd(final_flush);
+    cgmb_cannounce_p(g_p, 3);
 }
-
 
 
 /* Scaling mode */
@@ -3479,6 +3483,7 @@ static void setup_binary_context(cgm_context *ctx)
     ctx->funcs.colorValueExtent = cgmb_cvextent_p;
     ctx->funcs.metafileElementList = cgmb_mfellist_p;
     ctx->funcs.fontList = cgmb_fontlist_p;
+    ctx->funcs.characterCodingAnnouncer = cgmb_cannounce_p;
   ctx->cgm[begin] = CGM_FUNC cgmb_begin;
   ctx->cgm[end] = CGM_FUNC cgmb_end;
   ctx->cgm[bp] = CGM_FUNC cgmb_bp;
