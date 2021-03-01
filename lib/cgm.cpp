@@ -92,10 +92,11 @@ struct cgm_funcs
     void (*metafileDescription)(cgm_context *p, const char *value);
     void (*vdcType)(cgm_context *p, cgm::VdcType type);
     void (*intPrecisionClearText)(cgm_context *p, int min, int max);
-    void (*intPrecisionBinary)(cgm_context * p, int value);
+    void (*intPrecisionBinary)(cgm_context *p, int value);
     void (*realPrecisionClearText)(cgm_context *p, double minReal, double maxReal, int digits);
-    void (*realPrecisionBinary)(cgm_context * p, int prec, int expWidth, int mantWidth);
+    void (*realPrecisionBinary)(cgm_context *p, int prec, int expWidth, int mantWidth);
     void (*indexPrecisionClearText)(cgm_context *p, int min, int max);
+    void (*indexPrecisionBinary)(cgm_context *p, int value);
     void (*colorPrecisionClearText)(cgm_context *p, int max);
     void (*colorIndexPrecisionClearText)(cgm_context *p, int max);
     void (*maximumColorIndex)(cgm_context *p, int max);
@@ -132,13 +133,13 @@ struct cgm_funcs
     void (*textColor)(cgm_context *p, int index);
     void (*charHeight)(cgm_context *p, int value);
     void (*charOrientation)(cgm_context *p, int upX, int upY, int baseX, int baseY);
-    void (*textPath)(cgm_context * p, int value);
-    void (*textAlignment)(cgm_context * p, int horiz, int vert, double contHoriz, double contVert);
-    void (*interiorStyle)(cgm_context * p, int value);
-    void (*fillColor)(cgm_context * p, int value);
-    void (*hatchIndex)(cgm_context * p, int value);
-    void (*patternIndex)(cgm_context * p, int value);
-    void (*colorTable)(cgm_context * p, int startIndex, int numColors, const cgm::Color *colors);
+    void (*textPath)(cgm_context *p, int value);
+    void (*textAlignment)(cgm_context *p, int horiz, int vert, double contHoriz, double contVert);
+    void (*interiorStyle)(cgm_context *p, int value);
+    void (*fillColor)(cgm_context *p, int value);
+    void (*hatchIndex)(cgm_context *p, int value);
+    void (*patternIndex)(cgm_context *p, int value);
+    void (*colorTable)(cgm_context *p, int startIndex, int numColors, const cgm::Color *colors);
 };
 
 struct cgm_context
@@ -2228,14 +2229,18 @@ static void cgmb_realprec(void)
 
 
 /* Index precision */
+static void cgmb_indexprec_p(cgm_context *ctx, int value)
+{
+  cgmb_start_cmd(ctx, 1, (int) IndexPrec);
 
+  cgmb_sint(ctx, value);
+
+  cgmb_flush_cmd(ctx, final_flush);
+  cgmb_fb(ctx);
+}
 static void cgmb_indexprec(void)
 {
-  cgmb_start_cmd(1, (int) IndexPrec);
-
-  cgmb_sint(16);
-
-  cgmb_flush_cmd(final_flush);
+    cgmb_indexprec_p(g_p, 16);
 }
 
 
@@ -3427,6 +3432,7 @@ static void setup_binary_context(cgm_context *ctx)
     ctx->funcs.vdcType = cgmb_vdctype_p;
     ctx->funcs.intPrecisionBinary = cgmb_intprec_p;
     ctx->funcs.realPrecisionBinary = cgmb_realprec_p;
+    ctx->funcs.indexPrecisionBinary = cgmb_indexprec_p;
   ctx->cgm[begin] = CGM_FUNC cgmb_begin;
   ctx->cgm[end] = CGM_FUNC cgmb_end;
   ctx->cgm[bp] = CGM_FUNC cgmb_bp;
@@ -3790,6 +3796,7 @@ public:
     void realPrecisionClearText(float minReal, float maxReal, int digits) override;
     void realPrecisionBinary(RealPrecision prec, int expWidth, int mantWidth) override;
     void indexPrecisionClearText(int min, int max) override;
+    void indexPrecisionBinary(int value) override;
     void colorPrecisionClearText(int max) override;
     void colorIndexPrecisionClearText(int max) override;
     void maximumColorIndex(int max) override;
@@ -3925,6 +3932,11 @@ void MetafileStreamWriter::realPrecisionBinary(RealPrecision prec, int expWidth,
 void MetafileStreamWriter::indexPrecisionClearText(int min, int max)
 {
     m_context.funcs.indexPrecisionClearText(&m_context, min, max);
+}
+
+void MetafileStreamWriter::indexPrecisionBinary(int value)
+{
+    m_context.funcs.indexPrecisionBinary(&m_context, value);
 }
 
 void MetafileStreamWriter::colorPrecisionClearText(int max)

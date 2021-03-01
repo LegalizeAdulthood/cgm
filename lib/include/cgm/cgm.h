@@ -183,6 +183,7 @@ public:
     virtual void hatchIndex(int value) = 0;
     virtual void patternIndex(int value) = 0;
     virtual void colorTable(int startIndex, std::vector<Color> const &colors) = 0;
+    virtual void indexPrecisionBinary(int value) = 0;
 };
 
 std::unique_ptr<MetafileWriter> create(std::ostream &stream, Encoding enc);
