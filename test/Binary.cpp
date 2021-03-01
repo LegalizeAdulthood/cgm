@@ -3,6 +3,7 @@
 #include <catch2/catch.hpp>
 
 #include <array>
+#include <cstdint>
 #include <sstream>
 
 namespace
@@ -42,6 +43,13 @@ OpCode header(const std::string &str)
 std::string unpack(const std::string &str, int offset)
 {
     return str.substr(offset + 1, str[offset]);
+}
+
+int i16(const std::string &str, int offset)
+{
+    // This is x86 endian
+    const char bytes[2]{str[offset+1], str[offset]};
+    return *reinterpret_cast<const std::int16_t *>(bytes);
 }
 
 }
@@ -106,7 +114,10 @@ TEST_CASE("binary encoding")
         writer->metafileVersion(2);
 
         const std::string str = stream.str();
-        REQUIRE(header(str) == OpCode{1, 1, 1});
+        // Shouldn't the param length be 2, not 1?
+        const int paramLength = 1;
+        REQUIRE(header(str) == OpCode{1, 1, paramLength});
+        REQUIRE(i16(str, 2) == 2);
     }
 }
 
