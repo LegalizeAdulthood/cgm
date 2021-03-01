@@ -15,6 +15,184 @@ int numOf(T (&ary)[N])
     return N;
 }
 
+enum ElementClass
+{
+    Delimiter = 0,
+    MetafileDescriptor = 1,
+    PictureDescriptor = 2,
+    Control = 3,
+    Primitive = 4,
+    Attribute = 5,
+    Escape = 6,
+    External = 7,
+    Segment = 8,
+    Application = 9
+};
+
+enum ElementOpCode
+{
+    NoOp = 0,
+    BeginMetafile = 1,
+    EndMetafile = 2,
+    BeginPicture = 3,
+    BeginPictureBody = 4,
+    EndPicture = 5,
+    BeginSegment = 6,
+    EndSegment = 7,
+    BeginFigure = 8,
+    EndFigure = 9,
+    BeginProtection = 13,
+    EndProtection = 14,
+    BeginCompoundLine = 15,
+    EndCompoundLine = 16,
+    BeginCompoundTextPath = 17,
+    EndCompoundTextPath = 18,
+    BeginTileArray = 19,
+    EndTileArray = 20,
+    BeginAppStruct = 21,
+    BeginAppStructBody = 22,
+    EndAppStruct = 23,
+    MetafileVersion = 1,
+    MetafileDescription = 2,
+    VdcType = 3,
+    IntegerPrecision = 4,
+    RealPrecision = 5,
+    IndexPrecision = 6,
+    ColorPrecision = 7,
+    ColorIndexPrecision = 8,
+    MaximumColorIndex = 9,
+    ColorValueExtent = 10,
+    MetafileElementList = 11,
+    MetafileDefaultsReplacement = 12,
+    FontList = 13,
+    CharacterSetList = 14,
+    CharacterCodingAnnouncer = 15,
+    NamePrecision = 16,
+    MaximumVdcExtent = 17,
+    SegmentPriorityExtent = 18,
+    ColorModel = 19,
+    ColorCalibration = 20,
+    FontProperties = 21,
+    GlyphMapping = 22,
+    SymbolLibrariList = 23,
+    PictureDirectory = 24,
+    ScalingMode = 1,
+    ColorMode = 2,
+    LineWidthMode = 3,
+    MarkerSizeMode = 4,
+    EdgeWidthMode = 5,
+    VdcExtent = 6,
+    BackgroundColor = 7,
+    DeviceViewport = 8,
+    DeviceViewportMode = 9,
+    DeviceViewportMapping = 10,
+    LineRep = 11,
+    MarkerRep = 12,
+    TextRep = 13,
+    FillRep = 14,
+    EdgeRep = 15,
+    InteriorStyleMode = 16,
+    LineEdgeTypeDef = 17,
+    HatchStyleDef = 18,
+    PatternDef = 19,
+    AppStructDir = 20,
+    VdcIntPrec = 1,
+    VdcRealPrec = 2,
+    AuxiliaryColor = 3,
+    Transparency = 4,
+    ClipRect = 5,
+    ClipIndicator = 6,
+    LineClipMode = 7,
+    MarkerClipMode = 8,
+    EdgeClipMode = 9,
+    NewRegion = 10,
+    SavePrimContext = 11,
+    RestorePrimContext = 12,
+    ProtectionIndicator = 17,
+    TextPathMode = 18,
+    MitreLimit = 19,
+    TransparentCellColor = 20,
+    Polyline = 1,
+    DisjointPolyline = 2,
+    Polymarker = 3,
+    Text = 4,
+    RestrictedText = 5,
+    AppendText = 6,
+    Polygon = 7,
+    PolygonSet = 8,
+    CellArray = 9,
+    GDP = 10,
+    Rectangle = 11,
+    Circle = 12,
+    CircularArc3Point = 13,
+    CircularArc3PointClose = 14,
+    CircularArcCenter = 15,
+    CircularArcCenterClose = 16,
+    Ellipse = 17,
+    EllipticalArc = 18,
+    EllipticalArcClose = 19,
+    CircularArcCenterReversed = 20,
+    ConnectingEdge = 21,
+    HyperbolicArc = 22,
+    ParabolicArc = 23,
+    NUBSpline = 24,
+    NURBSpline = 25,
+    Polybezier = 26,
+    Polysymbol = 27,
+    BitonalTile = 28,
+    Tile = 29,
+    LineIndex = 1,
+    LineType = 2,
+    LineWidth = 3,
+    LineColor = 4,
+    MarkerIndex = 5,
+    MarkerType = 6,
+    MarkerSize = 7,
+    MarkerColor = 8,
+    TextIndex = 9,
+    TextFontIndex = 10,
+    TextPrecision = 11,
+    CharExpansion = 12,
+    CharSpacing = 13,
+    TextColor = 14,
+    CharHeight = 15,
+    CharOrientation = 16,
+    TextPath = 17,
+    TextAlignment = 18,
+    CharSetIndex = 19,
+    AltCharSetIndex = 20,
+    FillIndex = 21,
+    InteriorStyle = 22,
+    FillColor = 23,
+    HatchIndex = 24,
+    PatternIndex = 25,
+    EdgeIndex = 26,
+    EdgeType = 27,
+    EdgeColor = 29,
+    EdgeVisibility = 30,
+    FillRefPt = 31,
+    PatternTable = 32,
+    PatternSize = 33,
+    ColorTable = 34,
+    AspectSourceFlags = 35,
+    PickId = 36,
+    LineCap = 37,
+    LineJoin = 38,
+    LineTypeContinuation = 39,
+    LineTypeInitialOffset = 40,
+    TextScoreType = 41,
+    RestrictedTextType = 42,
+    InterpolatedInterior = 43,
+    EdgeCap = 44,
+    EdgeJoin = 45,
+    EdgeTypeContinuation = 46,
+    EdgeTypeInitialOffset = 47,
+    SymbolLibraryIndex = 48,
+    SymbolColor = 49,
+    SymbolSize = 50,
+    SymbolOrientation = 51,
+};
+
 struct OpCode
 {
     int classCode;
@@ -25,8 +203,13 @@ struct OpCode
 bool operator==(OpCode lhs, OpCode rhs)
 {
     return lhs.classCode == rhs.classCode
-        || lhs.opCode == rhs.opCode
-        || lhs.paramLength == rhs.paramLength;
+        && lhs.opCode == rhs.opCode
+        && lhs.paramLength == rhs.paramLength;
+}
+
+std::ostream &operator<<(std::ostream &stream, OpCode value)
+{
+    return stream << '{' << value.classCode << ", " << value.opCode << ", " << value.paramLength << '}';
 }
 
 OpCode header(const std::string &str)
@@ -48,6 +231,11 @@ std::string unpack(const std::string &str, int offset)
 int i8(const std::string &str, int offset)
 {
     return static_cast<int>(str[offset]);
+}
+
+int u8(const std::string &str, int offset)
+{
+    return static_cast<unsigned char>(str[offset]);
 }
 
 int i16(const std::string &str, int offset)
@@ -73,10 +261,7 @@ TEST_CASE("binary encoding")
         const int encodedLength = numOf(ident) - 1;
         REQUIRE(str.size() == std::size_t(3 + encodedLength));
         const char *data = str.data();
-        const OpCode op = header(str);
-        REQUIRE(op.classCode == 0);
-        REQUIRE(op.opCode == 1);
-        REQUIRE(op.paramLength == numOf(ident));
+        REQUIRE(header(str) == OpCode{Delimiter, BeginMetafile, numOf(ident)});
         REQUIRE(int(data[2]) == encodedLength);
         REQUIRE(unpack(str, 2) == "cgm unit test"); 
     }
@@ -85,7 +270,7 @@ TEST_CASE("binary encoding")
         writer->endMetafile();
 
         const std::string str = stream.str();
-        REQUIRE(header(str) == OpCode{0, 2, 0});
+        REQUIRE(header(str) == OpCode{Delimiter, EndMetafile, 0});
     }
     SECTION("begin picture")
     {
@@ -96,7 +281,7 @@ TEST_CASE("binary encoding")
         const int encodedLength = numOf(ident) - 1;
         REQUIRE(str.size() == std::size_t(3 + encodedLength));
         const char *data = str.data();
-        REQUIRE(header(str) == OpCode{0, 3, numOf(ident)});
+        REQUIRE(header(str) == OpCode{Delimiter, BeginPicture, numOf(ident)});
         REQUIRE(int(data[2]) == encodedLength);
         REQUIRE(str.substr(3) == "cgm unit test");
     }
@@ -105,23 +290,21 @@ TEST_CASE("binary encoding")
         writer->beginPictureBody();
 
         const std::string str = stream.str();
-        REQUIRE(header(str) == OpCode{0, 4, 0});
+        REQUIRE(header(str) == OpCode{Delimiter, BeginPictureBody, 0});
     }
     SECTION("end picture")
     {
         writer->endPicture();
 
         const std::string str = stream.str();
-        REQUIRE(header(str) == OpCode{0, 5, 0});
+        REQUIRE(header(str) == OpCode{Delimiter, EndPicture, 0});
     }
     SECTION("metafile version")
     {
         writer->metafileVersion(2);
 
         const std::string str = stream.str();
-        // Shouldn't the param length be 2, not 1?
-        const int paramLength = 1;
-        REQUIRE(header(str) == OpCode{1, 1, paramLength});
+        REQUIRE(header(str) == OpCode{MetafileDescriptor, MetafileVersion, 2});
         REQUIRE(i16(str, 2) == 2);
     }
     SECTION("metafile description")
@@ -130,7 +313,7 @@ TEST_CASE("binary encoding")
         writer->metafileDescription(ident);
 
         const std::string str = stream.str();
-        REQUIRE(header(str) == OpCode{1, 2, numOf(ident)});
+        REQUIRE(header(str) == OpCode{MetafileDescriptor, MetafileDescription, numOf(ident)});
         REQUIRE(unpack(str, 2) == ident);
     }
     SECTION("vdc type integer")
@@ -138,8 +321,7 @@ TEST_CASE("binary encoding")
         writer->vdcType(cgm::VdcType::Integer);
 
         const std::string str = stream.str();
-        const int paramLength = 1;
-        REQUIRE(header(str) == OpCode{1, 3, paramLength});
+        REQUIRE(header(str) == OpCode{MetafileDescriptor, VdcType, 2});
         REQUIRE(i16(str, 2) == 0);
     }
     SECTION("vdc type real")
@@ -147,8 +329,7 @@ TEST_CASE("binary encoding")
         writer->vdcType(cgm::VdcType::Real);
 
         const std::string str = stream.str();
-        const int paramLength = 1;
-        REQUIRE(header(str) == OpCode{1, 3, paramLength});
+        REQUIRE(header(str) == OpCode{MetafileDescriptor, VdcType, 2});
         REQUIRE(i16(str, 2) == 1);
     }
     SECTION("integer precision")
@@ -156,8 +337,7 @@ TEST_CASE("binary encoding")
         writer->intPrecisionBinary(32);
 
         const std::string str = stream.str();
-        const int paramLength = 1;
-        REQUIRE(header(str) == OpCode{1, 4, paramLength});
+        REQUIRE(header(str) == OpCode{MetafileDescriptor, IntegerPrecision, 2});
         REQUIRE(i16(str, 2) == 32);
     }
     SECTION("real precision")
@@ -165,8 +345,7 @@ TEST_CASE("binary encoding")
         writer->realPrecisionBinary(cgm::RealPrecision::Floating, 9, 23);
 
         const std::string str = stream.str();
-        const int paramLength = 6;
-        REQUIRE(header(str) == OpCode{1, 5, paramLength});
+        REQUIRE(header(str) == OpCode{MetafileDescriptor, RealPrecision, 6});
         REQUIRE(i16(str, 2) == 0);
         REQUIRE(i16(str, 4) == 9);
         REQUIRE(i16(str, 6) == 23);
@@ -176,8 +355,7 @@ TEST_CASE("binary encoding")
         writer->indexPrecisionBinary(16);
 
         const std::string str = stream.str();
-        const int paramLength = 2;
-        REQUIRE(header(str) == OpCode{1, 6, paramLength});
+        REQUIRE(header(str) == OpCode{MetafileDescriptor, IndexPrecision, 2});
         REQUIRE(i16(str, 2) == 16);
     }
     SECTION("color precision")
@@ -185,8 +363,7 @@ TEST_CASE("binary encoding")
         writer->colorPrecisionBinary(16);
 
         const std::string str = stream.str();
-        const int paramLength = 2;
-        REQUIRE(header(str) == OpCode{1, 7, paramLength});
+        REQUIRE(header(str) == OpCode{MetafileDescriptor, ColorPrecision, 2});
         REQUIRE(i16(str, 2) == 16);
     }
     SECTION("color index precision")
@@ -194,8 +371,7 @@ TEST_CASE("binary encoding")
         writer->colorIndexPrecisionBinary(8);
 
         const std::string str = stream.str();
-        const int paramLength = 2;
-        REQUIRE(header(str) == OpCode{1, 8, paramLength});
+        REQUIRE(header(str) == OpCode{MetafileDescriptor, ColorIndexPrecision, 2});
         REQUIRE(i16(str, 2) == 8);
     }
     SECTION("maximum color index")
@@ -203,8 +379,7 @@ TEST_CASE("binary encoding")
         writer->maximumColorIndex(63);
 
         const std::string str = stream.str();
-        const int paramLength = 2;
-        REQUIRE(header(str) == OpCode{1, 9, paramLength});
+        REQUIRE(header(str) == OpCode{MetafileDescriptor, MaximumColorIndex, 2});
         REQUIRE(i16(str, 2) == 63);
     }
     SECTION("color value extent")
@@ -212,15 +387,84 @@ TEST_CASE("binary encoding")
         writer->colorValueExtent(0, 63, 2, 31, 4, 15);
 
         const std::string str = stream.str();
-        // should be 6*1?
-        const int paramLength = 6*2;
-        REQUIRE(header(str) == OpCode{1, 10, paramLength});
+        REQUIRE(header(str) == OpCode{MetafileDescriptor, ColorValueExtent, 6});
         REQUIRE(i8(str, 2) == 0);
         REQUIRE(i8(str, 3) == 2);
         REQUIRE(i8(str, 4) == 4);
         REQUIRE(i8(str, 5) == 63);
         REQUIRE(i8(str, 6) == 31);
         REQUIRE(i8(str, 7) == 15);
+    }
+    SECTION("metafile element list")
+    {
+        writer->metafileElementList();
+
+        const std::string str = stream.str();
+        // 31 bytes?  Seems wrong....
+        const int paramLength = 31;
+        REQUIRE(header(str) == OpCode{MetafileDescriptor, MetafileElementList, paramLength});
+        const int expected[] = {
+            54,
+            Delimiter, BeginMetafile,
+            Delimiter, EndMetafile,
+            Delimiter, BeginPicture,
+            Delimiter, BeginPictureBody,
+            Delimiter, EndPicture,
+            MetafileDescriptor, MetafileVersion,
+            MetafileDescriptor, MetafileDescription,
+            MetafileDescriptor, VdcType,
+            MetafileDescriptor, IntegerPrecision,
+            MetafileDescriptor, RealPrecision,
+            MetafileDescriptor, IndexPrecision,
+            MetafileDescriptor, ColorPrecision,
+            MetafileDescriptor, ColorIndexPrecision,
+            MetafileDescriptor, MaximumColorIndex,
+            MetafileDescriptor, ColorValueExtent,
+            MetafileDescriptor, MetafileElementList,
+            MetafileDescriptor, FontList,
+            MetafileDescriptor, CharacterCodingAnnouncer,
+            PictureDescriptor, ScalingMode,
+            PictureDescriptor, ColorMode,
+            PictureDescriptor, LineWidthMode,
+            PictureDescriptor, MarkerSizeMode,
+            PictureDescriptor, VdcExtent,
+            PictureDescriptor, BackgroundColor,
+            Control, VdcIntPrec,
+            Control, Transparency,
+            Control, ClipRect,
+            Control, ClipIndicator,
+            Primitive, Polyline,
+            Primitive, Polymarker,
+            Primitive, Text,
+            Primitive, Polygon,
+            Primitive, CellArray,
+            Attribute, LineType,
+            Attribute, LineWidth,
+            Attribute, LineColor,
+            Attribute, MarkerType,
+            Attribute, MarkerSize,
+            Attribute, MarkerColor,
+            Attribute, TextFontIndex,
+            Attribute, TextPrecision,
+            Attribute, CharExpansion,
+            Attribute, CharSpacing,
+            Attribute, TextColor,
+            Attribute, CharHeight,
+            Attribute, CharOrientation,
+            Attribute, TextPath,
+            Attribute, TextAlignment,
+            Attribute, InteriorStyle,
+            Attribute, FillColor,
+            Attribute, HatchIndex,
+            Attribute, PatternIndex,
+            Attribute, ColorTable
+        };
+        int offset = 4;
+        for (int value : expected)
+        {
+            REQUIRE(i16(str, offset) == value);
+            offset += 2;
+        }
     }
 }
 
@@ -229,20 +473,6 @@ TEST_CASE("TODO", "[.]")
     std::ostringstream stream;
     std::unique_ptr<cgm::MetafileWriter> writer{create(stream, cgm::Encoding::Binary)};
 
-    SECTION("metafile element list")
-    {
-        writer->metafileElementList();
-
-        REQUIRE(stream.str() == 
-            "MFElemList \"BegMF EndMF BegPic BegPicBody EndPic MFVersion MFDesc VDCType \n"
-            "   IntegerPrec RealPrec IndexPrec ColrPrec ColrIndexPrec MaxColrIndex \n"
-            "   ColrValueExt MFElemList FontList CharCoding ScaleMode ColrMode \n"
-            "   LineWidthMode MarkerSizeMode VDCExt BackColr VDCIntegerPrec Transparency \n"
-            "   ClipRect Clip Line Marker Text Polygon CellArray LineType LineWidth \n"
-            "   LineColr MarkerType MarkerSize MarkerColr TextFontIndex TextPrec CharExpan \n"
-            "   CharSpace TextColr CharHeight CharOri TextPath TextAlign IntStyle FillColr \n"
-            "   HatchIndex PatIndex ColrTable\";\n");
-    }
     SECTION("metafile defaults replacement")
     {
         writer->metafileDefaultsReplacement();

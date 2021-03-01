@@ -2018,10 +2018,13 @@ static void cgmb_sint(int xin)
 }
 
 /* Write a signed int at index precision */
-
+static void cgmb_xint(cgm_context *ctx, int xin)
+{
+  cgmb_gint(ctx, xin, 16);
+}
 static void cgmb_xint(int xin)
 {
-  cgmb_gint(xin, 16);
+    cgmb_xint(g_p, xin);
 }
 
 
@@ -2331,21 +2334,25 @@ static void cgmb_maxcind(void)
 
 /* Metafile element list */
 
-static void cgmb_mfellist(void)
+static void cgmb_mfellist_p(cgm_context *ctx)
 {
   int i;
 
-  cgmb_start_cmd(1, (int) MfElList);
-  cgmb_sint(n_melements);
+  cgmb_start_cmd(ctx, 1, (int) MfElList);
+  cgmb_sint(ctx, n_melements);
 
   for (i = 2; i < 2 * n_melements; ++i)
     {
-      cgmb_xint(element_list[i]);
+      cgmb_xint(ctx, element_list[i]);
     }
 
-  cgmb_flush_cmd(final_flush);
+  cgmb_flush_cmd(ctx, final_flush);
+  cgmb_fb(ctx);
 }
-
+static void cgmb_mfellist(void)
+{
+    cgmb_mfellist_p(g_p);
+}
 
 
 /* Font List */
@@ -3464,6 +3471,7 @@ static void setup_binary_context(cgm_context *ctx)
     ctx->funcs.colorIndexPrecisionBinary = cgmb_cindprec_p;
     ctx->funcs.maximumColorIndex = cgmb_maxcind_p;
     ctx->funcs.colorValueExtent = cgmb_cvextent_p;
+    ctx->funcs.metafileElementList = cgmb_mfellist_p;
   ctx->cgm[begin] = CGM_FUNC cgmb_begin;
   ctx->cgm[end] = CGM_FUNC cgmb_end;
   ctx->cgm[bp] = CGM_FUNC cgmb_bp;
