@@ -103,6 +103,12 @@ enum class InteriorStyle
     Empty
 };
 
+enum class RealPrecision
+{
+    Floating,
+    Fixed
+};
+
 template <typename T>
 struct Point
 {
@@ -133,6 +139,7 @@ public:
     virtual void intPrecisionClearText(int min, int max) = 0;
     virtual void intPrecisionBinary(int value) = 0;
     virtual void realPrecisionClearText(float minReal, float maxReal, int digits) = 0;
+    virtual void realPrecisionBinary(RealPrecision prec, int expWidth, int mantWidth) = 0;
     virtual void indexPrecisionClearText(int min, int max) = 0;
     virtual void colorPrecisionClearText(int max) = 0;
     virtual void colorIndexPrecisionClearText(int max) = 0;

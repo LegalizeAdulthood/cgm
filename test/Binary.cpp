@@ -155,6 +155,17 @@ TEST_CASE("binary encoding")
         REQUIRE(header(str) == OpCode{1, 4, paramLength});
         REQUIRE(i16(str, 2) == 32);
     }
+    SECTION("real precision")
+    {
+        writer->realPrecisionBinary(cgm::RealPrecision::Floating, 9, 23);
+
+        const std::string str = stream.str();
+        const int paramLength = 6;
+        REQUIRE(header(str) == OpCode{1, 5, paramLength});
+        REQUIRE(i16(str, 2) == 0);
+        REQUIRE(i16(str, 4) == 9);
+        REQUIRE(i16(str, 6) == 23);
+    }
 }
 
 TEST_CASE("TODO", "[.]")
@@ -162,12 +173,6 @@ TEST_CASE("TODO", "[.]")
     std::ostringstream stream;
     std::unique_ptr<cgm::MetafileWriter> writer{create(stream, cgm::Encoding::Binary)};
 
-    SECTION("real precision")
-    {
-        writer->realPrecisionClearText(-32767.f, 32767.f, 4);
-
-        REQUIRE(stream.str() == "RealPrec -32767.000000 32767.000000 4;\n");
-    }
     SECTION("index precision")
     {
         writer->indexPrecisionClearText(0, 127);
