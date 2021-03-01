@@ -193,6 +193,15 @@ TEST_CASE("binary encoding")
         REQUIRE(header(str) == OpCode{1, 8, paramLength});
         REQUIRE(i16(str, 2) == 8);
     }
+    SECTION("maximum color index")
+    {
+        writer->maximumColorIndex(63);
+
+        const std::string str = stream.str();
+        const int paramLength = 2;
+        REQUIRE(header(str) == OpCode{1, 9, paramLength});
+        REQUIRE(i16(str, 2) == 63);
+    }
 }
 
 TEST_CASE("TODO", "[.]")
@@ -200,12 +209,6 @@ TEST_CASE("TODO", "[.]")
     std::ostringstream stream;
     std::unique_ptr<cgm::MetafileWriter> writer{create(stream, cgm::Encoding::Binary)};
 
-    SECTION("maximum color index")
-    {
-        writer->maximumColorIndex(63);
-
-        REQUIRE(stream.str() == "MaxColrIndex 63;\n");
-    }
     SECTION("color value extent")
     {
         writer->colorValueExtent(0, 63, 0, 63, 0, 63);

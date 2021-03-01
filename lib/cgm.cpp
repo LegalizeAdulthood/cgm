@@ -1836,7 +1836,7 @@ static void cgmb_gint(int xin, int precision)
 
 /* Write an unsigned integer variable */
 
-static void cgmb_uint(unsigned int xin, int precision)
+static void cgmb_uint(cgm_context *ctx, unsigned int xin, int precision)
 {
   int i, no_out;
   unsigned char buffer[4];
@@ -1849,9 +1849,12 @@ static void cgmb_uint(unsigned int xin, int precision)
       xin >>= byte_size;
     }
 
-  cgmb_out_bs((char *) buffer, no_out);
+  cgmb_out_bs(ctx, (char *) buffer, no_out);
 }
-
+static void cgmb_uint(unsigned int xin, int precision)
+{
+    cgmb_uint(g_p, xin, precision);
+}
 
 
 /* Write fixed point variable */
@@ -2021,10 +2024,13 @@ static void cgmb_xint(int xin)
 
 
 /* Write an unsigned integer at colour index precision */
-
+static void cgmb_cxint(cgm_context *ctx, int xin)
+{
+    cgmb_uint(ctx, (unsigned) xin, cxprec);
+}
 static void cgmb_cxint(int xin)
 {
-  cgmb_uint((unsigned) xin, cxprec);
+    cgmb_cxint(g_p, xin);
 }
 
 
@@ -2301,15 +2307,19 @@ static void cgmb_cvextent(void)
 
 /* Maximum colour index */
 
+static void cgmb_maxcind_p(cgm_context *ctx, int value)
+{
+  cgmb_start_cmd(ctx, 1, (int) MaxCInd);
+
+  cgmb_cxint(ctx, value);
+
+  cgmb_flush_cmd(ctx, final_flush);
+  cgmb_fb(ctx);
+}
 static void cgmb_maxcind(void)
 {
-  cgmb_start_cmd(1, (int) MaxCInd);
-
-  cgmb_cxint(MAX_COLOR - 1);
-
-  cgmb_flush_cmd(final_flush);
+    cgmb_maxcind_p(g_p, MAX_COLOR - 1);
 }
-
 
 
 /* Metafile element list */
@@ -3445,6 +3455,7 @@ static void setup_binary_context(cgm_context *ctx)
     ctx->funcs.indexPrecisionBinary = cgmb_indexprec_p;
     ctx->funcs.colorPrecisionBinary = cgmb_colprec_p;
     ctx->funcs.colorIndexPrecisionBinary = cgmb_cindprec_p;
+    ctx->funcs.maximumColorIndex = cgmb_maxcind_p;
   ctx->cgm[begin] = CGM_FUNC cgmb_begin;
   ctx->cgm[end] = CGM_FUNC cgmb_end;
   ctx->cgm[bp] = CGM_FUNC cgmb_bp;
