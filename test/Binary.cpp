@@ -119,6 +119,15 @@ TEST_CASE("binary encoding")
         REQUIRE(header(str) == OpCode{1, 1, paramLength});
         REQUIRE(i16(str, 2) == 2);
     }
+    SECTION("metafile description")
+    {
+        const char ident[]{"this is a foo widget"};
+        writer->metafileDescription(ident);
+
+        const std::string str = stream.str();
+        REQUIRE(header(str) == OpCode{1, 2, numOf(ident)});
+        REQUIRE(unpack(str, 2) == ident);
+    }
 }
 
 TEST_CASE("TODO", "[.]")
@@ -126,12 +135,6 @@ TEST_CASE("TODO", "[.]")
     std::ostringstream stream;
     std::unique_ptr<cgm::MetafileWriter> writer{create(stream, cgm::Encoding::Binary)};
 
-    SECTION("metafile description")
-    {
-        writer->metafileDescription("this is a foo widget");
-
-        REQUIRE(stream.str() == "MFDesc \"this is a foo widget\";\n");
-    }
     SECTION("vdc type integer")
     {
         writer->vdcType(cgm::VdcType::Integer);

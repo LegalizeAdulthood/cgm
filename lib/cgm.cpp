@@ -2154,18 +2154,19 @@ static void cgmb_mfversion()
 
 /* Metafile description */
 
-static void cgmb_mfdescrip(void)
+static void cgmb_mfdescrip_p(cgm_context *ctx, const char *descrip)
 {
-  char *descrip;
+  cgmb_start_cmd(ctx, 1, MfDescrip);
 
-  cgmb_start_cmd(1, MfDescrip);
+  cgmb_string(ctx, descrip, strlen(descrip));
 
-  descrip = "GKS 5 CGM Binary";
-  cgmb_string(descrip, strlen(descrip));
-
-  cgmb_flush_cmd(final_flush);
+  cgmb_flush_cmd(ctx, final_flush);
+  cgmb_fb(ctx);
 }
-
+static void cgmb_mfdescrip()
+{
+    cgmb_mfdescrip_p(g_p, "GKS 5 CGM Binary");
+}
 
 
 /* VDC type */
@@ -3405,6 +3406,7 @@ static void setup_binary_context(cgm_context *ctx)
     ctx->funcs.beginPictureBody = cgmb_bpage_p;
     ctx->funcs.endPicture = cgmb_epage_p;
     ctx->funcs.metafileVersion = cgmb_mfversion_p;
+    ctx->funcs.metafileDescription = cgmb_mfdescrip_p;
   ctx->cgm[begin] = CGM_FUNC cgmb_begin;
   ctx->cgm[end] = CGM_FUNC cgmb_end;
   ctx->cgm[bp] = CGM_FUNC cgmb_bp;
