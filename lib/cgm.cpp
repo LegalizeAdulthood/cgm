@@ -1881,7 +1881,7 @@ static void cgmb_fixed(double xin)
 
 /* Write IEEE floating point variable */
 
-static void cgmb_float(double xin)
+static void cgmb_float(cgm_context *ctx, double xin)
 {
   unsigned char arry[8];
   int sign_bit, i;
@@ -1970,7 +1970,7 @@ static void cgmb_float(double xin)
 	arry[1] = ((exponent & 1) << 7) | ((fract >> 16) & 127);
 	arry[2] = (fract >> 8) & 255;
 	arry[3] = fract & 255;
-	cgmb_out_bs((char *) arry, 4);
+	cgmb_out_bs(ctx, (char *) arry, 4);
 	break;
       }
 
@@ -1982,7 +1982,10 @@ static void cgmb_float(double xin)
       }
     }
 }
-
+static void cgmb_float(double xin)
+{
+    cgmb_float(g_p, xin);
+}
 
 
 /* Write direct colour value */
@@ -2414,24 +2417,32 @@ static void cgmb_cannounce(void)
 
 /* Scaling mode */
 
+static void cgmb_scalmode_p(cgm_context *ctx, int mode, double value)
+{
+  cgmb_start_cmd(ctx, 2, (int) ScalMode);
+
+  cgmb_eint(ctx, mode);
+  cgmb_float(ctx, value);
+
+  cgmb_flush_cmd(ctx, final_flush);
+  cgmb_fb(ctx);
+}
 static void cgmb_scalmode(void)
 {
-  cgmb_start_cmd(2, (int) ScalMode);
-
-  if (g_p->mm > 0)
+    int mode;
+    double value;
+    if (g_p->mm > 0)
     {
-      cgmb_eint(1);
-      cgmb_float(g_p->mm);
+        mode = 1;
+        value = g_p->mm;
     }
-  else
+    else
     {
-      cgmb_eint(0);
-      cgmb_float(0.);
+        mode = 0;
+        value = 0.0;
     }
-
-  cgmb_flush_cmd(final_flush);
+    cgmb_scalmode_p(g_p, mode, value);
 }
-
 
 
 /* Colour selection mode */
@@ -3484,6 +3495,7 @@ static void setup_binary_context(cgm_context *ctx)
     ctx->funcs.metafileElementList = cgmb_mfellist_p;
     ctx->funcs.fontList = cgmb_fontlist_p;
     ctx->funcs.characterCodingAnnouncer = cgmb_cannounce_p;
+    ctx->funcs.scalingMode = cgmb_scalmode_p;
   ctx->cgm[begin] = CGM_FUNC cgmb_begin;
   ctx->cgm[end] = CGM_FUNC cgmb_end;
   ctx->cgm[bp] = CGM_FUNC cgmb_bp;

@@ -245,6 +245,12 @@ int i16(const std::string &str, int offset)
     return *reinterpret_cast<const std::int16_t *>(bytes);
 }
 
+float f32(const std::string &str, int offset)
+{
+    const char bytes[4]{str[offset], str[offset+1], str[offset+2], str[offset+3]};
+    return *reinterpret_cast<const float *>(bytes);
+}
+
 const int expectedMetafileElementList[] = {
     54,
     Delimiter, BeginMetafile,
@@ -489,10 +495,34 @@ TEST_CASE("binary encoding")
     // character set list
     SECTION("character coding announcer")
     {
-        writer->characterCodingAnnouncer(cgm::CharCodeAnnouncer::Extended8Bit);
+        writer->characterCodingAnnouncer(cgm::CharCodeAnnouncer::Basic8Bit);
 
         const std::string str = stream.str();
         REQUIRE(header(str) == OpCode{MetafileDescriptor, CharacterCodingAnnouncer, 2});
+        REQUIRE(i16(str, 2) == static_cast<int>(cgm::CharCodeAnnouncer::Basic8Bit));
+    }
+    SECTION("scaling mode")
+    {
+        SECTION("abstract")
+        {
+            writer->scaleMode(cgm::ScaleMode::Abstract, 1.0f);
+
+            const std::string str = stream.str();
+            REQUIRE(header(str) == OpCode{PictureDescriptor, ScalingMode, 6});
+            REQUIRE(i16(str, 2) == static_cast<int>(cgm::ScaleMode::Abstract));
+            // TODO: decode 16.16 fixed-point as float
+            // REQUIRE(f32(str, 4) == 1.0f);
+        }
+        SECTION("metric")
+        {
+            writer->scaleMode(cgm::ScaleMode::Metric, 1.0f);
+
+            const std::string str = stream.str();
+            REQUIRE(header(str) == OpCode{PictureDescriptor, ScalingMode, 6});
+            REQUIRE(i16(str, 2) == static_cast<int>(cgm::ScaleMode::Metric));
+            // TODO: decode 16.16 fixed-point as float
+            //REQUIRE(f32(str, 4) == 1.0f);
+        }
     }
 }
 
@@ -501,21 +531,6 @@ TEST_CASE("TODO", "[.]")
     std::ostringstream stream;
     std::unique_ptr<cgm::MetafileWriter> writer{create(stream, cgm::Encoding::Binary)};
 
-    SECTION("scaling mode")
-    {
-        SECTION("abstract")
-        {
-            writer->scaleMode(cgm::ScaleMode::Abstract, 1.0f);
-
-            REQUIRE(stream.str() == "ScaleMode Abstract 1.000000;\n");
-        }
-        SECTION("metric")
-        {
-            writer->scaleMode(cgm::ScaleMode::Metric, 1.0f);
-
-            REQUIRE(stream.str() == "ScaleMode Metric 1.000000;\n");
-        }
-    }
     SECTION("color selection mode")
     {
         SECTION("indexed")
