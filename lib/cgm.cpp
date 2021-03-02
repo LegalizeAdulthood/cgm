@@ -2826,15 +2826,19 @@ static void cgmb_lcolour(int index)
 
 /* Marker type */
 
+static void cgmb_mtype_p(cgm_context *ctx, int marker)
+{
+  cgmb_start_cmd(ctx, 5, (int) MType);
+
+  cgmb_xint(ctx, marker);
+
+  cgmb_flush_cmd(ctx, final_flush);
+  cgmb_fb(ctx);
+}
 static void cgmb_mtype(int marker)
 {
-  cgmb_start_cmd(5, (int) MType);
-
-  cgmb_xint(marker);
-
-  cgmb_flush_cmd(final_flush);
+    cgmb_mtype_p(g_p, marker);
 }
-
 
 
 /* Marker size */
@@ -3625,6 +3629,7 @@ static void setup_binary_context(cgm_context *ctx)
     ctx->funcs.lineType = cgmb_ltype_p;
     ctx->funcs.lineWidth = cgmb_lwidth_p;
     ctx->funcs.lineColor = cgmb_lcolor_p;
+    ctx->funcs.markerType = cgmb_mtype_p;
   ctx->cgm[begin] = CGM_FUNC cgmb_begin;
   ctx->cgm[end] = CGM_FUNC cgmb_end;
   ctx->cgm[bp] = CGM_FUNC cgmb_bp;

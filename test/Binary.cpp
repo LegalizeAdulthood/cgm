@@ -744,6 +744,14 @@ TEST_CASE("binary encoding")
         REQUIRE(i16(str, 2) == 6);
     }
     // marker bundle index
+    SECTION("marker type")
+    {
+        writer->markerType(6);
+
+        const std::string str = stream.str();
+        REQUIRE(header(str) == OpCode{Attribute, MarkerType, 2});
+        REQUIRE(i16(str, 2) == 6);
+    }
 }
 
 TEST_CASE("TODO", "[.]")
@@ -751,12 +759,6 @@ TEST_CASE("TODO", "[.]")
     std::ostringstream stream;
     std::unique_ptr<cgm::MetafileWriter> writer{create(stream, cgm::Encoding::Binary)};
 
-    SECTION("marker type")
-    {
-        writer->markerType(6);
-
-        REQUIRE(stream.str() == "MarkerType 6;\n");
-    }
     SECTION("marker size")
     {
         writer->markerSize(0.1f);
