@@ -719,6 +719,14 @@ TEST_CASE("binary encoding")
     // elliptical arc
     // elliptical arc close
     // line bundle index
+    SECTION("line type")
+    {
+        writer->lineType(1);
+
+        const std::string str = stream.str();
+        REQUIRE(header(str) == OpCode{Attribute, LineType, 2});
+        REQUIRE(i16(str, 2) == 1);
+    }
 }
 
 TEST_CASE("TODO", "[.]")
@@ -726,12 +734,6 @@ TEST_CASE("TODO", "[.]")
     std::ostringstream stream;
     std::unique_ptr<cgm::MetafileWriter> writer{create(stream, cgm::Encoding::Binary)};
 
-    SECTION("line type")
-    {
-        writer->lineType(1);
-
-        REQUIRE(stream.str() == "LineType 1;\n");
-    }
     SECTION("line width")
     {
         writer->lineWidth(1.0f);

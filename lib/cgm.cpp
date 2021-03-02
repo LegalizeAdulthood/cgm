@@ -2771,15 +2771,19 @@ static void cgmb_carray(int xmin, int xmax, int ymin, int ymax, int dx,
 
 /* Line type */
 
+static void cgmb_ltype_p(cgm_context *ctx, int line_type)
+{
+  cgmb_start_cmd(ctx, 5, (int) LType);
+
+  cgmb_xint(ctx, line_type);
+
+  cgmb_flush_cmd(ctx, final_flush);
+  cgmb_fb(ctx);
+}
 static void cgmb_ltype(int line_type)
 {
-  cgmb_start_cmd(5, (int) LType);
-
-  cgmb_xint(line_type);
-
-  cgmb_flush_cmd(final_flush);
+    cgmb_ltype_p(g_p, line_type);
 }
-
 
 
 
@@ -3607,6 +3611,7 @@ static void setup_binary_context(cgm_context *ctx)
     ctx->funcs.textInt = cgmb_text_p;
     ctx->funcs.polygonInt = cgmb_pgon_pt;
     ctx->funcs.cellArray = cgmb_carray_p;
+    ctx->funcs.lineType = cgmb_ltype_p;
   ctx->cgm[begin] = CGM_FUNC cgmb_begin;
   ctx->cgm[end] = CGM_FUNC cgmb_end;
   ctx->cgm[bp] = CGM_FUNC cgmb_bp;
