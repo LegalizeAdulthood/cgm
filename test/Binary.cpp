@@ -1017,18 +1017,13 @@ TEST_CASE("binary encoding")
         REQUIRE(header(str) == OpCode{Attribute, HatchIndex, 2});
         REQUIRE(i16(str, 2) == 6);
     }
-}
-
-TEST_CASE("TODO", "[.]")
-{
-    std::ostringstream stream;
-    std::unique_ptr<cgm::MetafileWriter> writer{create(stream, cgm::Encoding::Binary)};
-
     SECTION("pattern index")
     {
         writer->patternIndex(6);
 
-        REQUIRE(stream.str() == "PatIndex 6;\n");
+        const std::string str = stream.str();
+        REQUIRE(header(str) == OpCode{Attribute, PatternIndex, 2});
+        REQUIRE(i16(str, 2) == 6);
     }
     // edge bundle index
     // edge type
@@ -1038,6 +1033,13 @@ TEST_CASE("TODO", "[.]")
     // fill reference point
     // pattern table
     // pattern size
+}
+
+TEST_CASE("TODO", "[.]")
+{
+    std::ostringstream stream;
+    std::unique_ptr<cgm::MetafileWriter> writer{create(stream, cgm::Encoding::Binary)};
+
     SECTION("color table")
     {
         std::vector<cgm::Color> colors{{0.0f, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f}};
