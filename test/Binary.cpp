@@ -523,75 +523,85 @@ TEST_CASE("binary encoding")
             // TODO: decode 16.16 fixed-point as float
             //REQUIRE(f32(str, 4) == 1.0f);
         }
-        SECTION("color selection mode")
+    }
+    SECTION("color selection mode")
+    {
+        SECTION("indexed")
         {
-            SECTION("indexed")
-            {
-                writer->colorMode(cgm::ColorMode::Indexed);
-
-                const std::string str = stream.str();
-                REQUIRE(header(str) == OpCode{PictureDescriptor, ColorMode, 2});
-                REQUIRE(i16(str, 2) == static_cast<int>(cgm::ColorMode::Indexed));
-            }
-            SECTION("direct")
-            {
-                writer->colorMode(cgm::ColorMode::Direct);
-
-                const std::string str = stream.str();
-                REQUIRE(header(str) == OpCode{PictureDescriptor, ColorMode, 2});
-                REQUIRE(i16(str, 2) == static_cast<int>(cgm::ColorMode::Direct));
-            }
-        }
-        SECTION("line width specification mode")
-        {
-            SECTION("absolute")
-            {
-                writer->lineWidthMode(cgm::LineWidthMode::Absolute);
-
-                const std::string str = stream.str();
-                REQUIRE(header(str) == OpCode{PictureDescriptor, LineWidthMode, 2});
-                REQUIRE(i16(str, 2) == static_cast<int>(cgm::LineWidthMode::Absolute));
-            }
-            SECTION("scaled")
-            {
-                writer->lineWidthMode(cgm::LineWidthMode::Scaled);
-
-                const std::string str = stream.str();
-                REQUIRE(header(str) == OpCode{PictureDescriptor, LineWidthMode, 2});
-                REQUIRE(i16(str, 2) == static_cast<int>(cgm::LineWidthMode::Scaled));
-            }
-        }
-        SECTION("marker size specification mode")
-        {
-            SECTION("absolute")
-            {
-                writer->markerSizeMode(cgm::MarkerSizeMode::Absolute);
-
-                const std::string str = stream.str();
-                REQUIRE(header(str) == OpCode{PictureDescriptor, MarkerSizeMode, 2});
-                REQUIRE(i16(str, 2) == static_cast<int>(cgm::MarkerSizeMode::Absolute));
-            }
-            SECTION("scaled")
-            {
-                writer->markerSizeMode(cgm::MarkerSizeMode::Scaled);
-
-                const std::string str = stream.str();
-                REQUIRE(header(str) == OpCode{PictureDescriptor, MarkerSizeMode, 2});
-                REQUIRE(i16(str, 2) == static_cast<int>(cgm::MarkerSizeMode::Scaled));
-            }
-        }
-        // edge width specification mode
-        SECTION("vdc extent")
-        {
-            writer->vdcExtent(32, 64, 640, 480);
+            writer->colorMode(cgm::ColorMode::Indexed);
 
             const std::string str = stream.str();
-            REQUIRE(header(str) == OpCode{PictureDescriptor, VdcExtent, 4*2});
-            REQUIRE(i16(str, 2) == 32);
-            REQUIRE(i16(str, 4) == 64);
-            REQUIRE(i16(str, 6) == 640);
-            REQUIRE(i16(str, 8) == 480);
+            REQUIRE(header(str) == OpCode{PictureDescriptor, ColorMode, 2});
+            REQUIRE(i16(str, 2) == static_cast<int>(cgm::ColorMode::Indexed));
         }
+        SECTION("direct")
+        {
+            writer->colorMode(cgm::ColorMode::Direct);
+
+            const std::string str = stream.str();
+            REQUIRE(header(str) == OpCode{PictureDescriptor, ColorMode, 2});
+            REQUIRE(i16(str, 2) == static_cast<int>(cgm::ColorMode::Direct));
+        }
+    }
+    SECTION("line width specification mode")
+    {
+        SECTION("absolute")
+        {
+            writer->lineWidthMode(cgm::LineWidthMode::Absolute);
+
+            const std::string str = stream.str();
+            REQUIRE(header(str) == OpCode{PictureDescriptor, LineWidthMode, 2});
+            REQUIRE(i16(str, 2) == static_cast<int>(cgm::LineWidthMode::Absolute));
+        }
+        SECTION("scaled")
+        {
+            writer->lineWidthMode(cgm::LineWidthMode::Scaled);
+
+            const std::string str = stream.str();
+            REQUIRE(header(str) == OpCode{PictureDescriptor, LineWidthMode, 2});
+            REQUIRE(i16(str, 2) == static_cast<int>(cgm::LineWidthMode::Scaled));
+        }
+    }
+    SECTION("marker size specification mode")
+    {
+        SECTION("absolute")
+        {
+            writer->markerSizeMode(cgm::MarkerSizeMode::Absolute);
+
+            const std::string str = stream.str();
+            REQUIRE(header(str) == OpCode{PictureDescriptor, MarkerSizeMode, 2});
+            REQUIRE(i16(str, 2) == static_cast<int>(cgm::MarkerSizeMode::Absolute));
+        }
+        SECTION("scaled")
+        {
+            writer->markerSizeMode(cgm::MarkerSizeMode::Scaled);
+
+            const std::string str = stream.str();
+            REQUIRE(header(str) == OpCode{PictureDescriptor, MarkerSizeMode, 2});
+            REQUIRE(i16(str, 2) == static_cast<int>(cgm::MarkerSizeMode::Scaled));
+        }
+    }
+    // edge width specification mode
+    SECTION("vdc extent")
+    {
+        writer->vdcExtent(32, 64, 640, 480);
+
+        const std::string str = stream.str();
+        REQUIRE(header(str) == OpCode{PictureDescriptor, VdcExtent, 4*2});
+        REQUIRE(i16(str, 2) == 32);
+        REQUIRE(i16(str, 4) == 64);
+        REQUIRE(i16(str, 6) == 640);
+        REQUIRE(i16(str, 8) == 480);
+    }
+    SECTION("background color")
+    {
+        writer->backgroundColor(128, 64, 32);
+
+        const std::string str = stream.str();
+        REQUIRE(header(str) == OpCode{PictureDescriptor, BackgroundColor, 3});
+        REQUIRE(u8(str, 2) == 128);
+        REQUIRE(u8(str, 3) == 64);
+        REQUIRE(u8(str, 4) == 32);
     }
 }
 
@@ -600,12 +610,6 @@ TEST_CASE("TODO", "[.]")
     std::ostringstream stream;
     std::unique_ptr<cgm::MetafileWriter> writer{create(stream, cgm::Encoding::Binary)};
 
-    SECTION("background color")
-    {
-        writer->backgroundColor(128, 64, 128);
-
-        REQUIRE(stream.str() == "BackColr 128 64 128;\n");
-    }
     SECTION("vdc integer precision")
     {
         writer->vdcIntegerPrecision(-128, 128);

@@ -2522,17 +2522,21 @@ static void cgmb_vdcextent(void)
 
 /* Background colour */
 
+static void cgmb_backcol_p(cgm_context *ctx, int r, int g, int b)
+{
+  cgmb_start_cmd(ctx, 2, (int) BackCol);
+
+  cgmb_dcint(ctx, r);
+  cgmb_dcint(ctx, g);
+  cgmb_dcint(ctx, b);
+
+  cgmb_flush_cmd(ctx, final_flush);
+  cgmb_fb(ctx);
+}
 static void cgmb_backcol(void)
 {
-  cgmb_start_cmd(2, (int) BackCol);
-
-  cgmb_dcint(255);
-  cgmb_dcint(255);
-  cgmb_dcint(255);
-
-  cgmb_flush_cmd(final_flush);
+    cgmb_backcol_p(g_p, 255, 255, 255);
 }
-
 
 
 /* VDC integer precision */
@@ -3519,6 +3523,7 @@ static void setup_binary_context(cgm_context *ctx)
     ctx->funcs.lineWidthMode = cgmb_lwsmode_p;
     ctx->funcs.markerSizeMode = cgmb_msmode_p;
     ctx->funcs.vdcExtentInt = cgmb_vdcextent_p;
+    ctx->funcs.backgroundColor = cgmb_backcol_p;
   ctx->cgm[begin] = CGM_FUNC cgmb_begin;
   ctx->cgm[end] = CGM_FUNC cgmb_end;
   ctx->cgm[bp] = CGM_FUNC cgmb_bp;
