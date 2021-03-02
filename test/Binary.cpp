@@ -820,6 +820,14 @@ TEST_CASE("binary encoding")
         REQUIRE(header(str) == OpCode{Attribute, CharSpacing, 4});
         // TODO: validate 16p16 char spacing
     }
+    SECTION("text color")
+    {
+        writer->textColor(6);
+
+        const std::string str = stream.str();
+        REQUIRE(header(str) == OpCode{Attribute, TextColor, 2});
+        REQUIRE(i16(str, 2) == 6);
+    }
 }
 
 TEST_CASE("TODO", "[.]")
@@ -827,12 +835,6 @@ TEST_CASE("TODO", "[.]")
     std::ostringstream stream;
     std::unique_ptr<cgm::MetafileWriter> writer{create(stream, cgm::Encoding::Binary)};
 
-    SECTION("text color")
-    {
-        writer->textColor(6);
-
-        REQUIRE(stream.str() == "TextColr 6;\n");
-    }
     SECTION("character height")
     {
         writer->charHeight(12);
