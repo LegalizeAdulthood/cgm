@@ -5,7 +5,7 @@ interchange of 2D picture descriptions created in 1985.  Graphical data
 for interchange must conform to uniform semantics in different software
 applications in order for the interchange to be useflu.  CGM defines the
 semantics of the data elements in a
-[functional specifiation](doc/ISO_IEC_8632-1_1999%28E%29 CGM Functional Specification.pdf),
+[functional specifiation](doc/ISO_IEC_8632-1_1999%28E%29%20CGM%20Functional%20Specification.pdf),
 and one or more element encodings.
 
 When CGM was originally defined, three encodings were standardized: binary,
