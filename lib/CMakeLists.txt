@@ -1,5 +1,6 @@
 add_library(cgm
     include/cgm/cgm.h
+    include/cgm/builder.h
     impl.h
     cgm.cpp
     io.cpp
