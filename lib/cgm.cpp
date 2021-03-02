@@ -2809,15 +2809,19 @@ static void cgmb_lwidth(double rmul)
 
 /* Line colour */
 
+static void cgmb_lcolor_p(cgm_context *ctx, int index)
+{
+  cgmb_start_cmd(ctx, 5, (int) LColour);
+
+  cgmb_cxint(ctx, index);
+
+  cgmb_flush_cmd(ctx, final_flush);
+  cgmb_fb(ctx);
+}
 static void cgmb_lcolour(int index)
 {
-  cgmb_start_cmd(5, (int) LColour);
-
-  cgmb_cxint(index);
-
-  cgmb_flush_cmd(final_flush);
+    cgmb_lcolor_p(g_p, index);
 }
-
 
 
 /* Marker type */
@@ -3620,6 +3624,7 @@ static void setup_binary_context(cgm_context *ctx)
     ctx->funcs.cellArray = cgmb_carray_p;
     ctx->funcs.lineType = cgmb_ltype_p;
     ctx->funcs.lineWidth = cgmb_lwidth_p;
+    ctx->funcs.lineColor = cgmb_lcolor_p;
   ctx->cgm[begin] = CGM_FUNC cgmb_begin;
   ctx->cgm[end] = CGM_FUNC cgmb_end;
   ctx->cgm[bp] = CGM_FUNC cgmb_bp;
