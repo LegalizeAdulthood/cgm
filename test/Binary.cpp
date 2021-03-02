@@ -769,6 +769,14 @@ TEST_CASE("binary encoding")
         REQUIRE(i16(str, 2) == 6);
     }
     // text bundle index
+    SECTION("text font index")
+    {
+        writer->textFontIndex(6);
+
+        const std::string str = stream.str();
+        REQUIRE(header(str) == OpCode{Attribute, TextFontIndex, 2});
+        REQUIRE(i16(str, 2) == 6);
+    }
 }
 
 TEST_CASE("TODO", "[.]")
@@ -776,12 +784,6 @@ TEST_CASE("TODO", "[.]")
     std::ostringstream stream;
     std::unique_ptr<cgm::MetafileWriter> writer{create(stream, cgm::Encoding::Binary)};
 
-    SECTION("text font index")
-    {
-        writer->textFontIndex(6);
-
-        REQUIRE(stream.str() == "TextFontIndex 6;\n");
-    }
     SECTION("text precision")
     {
         SECTION("string")
