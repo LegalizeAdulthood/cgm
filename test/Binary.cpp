@@ -804,6 +804,14 @@ TEST_CASE("binary encoding")
             REQUIRE(i16(str, 2) == static_cast<int>(cgm::TextPrecision::Stroke));
         }
     }
+    SECTION("character expansion factor")
+    {
+        writer->charExpansion(0.1f);
+
+        const std::string str = stream.str();
+        REQUIRE(header(str) == OpCode{Attribute, CharExpansion, 4});
+        // TODO: validate 16p16 expansion factor
+    }
 }
 
 TEST_CASE("TODO", "[.]")
@@ -811,12 +819,6 @@ TEST_CASE("TODO", "[.]")
     std::ostringstream stream;
     std::unique_ptr<cgm::MetafileWriter> writer{create(stream, cgm::Encoding::Binary)};
 
-    SECTION("character expansion factor")
-    {
-        writer->charExpansion(0.1f);
-
-        REQUIRE(stream.str() == "CharExpan 0.100000;\n");
-    }
     SECTION("character spacing")
     {
         writer->charSpacing(0.1f);
