@@ -3017,18 +3017,22 @@ static void cgmb_tpath(int new_path)
 
 /* Text alignment */
 
+static void cgmb_talign_p(cgm_context *ctx, int hor, int ver, double contHoriz, double contVert)
+{
+  cgmb_start_cmd(ctx, 5, (int) TAlign);
+
+  cgmb_eint(ctx, hor);
+  cgmb_eint(ctx, ver);
+  cgmb_fixed(ctx, contHoriz);
+  cgmb_fixed(ctx, contVert);
+
+  cgmb_flush_cmd(ctx, final_flush);
+  cgmb_fb(ctx);
+}
 static void cgmb_talign(int hor, int ver)
 {
-  cgmb_start_cmd(5, (int) TAlign);
-
-  cgmb_eint(hor);
-  cgmb_eint(ver);
-  cgmb_fixed(0.);
-  cgmb_fixed(0.);
-
-  cgmb_flush_cmd(final_flush);
+    cgmb_talign_p(g_p, hor, ver, 0., 0.);
 }
-
 
 
 /* Interior style */
@@ -3678,6 +3682,7 @@ static void setup_binary_context(cgm_context *ctx)
     ctx->funcs.charHeight = cgmb_cheight_p;
     ctx->funcs.charOrientation = cgmb_corient_p;
     ctx->funcs.textPath = cgmb_tpath_p;
+    ctx->funcs.textAlignment = cgmb_talign_p;
   ctx->cgm[begin] = CGM_FUNC cgmb_begin;
   ctx->cgm[end] = CGM_FUNC cgmb_end;
   ctx->cgm[bp] = CGM_FUNC cgmb_bp;

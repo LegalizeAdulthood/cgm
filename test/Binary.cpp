@@ -882,6 +882,79 @@ TEST_CASE("binary encoding")
             REQUIRE(i16(str, 2) == static_cast<int>(cgm::TextPath::Down));
         }
     }
+    SECTION("text alignment")
+    {
+        SECTION("normal, normal")
+        {
+            writer->textAlignment(cgm::HorizAlign::Normal, cgm::VertAlign::Normal, 0.1f, 0.2f);
+
+            const std::string str = stream.str();
+            REQUIRE(header(str) == OpCode{Attribute, TextAlignment, 2*2 + 2*4});
+            REQUIRE(i16(str, 2) == static_cast<int>(cgm::HorizAlign::Normal));
+            REQUIRE(i16(str, 4) == static_cast<int>(cgm::VertAlign::Normal));
+            // TODO validate 16p16 parameters
+        }
+        SECTION("left, top")
+        {
+            writer->textAlignment(cgm::HorizAlign::Left, cgm::VertAlign::Top, 0.0f, 0.0f);
+
+            const std::string str = stream.str();
+            REQUIRE(header(str) == OpCode{Attribute, TextAlignment, 2*2 + 2*4});
+            REQUIRE(i16(str, 2) == static_cast<int>(cgm::HorizAlign::Left));
+            REQUIRE(i16(str, 4) == static_cast<int>(cgm::VertAlign::Top));
+            // TODO validate 16p16 parameters
+        }
+        SECTION("center, cap")
+        {
+            writer->textAlignment(cgm::HorizAlign::Center, cgm::VertAlign::Cap, 0.0f, 0.0f);
+
+            const std::string str = stream.str();
+            REQUIRE(header(str) == OpCode{Attribute, TextAlignment, 2*2 + 2*4});
+            REQUIRE(i16(str, 2) == static_cast<int>(cgm::HorizAlign::Center));
+            REQUIRE(i16(str, 4) == static_cast<int>(cgm::VertAlign::Cap));
+            // TODO validate 16p16 parameters
+        }
+        SECTION("right, half")
+        {
+            writer->textAlignment(cgm::HorizAlign::Right, cgm::VertAlign::Half, 0.0f, 0.0f);
+
+            const std::string str = stream.str();
+            REQUIRE(header(str) == OpCode{Attribute, TextAlignment, 2*2 + 2*4});
+            REQUIRE(i16(str, 2) == static_cast<int>(cgm::HorizAlign::Right));
+            REQUIRE(i16(str, 4) == static_cast<int>(cgm::VertAlign::Half));
+            // TODO validate 16p16 parameters
+        }
+        SECTION("continuous, base")
+        {
+            writer->textAlignment(cgm::HorizAlign::Continuous, cgm::VertAlign::Base, 0.0f, 0.0f);
+
+            const std::string str = stream.str();
+            REQUIRE(header(str) == OpCode{Attribute, TextAlignment, 2*2 + 2*4});
+            REQUIRE(i16(str, 2) == static_cast<int>(cgm::HorizAlign::Continuous));
+            REQUIRE(i16(str, 4) == static_cast<int>(cgm::VertAlign::Base));
+            // TODO validate 16p16 parameters
+        }
+        SECTION("normal, bottom")
+        {
+            writer->textAlignment(cgm::HorizAlign::Normal, cgm::VertAlign::Bottom, 0.0f, 0.0f);
+
+            const std::string str = stream.str();
+            REQUIRE(header(str) == OpCode{Attribute, TextAlignment, 2*2 + 2*4});
+            REQUIRE(i16(str, 2) == static_cast<int>(cgm::HorizAlign::Normal));
+            REQUIRE(i16(str, 4) == static_cast<int>(cgm::VertAlign::Bottom));
+            // TODO validate 16p16 parameters
+        }
+        SECTION("normal, continuous")
+        {
+            writer->textAlignment(cgm::HorizAlign::Normal, cgm::VertAlign::Continuous, 0.0f, 0.0f);
+
+            const std::string str = stream.str();
+            REQUIRE(header(str) == OpCode{Attribute, TextAlignment, 2*2 + 2*4});
+            REQUIRE(i16(str, 2) == static_cast<int>(cgm::HorizAlign::Normal));
+            REQUIRE(i16(str, 4) == static_cast<int>(cgm::VertAlign::Continuous));
+            // TODO validate 16p16 parameters
+        }
+    }
 }
 
 TEST_CASE("TODO", "[.]")
@@ -889,51 +962,6 @@ TEST_CASE("TODO", "[.]")
     std::ostringstream stream;
     std::unique_ptr<cgm::MetafileWriter> writer{create(stream, cgm::Encoding::Binary)};
 
-    SECTION("text alignment")
-    {
-        SECTION("normal, normal")
-        {
-            writer->textAlignment(cgm::HorizAlign::Normal, cgm::VertAlign::Normal, 0.1f, 0.2f);
-
-            REQUIRE(stream.str() == "TextAlign NormHoriz NormVert 0.100000 0.200000;\n");
-        }
-        SECTION("left, top")
-        {
-            writer->textAlignment(cgm::HorizAlign::Left, cgm::VertAlign::Top, 0.0f, 0.0f);
-
-            REQUIRE(stream.str() == "TextAlign Left Top 0.000000 0.000000;\n");
-        }
-        SECTION("center, cap")
-        {
-            writer->textAlignment(cgm::HorizAlign::Center, cgm::VertAlign::Cap, 0.0f, 0.0f);
-
-            REQUIRE(stream.str() == "TextAlign Ctr Cap 0.000000 0.000000;\n");
-        }
-        SECTION("right, half")
-        {
-            writer->textAlignment(cgm::HorizAlign::Right, cgm::VertAlign::Half, 0.0f, 0.0f);
-
-            REQUIRE(stream.str() == "TextAlign Right Half 0.000000 0.000000;\n");
-        }
-        SECTION("continuous, base")
-        {
-            writer->textAlignment(cgm::HorizAlign::Continuous, cgm::VertAlign::Base, 0.0f, 0.0f);
-
-            REQUIRE(stream.str() == "TextAlign ContHoriz Base 0.000000 0.000000;\n");
-        }
-        SECTION("normal, bottom")
-        {
-            writer->textAlignment(cgm::HorizAlign::Normal, cgm::VertAlign::Bottom, 0.0f, 0.0f);
-
-            REQUIRE(stream.str() == "TextAlign NormHoriz Bottom 0.000000 0.000000;\n");
-        }
-        SECTION("normal, continuous")
-        {
-            writer->textAlignment(cgm::HorizAlign::Normal, cgm::VertAlign::Continuous, 0.0f, 0.0f);
-
-            REQUIRE(stream.str() == "TextAlign NormHoriz ContVert 0.000000 0.000000;\n");
-        }
-    }
     // character set index
     // alternate character set index
     // full bundle index
