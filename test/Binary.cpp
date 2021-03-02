@@ -847,6 +847,41 @@ TEST_CASE("binary encoding")
         REQUIRE(i16(str, 6) == 2);
         REQUIRE(i16(str, 8) == 3);
     }
+    SECTION("text path")
+    {
+        SECTION("right")
+        {
+            writer->textPath(cgm::TextPath::Right);
+
+            const std::string str = stream.str();
+            REQUIRE(header(str) == OpCode{Attribute, TextPath, 2});
+            REQUIRE(i16(str, 2) == static_cast<int>(cgm::TextPath::Right));
+        }
+        SECTION("left")
+        {
+            writer->textPath(cgm::TextPath::Left);
+
+            const std::string str = stream.str();
+            REQUIRE(header(str) == OpCode{Attribute, TextPath, 2});
+            REQUIRE(i16(str, 2) == static_cast<int>(cgm::TextPath::Left));
+        }
+        SECTION("up")
+        {
+            writer->textPath(cgm::TextPath::Up);
+
+            const std::string str = stream.str();
+            REQUIRE(header(str) == OpCode{Attribute, TextPath, 2});
+            REQUIRE(i16(str, 2) == static_cast<int>(cgm::TextPath::Up));
+        }
+        SECTION("down")
+        {
+            writer->textPath(cgm::TextPath::Down);
+
+            const std::string str = stream.str();
+            REQUIRE(header(str) == OpCode{Attribute, TextPath, 2});
+            REQUIRE(i16(str, 2) == static_cast<int>(cgm::TextPath::Down));
+        }
+    }
 }
 
 TEST_CASE("TODO", "[.]")
@@ -854,33 +889,6 @@ TEST_CASE("TODO", "[.]")
     std::ostringstream stream;
     std::unique_ptr<cgm::MetafileWriter> writer{create(stream, cgm::Encoding::Binary)};
 
-    SECTION("text path")
-    {
-        SECTION("right")
-        {
-            writer->textPath(cgm::TextPath::Right);
-
-            REQUIRE(stream.str() == "TextPath Right;\n");
-        }
-        SECTION("left")
-        {
-            writer->textPath(cgm::TextPath::Left);
-
-            REQUIRE(stream.str() == "TextPath Left;\n");
-        }
-        SECTION("up")
-        {
-            writer->textPath(cgm::TextPath::Up);
-
-            REQUIRE(stream.str() == "TextPath Up;\n");
-        }
-        SECTION("down")
-        {
-            writer->textPath(cgm::TextPath::Down);
-
-            REQUIRE(stream.str() == "TextPath Down;\n");
-        }
-    }
     SECTION("text alignment")
     {
         SECTION("normal, normal")
