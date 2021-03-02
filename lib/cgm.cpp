@@ -2979,18 +2979,22 @@ static void cgmb_cheight(int height)
 
 /* Character orientation */
 
+static void cgmb_corient_p(cgm_context *ctx, int x_up, int y_up, int x_base, int y_base)
+{
+  cgmb_start_cmd(ctx, 5, (int) COrient);
+
+  cgmb_vint(ctx, x_up);
+  cgmb_vint(ctx, y_up);
+  cgmb_vint(ctx, x_base);
+  cgmb_vint(ctx, y_base);
+
+  cgmb_flush_cmd(ctx, final_flush);
+  cgmb_fb(ctx);
+}
 static void cgmb_corient(int x_up, int y_up, int x_base, int y_base)
 {
-  cgmb_start_cmd(5, (int) COrient);
-
-  cgmb_vint(x_up);
-  cgmb_vint(y_up);
-  cgmb_vint(x_base);
-  cgmb_vint(y_base);
-
-  cgmb_flush_cmd(final_flush);
+    cgmb_corient_p(g_p, x_up, y_up, x_base, y_base);
 }
-
 
 
 
@@ -3668,6 +3672,7 @@ static void setup_binary_context(cgm_context *ctx)
     ctx->funcs.charSpacing = cgmb_cspace_p;
     ctx->funcs.textColor = cgmb_tcolor_p;
     ctx->funcs.charHeight = cgmb_cheight_p;
+    ctx->funcs.charOrientation = cgmb_corient_p;
   ctx->cgm[begin] = CGM_FUNC cgmb_begin;
   ctx->cgm[end] = CGM_FUNC cgmb_end;
   ctx->cgm[bp] = CGM_FUNC cgmb_bp;

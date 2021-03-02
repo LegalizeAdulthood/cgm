@@ -836,6 +836,17 @@ TEST_CASE("binary encoding")
         REQUIRE(header(str) == OpCode{Attribute, CharHeight, 2});
         REQUIRE(i16(str, 2) == 12);
     }
+    SECTION("character orientation")
+    {
+        writer->charOrientation(0, 1, 2, 3);
+
+        const std::string str = stream.str();
+        REQUIRE(header(str) == OpCode{Attribute, CharOrientation, 4*2});
+        REQUIRE(i16(str, 2) == 0);
+        REQUIRE(i16(str, 4) == 1);
+        REQUIRE(i16(str, 6) == 2);
+        REQUIRE(i16(str, 8) == 3);
+    }
 }
 
 TEST_CASE("TODO", "[.]")
@@ -843,12 +854,6 @@ TEST_CASE("TODO", "[.]")
     std::ostringstream stream;
     std::unique_ptr<cgm::MetafileWriter> writer{create(stream, cgm::Encoding::Binary)};
 
-    SECTION("character orientation")
-    {
-        writer->charOrientation(0, 1, 1, 0);
-
-        REQUIRE(stream.str() == "CharOri 0 1 1 0;\n");
-    }
     SECTION("text path")
     {
         SECTION("right")
