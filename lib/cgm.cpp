@@ -3072,15 +3072,19 @@ static void cgmb_fillcolour(int index)
 
 /* Hatch index */
 
+static void cgmb_hindex_p(cgm_context *ctx, int new_index)
+{
+  cgmb_start_cmd(ctx, 5, (int) HatchIndex);
+
+  cgmb_xint(ctx, new_index);
+
+  cgmb_flush_cmd(ctx, final_flush);
+  cgmb_fb(ctx);
+}
 static void cgmb_hindex(int new_index)
 {
-  cgmb_start_cmd(5, (int) HatchIndex);
-
-  cgmb_xint(new_index);
-
-  cgmb_flush_cmd(final_flush);
+    cgmb_hindex_p(g_p, new_index);
 }
-
 
 /* Pattern index */
 
@@ -3693,6 +3697,7 @@ static void setup_binary_context(cgm_context *ctx)
     ctx->funcs.textAlignment = cgmb_talign_p;
     ctx->funcs.interiorStyle = cgmb_intstyle_p;
     ctx->funcs.fillColor = cgmb_fillcolor_p;
+    ctx->funcs.hatchIndex = cgmb_hindex_p;
   ctx->cgm[begin] = CGM_FUNC cgmb_begin;
   ctx->cgm[end] = CGM_FUNC cgmb_end;
   ctx->cgm[bp] = CGM_FUNC cgmb_bp;

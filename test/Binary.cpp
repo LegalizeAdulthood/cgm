@@ -1009,6 +1009,14 @@ TEST_CASE("binary encoding")
         REQUIRE(header(str) == OpCode{Attribute, FillColor, 2});
         REQUIRE(i16(str, 2) == 6);
     }
+    SECTION("hatch index")
+    {
+        writer->hatchIndex(6);
+
+        const std::string str = stream.str();
+        REQUIRE(header(str) == OpCode{Attribute, HatchIndex, 2});
+        REQUIRE(i16(str, 2) == 6);
+    }
 }
 
 TEST_CASE("TODO", "[.]")
@@ -1016,12 +1024,6 @@ TEST_CASE("TODO", "[.]")
     std::ostringstream stream;
     std::unique_ptr<cgm::MetafileWriter> writer{create(stream, cgm::Encoding::Binary)};
 
-    SECTION("hatch index")
-    {
-        writer->hatchIndex(6);
-
-        REQUIRE(stream.str() == "HatchIndex 6;\n");
-    }
     SECTION("pattern index")
     {
         writer->patternIndex(6);
