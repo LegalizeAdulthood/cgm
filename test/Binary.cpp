@@ -561,6 +561,25 @@ TEST_CASE("binary encoding")
                 REQUIRE(i16(str, 2) == static_cast<int>(cgm::LineWidthMode::Scaled));
             }
         }
+        SECTION("marker size specification mode")
+        {
+            SECTION("absolute")
+            {
+                writer->markerSizeMode(cgm::MarkerSizeMode::Absolute);
+
+                const std::string str = stream.str();
+                REQUIRE(header(str) == OpCode{PictureDescriptor, MarkerSizeMode, 2});
+                REQUIRE(i16(str, 2) == static_cast<int>(cgm::MarkerSizeMode::Absolute));
+            }
+            SECTION("scaled")
+            {
+                writer->markerSizeMode(cgm::MarkerSizeMode::Scaled);
+
+                const std::string str = stream.str();
+                REQUIRE(header(str) == OpCode{PictureDescriptor, MarkerSizeMode, 2});
+                REQUIRE(i16(str, 2) == static_cast<int>(cgm::MarkerSizeMode::Scaled));
+            }
+        }
     }
 }
 
@@ -569,21 +588,6 @@ TEST_CASE("TODO", "[.]")
     std::ostringstream stream;
     std::unique_ptr<cgm::MetafileWriter> writer{create(stream, cgm::Encoding::Binary)};
 
-    SECTION("marker size specification mode")
-    {
-        SECTION("absolute")
-        {
-            writer->markerSizeMode(cgm::MarkerSizeMode::Absolute);
-
-            REQUIRE(stream.str() == "MarkerSizeMode Absolute;\n");
-        }
-        SECTION("scaled")
-        {
-            writer->markerSizeMode(cgm::MarkerSizeMode::Scaled);
-
-            REQUIRE(stream.str() == "MarkerSizeMode Scaled;\n");
-        }
-    }
     // edge width specification mode
     SECTION("vdc extent")
     {

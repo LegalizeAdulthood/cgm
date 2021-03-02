@@ -2482,15 +2482,19 @@ static void cgmb_lwsmode(void)
 
 /* marker size specification mode */
 
+static void cgmb_msmode_p(cgm_context *ctx, int value)
+{
+  cgmb_start_cmd(ctx, 2, (int) MarkSizSpecMode);
+
+  cgmb_eint(ctx, value);
+
+  cgmb_flush_cmd(ctx, final_flush);
+  cgmb_fb(ctx);
+}
 static void cgmb_msmode(void)
 {
-  cgmb_start_cmd(2, (int) MarkSizSpecMode);
-
-  cgmb_eint((int) scaled);
-
-  cgmb_flush_cmd(final_flush);
+    cgmb_msmode_p(g_p, (int) scaled);
 }
-
 
 
 /* VDC extent */
@@ -3506,6 +3510,7 @@ static void setup_binary_context(cgm_context *ctx)
     ctx->funcs.scalingMode = cgmb_scalmode_p;
     ctx->funcs.colorMode = cgmb_colselmode_p;
     ctx->funcs.lineWidthMode = cgmb_lwsmode_p;
+    ctx->funcs.markerSizeMode = cgmb_msmode_p;
   ctx->cgm[begin] = CGM_FUNC cgmb_begin;
   ctx->cgm[end] = CGM_FUNC cgmb_end;
   ctx->cgm[bp] = CGM_FUNC cgmb_bp;
