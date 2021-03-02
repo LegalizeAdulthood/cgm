@@ -227,7 +227,7 @@ TEST_CASE("clear text encoding")
     }
     SECTION("vdc integer precision")
     {
-        writer->vdcIntegerPrecision(-128, 128);
+        writer->vdcIntegerPrecisionClearText(-128, 128);
 
         REQUIRE(stream.str() == "VDCIntegerPrec -128 128;\n");
     }

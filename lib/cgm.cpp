@@ -114,7 +114,8 @@ struct cgm_funcs
     void (*markerSizeMode)(cgm_context *p, int mode);
     void (*vdcExtentInt)(cgm_context *p, int llx, int lly, int urx, int ury);
     void (*backgroundColor)(cgm_context *p, int red, int green, int blue);
-    void (*vdcIntegerPrecision)(cgm_context *p, int min, int max);
+    void (*vdcIntegerPrecisionClearText)(cgm_context *p, int min, int max);
+    void (*vdcIntegerPrecisionBinary)(cgm_context *p, int value);
     void (*clipRectangle)(cgm_context *p, int llx, int lly, int urx, int ury);
     void (*clipIndicator)(cgm_context *p, int clip_ind);
     void (*polylineInt)(cgm_context *p, int numPoints, const cgm::Point<int> *points);
@@ -2541,15 +2542,19 @@ static void cgmb_backcol(void)
 
 /* VDC integer precision */
 
-static void cgmb_vdcintprec(void)
+static void cgmb_vdcintprec_p(cgm_context *ctx, int value)
 {
-  cgmb_start_cmd(3, (int) vdcIntPrec);
+  cgmb_start_cmd(ctx, 3, (int) vdcIntPrec);
 
-  cgmb_sint(16);
+  cgmb_sint(ctx, value);
 
-  cgmb_flush_cmd(final_flush);
+  cgmb_flush_cmd(ctx, final_flush);
+  cgmb_fb(ctx);
 }
-
+static void cgmb_vdcintprec()
+{
+    cgmb_vdcintprec_p(g_p, 16);
+}
 
 
 /* Clip rectangle */
@@ -3407,7 +3412,7 @@ static void setup_clear_text_context(cgm_context *ctx)
     ctx->funcs.markerSizeMode = cgmt_msmode_p;
     ctx->funcs.vdcExtentInt = cgmt_vdcectent_p;
     ctx->funcs.backgroundColor = cgmt_backcol_p;
-    ctx->funcs.vdcIntegerPrecision = cgmt_vdcintprec_p;
+    ctx->funcs.vdcIntegerPrecisionClearText = cgmt_vdcintprec_p;
     ctx->funcs.clipRectangle = cgmt_cliprect_p;
     ctx->funcs.clipIndicator = cgmt_clipindic_p;
     ctx->funcs.polylineInt = cgmt_pline_pt;
@@ -3524,6 +3529,7 @@ static void setup_binary_context(cgm_context *ctx)
     ctx->funcs.markerSizeMode = cgmb_msmode_p;
     ctx->funcs.vdcExtentInt = cgmb_vdcextent_p;
     ctx->funcs.backgroundColor = cgmb_backcol_p;
+    ctx->funcs.vdcIntegerPrecisionBinary = cgmb_vdcintprec_p;
   ctx->cgm[begin] = CGM_FUNC cgmb_begin;
   ctx->cgm[end] = CGM_FUNC cgmb_end;
   ctx->cgm[bp] = CGM_FUNC cgmb_bp;
@@ -3905,7 +3911,8 @@ public:
     void markerSizeMode(MarkerSizeMode mode) override;
     void vdcExtent(int llx, int lly, int urx, int ury) override;
     void backgroundColor(int red, int green, int blue) override;
-    void vdcIntegerPrecision(int min, int max) override;
+    void vdcIntegerPrecisionClearText(int min, int max) override;
+    void vdcIntegerPrecisionBinary(int value) override;
     void clipRectangle(int llx, int lly, int urx, int ury) override;
     void clipIndicator(bool enabled) override;
     void polyline(const std::vector<Point<int>> &points) override;
@@ -4118,9 +4125,14 @@ void MetafileStreamWriter::backgroundColor(int red, int green, int blue)
     m_context.funcs.backgroundColor(&m_context, red, green, blue);
 }
 
-void MetafileStreamWriter::vdcIntegerPrecision(int min, int max)
+void MetafileStreamWriter::vdcIntegerPrecisionClearText(int min, int max)
 {
-    m_context.funcs.vdcIntegerPrecision(&m_context, min, max);
+    m_context.funcs.vdcIntegerPrecisionClearText(&m_context, min, max);
+}
+
+void MetafileStreamWriter::vdcIntegerPrecisionBinary(int value)
+{
+    m_context.funcs.vdcIntegerPrecisionBinary(&m_context, value);
 }
 
 void MetafileStreamWriter::clipRectangle(int llx, int lly, int urx, int ury)

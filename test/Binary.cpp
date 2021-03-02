@@ -96,7 +96,7 @@ enum ElementOpCode
     HatchStyleDef = 18,
     PatternDef = 19,
     AppStructDir = 20,
-    VdcIntPrec = 1,
+    VdcIntegerPrecision = 1,
     VdcRealPrec = 2,
     AuxiliaryColor = 3,
     Transparency = 4,
@@ -277,7 +277,7 @@ const int expectedMetafileElementList[] = {
     PictureDescriptor, MarkerSizeMode,
     PictureDescriptor, VdcExtent,
     PictureDescriptor, BackgroundColor,
-    Control, VdcIntPrec,
+    Control, VdcIntegerPrecision,
     Control, Transparency,
     Control, ClipRect,
     Control, ClipIndicator,
@@ -603,6 +603,17 @@ TEST_CASE("binary encoding")
         REQUIRE(u8(str, 3) == 64);
         REQUIRE(u8(str, 4) == 32);
     }
+    SECTION("vdc integer precision")
+    {
+        writer->vdcIntegerPrecisionBinary(16);
+
+        const std::string str = stream.str();
+        REQUIRE(header(str) == OpCode{Control, VdcIntegerPrecision, 2});
+        REQUIRE(i16(str, 2) == 16);
+    }
+    // vdc real precision
+    // auxiliary color
+    // transparency
 }
 
 TEST_CASE("TODO", "[.]")
@@ -610,15 +621,6 @@ TEST_CASE("TODO", "[.]")
     std::ostringstream stream;
     std::unique_ptr<cgm::MetafileWriter> writer{create(stream, cgm::Encoding::Binary)};
 
-    SECTION("vdc integer precision")
-    {
-        writer->vdcIntegerPrecision(-128, 128);
-
-        REQUIRE(stream.str() == "VDCIntegerPrec -128 128;\n");
-    }
-    // vdc real precision
-    // auxiliary color
-    // transparency
     SECTION("clip rectangle")
     {
         writer->clipRectangle(20, 20, 64, 64);

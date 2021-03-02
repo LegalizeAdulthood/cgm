@@ -157,7 +157,7 @@ public:
     virtual void markerSizeMode(MarkerSizeMode mode) = 0;
     virtual void vdcExtent(int llx, int lly, int urx, int ury) = 0;
     virtual void backgroundColor(int red, int green, int blue) = 0;
-    virtual void vdcIntegerPrecision(int min, int max) = 0;
+    virtual void vdcIntegerPrecisionClearText(int min, int max) = 0;
     virtual void clipRectangle(int llx, int lly, int urx, int ury) = 0;
     virtual void clipIndicator(bool enabled) = 0;
     virtual void polyline(const std::vector<Point<int>> &points) = 0;
@@ -186,6 +186,7 @@ public:
     virtual void patternIndex(int value) = 0;
     virtual void colorTable(int startIndex, std::vector<Color> const &colors) = 0;
     virtual void indexPrecisionBinary(int value) = 0;
+    virtual void vdcIntegerPrecisionBinary(int value) = 0;
 };
 
 std::unique_ptr<MetafileWriter> create(std::ostream &stream, Encoding enc);
