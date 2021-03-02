@@ -2578,15 +2578,19 @@ static void cgmb_cliprect(int *int_coords)
 
 /* Clip indicator */
 
+static void cgmb_clipindic_p(cgm_context *ctx, int clip_ind)
+{
+  cgmb_start_cmd(ctx, 3, (int) ClipIndic);
+
+  cgmb_eint(ctx, clip_ind);
+
+  cgmb_flush_cmd(ctx, final_flush);
+  cgmb_fb(ctx);
+}
 static void cgmb_clipindic(int clip_ind)
 {
-  cgmb_start_cmd(3, (int) ClipIndic);
-
-  cgmb_eint(clip_ind);
-
-  cgmb_flush_cmd(final_flush);
+    cgmb_clipindic_p(g_p, clip_ind);
 }
-
 
 
 /* Polyline */
@@ -3534,6 +3538,7 @@ static void setup_binary_context(cgm_context *ctx)
     ctx->funcs.backgroundColor = cgmb_backcol_p;
     ctx->funcs.vdcIntegerPrecisionBinary = cgmb_vdcintprec_p;
     ctx->funcs.clipRectangle = cgmb_cliprect_p;
+    ctx->funcs.clipIndicator = cgmb_clipindic_p;
   ctx->cgm[begin] = CGM_FUNC cgmb_begin;
   ctx->cgm[end] = CGM_FUNC cgmb_end;
   ctx->cgm[bp] = CGM_FUNC cgmb_bp;

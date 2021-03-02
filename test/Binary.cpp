@@ -625,6 +625,14 @@ TEST_CASE("binary encoding")
         REQUIRE(i16(str, 6) == 32);
         REQUIRE(i16(str, 8) == 64);
     }
+    SECTION("clip indicator")
+    {
+        writer->clipIndicator(true);
+
+        const std::string str = stream.str();
+        REQUIRE(header(str) == OpCode{Control, ClipIndicator, 2});
+        REQUIRE(i16(str, 2) == 1);
+    }
 }
 
 TEST_CASE("TODO", "[.]")
@@ -632,12 +640,6 @@ TEST_CASE("TODO", "[.]")
     std::ostringstream stream;
     std::unique_ptr<cgm::MetafileWriter> writer{create(stream, cgm::Encoding::Binary)};
 
-    SECTION("clip indicator")
-    {
-        writer->clipIndicator(true);
-
-        REQUIRE(stream.str() == "Clip On;\n");
-    }
     SECTION("polyline")
     {
         const std::vector<cgm::Point<int>> points{{10, 10}, {20, 20}};
