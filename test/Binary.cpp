@@ -614,6 +614,17 @@ TEST_CASE("binary encoding")
     // vdc real precision
     // auxiliary color
     // transparency
+    SECTION("clip rectangle")
+    {
+        writer->clipRectangle(10, 20, 32, 64);
+
+        const std::string str = stream.str();
+        REQUIRE(header(str) == OpCode{Control, ClipRect, 4*2});
+        REQUIRE(i16(str, 2) == 10);
+        REQUIRE(i16(str, 4) == 20);
+        REQUIRE(i16(str, 6) == 32);
+        REQUIRE(i16(str, 8) == 64);
+    }
 }
 
 TEST_CASE("TODO", "[.]")
@@ -621,12 +632,6 @@ TEST_CASE("TODO", "[.]")
     std::ostringstream stream;
     std::unique_ptr<cgm::MetafileWriter> writer{create(stream, cgm::Encoding::Binary)};
 
-    SECTION("clip rectangle")
-    {
-        writer->clipRectangle(20, 20, 64, 64);
-
-        REQUIRE(stream.str() == "ClipRect 20,20 64,64;\n");
-    }
     SECTION("clip indicator")
     {
         writer->clipIndicator(true);

@@ -2558,19 +2558,22 @@ static void cgmb_vdcintprec()
 
 
 /* Clip rectangle */
+static void cgmb_cliprect_p(cgm_context *ctx, int llx, int lly, int urx, int ury)
+{
+  cgmb_start_cmd(ctx, 3, (int) ClipRect);
 
+  cgmb_vint(ctx, llx);
+  cgmb_vint(ctx, lly);
+  cgmb_vint(ctx, urx);
+  cgmb_vint(ctx, ury);
+
+  cgmb_flush_cmd(ctx, final_flush);
+  cgmb_fb(ctx);
+}
 static void cgmb_cliprect(int *int_coords)
 {
-  int i;
-
-  cgmb_start_cmd(3, (int) ClipRect);
-
-  for (i = 0; i < 4; ++i)
-    cgmb_vint(int_coords[i]);
-
-  cgmb_flush_cmd(final_flush);
+    cgmb_cliprect_p(g_p, int_coords[0], int_coords[1], int_coords[2], int_coords[3]);
 }
-
 
 
 /* Clip indicator */
@@ -3530,6 +3533,7 @@ static void setup_binary_context(cgm_context *ctx)
     ctx->funcs.vdcExtentInt = cgmb_vdcextent_p;
     ctx->funcs.backgroundColor = cgmb_backcol_p;
     ctx->funcs.vdcIntegerPrecisionBinary = cgmb_vdcintprec_p;
+    ctx->funcs.clipRectangle = cgmb_cliprect_p;
   ctx->cgm[begin] = CGM_FUNC cgmb_begin;
   ctx->cgm[end] = CGM_FUNC cgmb_end;
   ctx->cgm[bp] = CGM_FUNC cgmb_bp;
