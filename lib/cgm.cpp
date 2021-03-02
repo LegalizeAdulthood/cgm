@@ -2963,16 +2963,19 @@ static void cgmb_tcolour(int index)
 
 /* Character height */
 
+static void cgmb_cheight_p(cgm_context *ctx, int height)
+{
+  cgmb_start_cmd(ctx, 5, (int) CHeight);
+
+  cgmb_vint(ctx, height);
+
+  cgmb_flush_cmd(ctx, final_flush);
+  cgmb_fb(ctx);
+}
 static void cgmb_cheight(int height)
 {
-  cgmb_start_cmd(5, (int) CHeight);
-
-  cgmb_vint(height);
-
-  cgmb_flush_cmd(final_flush);
+    cgmb_cheight_p(g_p, height);
 }
-
-
 
 /* Character orientation */
 
@@ -3664,6 +3667,7 @@ static void setup_binary_context(cgm_context *ctx)
     ctx->funcs.charExpansion = cgmb_cexpfac_p;
     ctx->funcs.charSpacing = cgmb_cspace_p;
     ctx->funcs.textColor = cgmb_tcolor_p;
+    ctx->funcs.charHeight = cgmb_cheight_p;
   ctx->cgm[begin] = CGM_FUNC cgmb_begin;
   ctx->cgm[end] = CGM_FUNC cgmb_end;
   ctx->cgm[bp] = CGM_FUNC cgmb_bp;
