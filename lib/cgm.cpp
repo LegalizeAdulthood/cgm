@@ -3037,15 +3037,19 @@ static void cgmb_talign(int hor, int ver)
 
 /* Interior style */
 
+static void cgmb_intstyle_p(cgm_context *ctx, int style)
+{
+  cgmb_start_cmd(ctx, 5, (int) IntStyle);
+
+  cgmb_eint(ctx, style);
+
+  cgmb_flush_cmd(ctx, final_flush);
+  cgmb_fb(ctx);
+}
 static void cgmb_intstyle(int style)
 {
-  cgmb_start_cmd(5, (int) IntStyle);
-
-  cgmb_eint(style);
-
-  cgmb_flush_cmd(final_flush);
+    cgmb_intstyle_p(g_p, style);
 }
-
 
 
 /* Fill colour */
@@ -3683,6 +3687,7 @@ static void setup_binary_context(cgm_context *ctx)
     ctx->funcs.charOrientation = cgmb_corient_p;
     ctx->funcs.textPath = cgmb_tpath_p;
     ctx->funcs.textAlignment = cgmb_talign_p;
+    ctx->funcs.interiorStyle = cgmb_intstyle_p;
   ctx->cgm[begin] = CGM_FUNC cgmb_begin;
   ctx->cgm[end] = CGM_FUNC cgmb_end;
   ctx->cgm[bp] = CGM_FUNC cgmb_bp;

@@ -955,13 +955,6 @@ TEST_CASE("binary encoding")
             // TODO validate 16p16 parameters
         }
     }
-}
-
-TEST_CASE("TODO", "[.]")
-{
-    std::ostringstream stream;
-    std::unique_ptr<cgm::MetafileWriter> writer{create(stream, cgm::Encoding::Binary)};
-
     // character set index
     // alternate character set index
     // full bundle index
@@ -971,33 +964,50 @@ TEST_CASE("TODO", "[.]")
         {
             writer->interiorStyle(cgm::InteriorStyle::Hollow);
 
-            REQUIRE(stream.str() == "IntStyle Hollow;\n");
+            const std::string str = stream.str();
+            REQUIRE(header(str) == OpCode{Attribute, InteriorStyle, 2});
+            REQUIRE(i16(str, 2) == static_cast<int>(cgm::InteriorStyle::Hollow));
         }
         SECTION("solid")
         {
             writer->interiorStyle(cgm::InteriorStyle::Solid);
 
-            REQUIRE(stream.str() == "IntStyle Solid;\n");
+            const std::string str = stream.str();
+            REQUIRE(header(str) == OpCode{Attribute, InteriorStyle, 2});
+            REQUIRE(i16(str, 2) == static_cast<int>(cgm::InteriorStyle::Solid));
         }
         SECTION("pattern")
         {
             writer->interiorStyle(cgm::InteriorStyle::Pattern);
 
-            REQUIRE(stream.str() == "IntStyle Pat;\n");
+            const std::string str = stream.str();
+            REQUIRE(header(str) == OpCode{Attribute, InteriorStyle, 2});
+            REQUIRE(i16(str, 2) == static_cast<int>(cgm::InteriorStyle::Pattern));
         }
         SECTION("hatch")
         {
             writer->interiorStyle(cgm::InteriorStyle::Hatch);
 
-            REQUIRE(stream.str() == "IntStyle Hatch;\n");
+            const std::string str = stream.str();
+            REQUIRE(header(str) == OpCode{Attribute, InteriorStyle, 2});
+            REQUIRE(i16(str, 2) == static_cast<int>(cgm::InteriorStyle::Hatch));
         }
         SECTION("empty")
         {
             writer->interiorStyle(cgm::InteriorStyle::Empty);
 
-            REQUIRE(stream.str() == "IntStyle Empty;\n");
+            const std::string str = stream.str();
+            REQUIRE(header(str) == OpCode{Attribute, InteriorStyle, 2});
+            REQUIRE(i16(str, 2) == static_cast<int>(cgm::InteriorStyle::Empty));
         }
     }
+}
+
+TEST_CASE("TODO", "[.]")
+{
+    std::ostringstream stream;
+    std::unique_ptr<cgm::MetafileWriter> writer{create(stream, cgm::Encoding::Binary)};
+
     SECTION("fill color")
     {
         writer->fillColor(6);
