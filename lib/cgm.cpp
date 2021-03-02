@@ -2002,11 +2002,14 @@ static void cgmb_dcint(int xin)
 
 /* Write a signed int at VDC integer precision */
 
+static void cgmb_vint(cgm_context *ctx, int xin)
+{
+  cgmb_gint(ctx, xin, 16);
+}
 static void cgmb_vint(int xin)
 {
-  cgmb_gint(xin, 16);
+    cgmb_vint(g_p, xin);
 }
-
 
 
 /* Write a standard CGM signed int */
@@ -2499,18 +2502,22 @@ static void cgmb_msmode(void)
 
 /* VDC extent */
 
+static void cgmb_vdcextent_p(cgm_context *ctx, int xmin, int ymin, int xmax, int ymax)
+{
+  cgmb_start_cmd(ctx, 2, (int) vdcExtent);
+
+  cgmb_vint(ctx, xmin);
+  cgmb_vint(ctx, ymin);
+  cgmb_vint(ctx, xmax);
+  cgmb_vint(ctx, ymax);
+
+  cgmb_flush_cmd(ctx, final_flush);
+  cgmb_fb(ctx);
+}
 static void cgmb_vdcextent(void)
 {
-  cgmb_start_cmd(2, (int) vdcExtent);
-
-  cgmb_vint(0);
-  cgmb_vint(0);
-  cgmb_vint(g_p->xext);
-  cgmb_vint(g_p->yext);
-
-  cgmb_flush_cmd(final_flush);
+    cgmb_vdcextent_p(g_p, 0, 0, g_p->xext, g_p->yext);
 }
-
 
 
 /* Background colour */
@@ -3511,6 +3518,7 @@ static void setup_binary_context(cgm_context *ctx)
     ctx->funcs.colorMode = cgmb_colselmode_p;
     ctx->funcs.lineWidthMode = cgmb_lwsmode_p;
     ctx->funcs.markerSizeMode = cgmb_msmode_p;
+    ctx->funcs.vdcExtentInt = cgmb_vdcextent_p;
   ctx->cgm[begin] = CGM_FUNC cgmb_begin;
   ctx->cgm[end] = CGM_FUNC cgmb_end;
   ctx->cgm[bp] = CGM_FUNC cgmb_bp;

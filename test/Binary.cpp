@@ -580,6 +580,18 @@ TEST_CASE("binary encoding")
                 REQUIRE(i16(str, 2) == static_cast<int>(cgm::MarkerSizeMode::Scaled));
             }
         }
+        // edge width specification mode
+        SECTION("vdc extent")
+        {
+            writer->vdcExtent(32, 64, 640, 480);
+
+            const std::string str = stream.str();
+            REQUIRE(header(str) == OpCode{PictureDescriptor, VdcExtent, 4*2});
+            REQUIRE(i16(str, 2) == 32);
+            REQUIRE(i16(str, 4) == 64);
+            REQUIRE(i16(str, 6) == 640);
+            REQUIRE(i16(str, 8) == 480);
+        }
     }
 }
 
@@ -588,13 +600,6 @@ TEST_CASE("TODO", "[.]")
     std::ostringstream stream;
     std::unique_ptr<cgm::MetafileWriter> writer{create(stream, cgm::Encoding::Binary)};
 
-    // edge width specification mode
-    SECTION("vdc extent")
-    {
-        writer->vdcExtent(0, 0, 640, 480);
-
-        REQUIRE(stream.str() == "VDCExt 0,0 640,480;\n");
-    }
     SECTION("background color")
     {
         writer->backgroundColor(128, 64, 128);
