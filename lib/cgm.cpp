@@ -2669,19 +2669,23 @@ static void cgmb_pmarker(int no_pairs, int *x1_ptr, int *y1_ptr)
 
 /* Text */
 
-static void cgmb_text(int x, int y, int final, char *buffer)
+static void cgmb_text_p(cgm_context *ctx, int x, int y, int final, const char *buffer)
 {
-  cgmb_start_cmd(4, (int) Text);
+  cgmb_start_cmd(ctx, 4, (int) Text);
 
-  cgmb_vint(x);
-  cgmb_vint(y);
+  cgmb_vint(ctx, x);
+  cgmb_vint(ctx, y);
 
-  cgmb_eint(final);
-  cgmb_string(buffer, strlen(buffer));
+  cgmb_eint(ctx, final);
+  cgmb_string(ctx, buffer, strlen(buffer));
 
-  cgmb_flush_cmd(final_flush);
+  cgmb_flush_cmd(ctx, final_flush);
+  cgmb_fb(ctx);
 }
-
+static void cgmb_text(int x, int y, int final, const char *buffer)
+{
+    cgmb_text_p(g_p, x, y, final, buffer);
+}
 
 
 /* Polygon */
@@ -3577,6 +3581,7 @@ static void setup_binary_context(cgm_context *ctx)
     ctx->funcs.clipIndicator = cgmb_clipindic_p;
     ctx->funcs.polylineInt = cgmb_pline_pt;
     ctx->funcs.polymarkerInt = cgmb_pmarker_pt;
+    ctx->funcs.textInt = cgmb_text_p;
   ctx->cgm[begin] = CGM_FUNC cgmb_begin;
   ctx->cgm[end] = CGM_FUNC cgmb_end;
   ctx->cgm[bp] = CGM_FUNC cgmb_bp;

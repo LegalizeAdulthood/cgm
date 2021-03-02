@@ -660,6 +660,20 @@ TEST_CASE("binary encoding")
         REQUIRE(i16(str, 6) == 21);
         REQUIRE(i16(str, 8) == 22);
     }
+    SECTION("text")
+    {
+        const char text[]{"Hello, world!"};
+        writer->text({10, 11}, cgm::TextFlag::Final, text);
+
+        const std::string str = stream.str();
+        REQUIRE(header(str) == OpCode{Primitive, Text, 3*2 + numOf(text)});
+        REQUIRE(i16(str, 2) == 10);
+        REQUIRE(i16(str, 4) == 11);
+        REQUIRE(i16(str, 6) == static_cast<int>(cgm::TextFlag::Final));
+        REQUIRE(unpack(str, 8) == text);
+    }
+    // restricted text
+    // append text
 }
 
 TEST_CASE("TODO", "[.]")
@@ -667,14 +681,6 @@ TEST_CASE("TODO", "[.]")
     std::ostringstream stream;
     std::unique_ptr<cgm::MetafileWriter> writer{create(stream, cgm::Encoding::Binary)};
 
-    SECTION("text")
-    {
-        writer->text({10, 10}, cgm::TextFlag::Final, "Hello, world!");
-
-        REQUIRE(stream.str() == "Text 10,10 Final \"Hello, world!\";\n");
-    }
-    // restricted text
-    // append text
     SECTION("polygon")
     {
         const std::vector<cgm::Point<int>> points{{10, 10}, {20, 10}, {20, 20}, {10, 20}};
