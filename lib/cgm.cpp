@@ -2894,15 +2894,19 @@ static void cgmb_tfindex(int index)
 
 /* Text precision */
 
+static void cgmb_tprec_p(cgm_context *ctx, int precision)
+{
+  cgmb_start_cmd(ctx, 5, (int) TPrec);
+
+  cgmb_eint(ctx, precision);
+
+  cgmb_flush_cmd(ctx, final_flush);
+  cgmb_fb(ctx);
+}
 static void cgmb_tprec(int precision)
 {
-  cgmb_start_cmd(5, (int) TPrec);
-
-  cgmb_eint(precision);
-
-  cgmb_flush_cmd(final_flush);
+    cgmb_tprec_p(g_p, precision);
 }
-
 
 
 /* Character expansion factor */
@@ -3644,6 +3648,7 @@ static void setup_binary_context(cgm_context *ctx)
     ctx->funcs.markerSize = cgmb_msize_p;
     ctx->funcs.markerColor = cgmb_mcolor_p;
     ctx->funcs.textFontIndex = cgmb_tfindex_p;
+    ctx->funcs.textPrecision = cgmb_tprec_p;
   ctx->cgm[begin] = CGM_FUNC cgmb_begin;
   ctx->cgm[end] = CGM_FUNC cgmb_end;
   ctx->cgm[bp] = CGM_FUNC cgmb_bp;

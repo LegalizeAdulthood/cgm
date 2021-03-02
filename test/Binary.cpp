@@ -777,6 +777,33 @@ TEST_CASE("binary encoding")
         REQUIRE(header(str) == OpCode{Attribute, TextFontIndex, 2});
         REQUIRE(i16(str, 2) == 6);
     }
+    SECTION("text precision")
+    {
+        SECTION("string")
+        {
+            writer->textPrecision(cgm::TextPrecision::String);
+
+            const std::string str = stream.str();
+            REQUIRE(header(str) == OpCode{Attribute, TextPrecision, 2});
+            REQUIRE(i16(str, 2) == static_cast<int>(cgm::TextPrecision::String));
+        }
+        SECTION("character")
+        {
+            writer->textPrecision(cgm::TextPrecision::Character);
+
+            const std::string str = stream.str();
+            REQUIRE(header(str) == OpCode{Attribute, TextPrecision, 2});
+            REQUIRE(i16(str, 2) == static_cast<int>(cgm::TextPrecision::Character));
+        }
+        SECTION("stroke")
+        {
+            writer->textPrecision(cgm::TextPrecision::Stroke);
+
+            const std::string str = stream.str();
+            REQUIRE(header(str) == OpCode{Attribute, TextPrecision, 2});
+            REQUIRE(i16(str, 2) == static_cast<int>(cgm::TextPrecision::Stroke));
+        }
+    }
 }
 
 TEST_CASE("TODO", "[.]")
@@ -784,27 +811,6 @@ TEST_CASE("TODO", "[.]")
     std::ostringstream stream;
     std::unique_ptr<cgm::MetafileWriter> writer{create(stream, cgm::Encoding::Binary)};
 
-    SECTION("text precision")
-    {
-        SECTION("string")
-        {
-            writer->textPrecision(cgm::TextPrecision::String);
-
-            REQUIRE(stream.str() == "TextPrec String;\n");
-        }
-        SECTION("character")
-        {
-            writer->textPrecision(cgm::TextPrecision::Character);
-
-            REQUIRE(stream.str() == "TextPrec Character;\n");
-        }
-        SECTION("stroke")
-        {
-            writer->textPrecision(cgm::TextPrecision::Stroke);
-
-            REQUIRE(stream.str() == "TextPrec Stroke;\n");
-        }
-    }
     SECTION("character expansion factor")
     {
         writer->charExpansion(0.1f);
