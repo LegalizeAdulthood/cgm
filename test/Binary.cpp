@@ -542,6 +542,25 @@ TEST_CASE("binary encoding")
                 REQUIRE(i16(str, 2) == static_cast<int>(cgm::ColorMode::Direct));
             }
         }
+        SECTION("line width specification mode")
+        {
+            SECTION("absolute")
+            {
+                writer->lineWidthMode(cgm::LineWidthMode::Absolute);
+
+                const std::string str = stream.str();
+                REQUIRE(header(str) == OpCode{PictureDescriptor, LineWidthMode, 2});
+                REQUIRE(i16(str, 2) == static_cast<int>(cgm::LineWidthMode::Absolute));
+            }
+            SECTION("scaled")
+            {
+                writer->lineWidthMode(cgm::LineWidthMode::Scaled);
+
+                const std::string str = stream.str();
+                REQUIRE(header(str) == OpCode{PictureDescriptor, LineWidthMode, 2});
+                REQUIRE(i16(str, 2) == static_cast<int>(cgm::LineWidthMode::Scaled));
+            }
+        }
     }
 }
 
@@ -550,21 +569,6 @@ TEST_CASE("TODO", "[.]")
     std::ostringstream stream;
     std::unique_ptr<cgm::MetafileWriter> writer{create(stream, cgm::Encoding::Binary)};
 
-    SECTION("line width specification mode")
-    {
-        SECTION("absolute")
-        {
-            writer->lineWidthMode(cgm::LineWidthMode::Absolute);
-
-            REQUIRE(stream.str() == "LineWidthMode Absolute;\n");
-        }
-        SECTION("scaled")
-        {
-            writer->lineWidthMode(cgm::LineWidthMode::Scaled);
-
-            REQUIRE(stream.str() == "LineWidthMode Scaled;\n");
-        }
-    }
     SECTION("marker size specification mode")
     {
         SECTION("absolute")

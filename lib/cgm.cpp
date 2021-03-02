@@ -2465,15 +2465,19 @@ static void cgmb_colselmode(void)
 
 /* line width specification mode */
 
+static void cgmb_lwsmode_p(cgm_context *ctx, int value)
+{
+  cgmb_start_cmd(ctx, 2, (int) LWidSpecMode);
+
+  cgmb_eint(ctx, value);
+
+  cgmb_flush_cmd(ctx, final_flush);
+  cgmb_fb(ctx);
+}
 static void cgmb_lwsmode(void)
 {
-  cgmb_start_cmd(2, (int) LWidSpecMode);
-
-  cgmb_eint((int) scaled);
-
-  cgmb_flush_cmd(final_flush);
+    cgmb_lwsmode_p(g_p, (int) scaled);
 }
-
 
 
 /* marker size specification mode */
@@ -3501,6 +3505,7 @@ static void setup_binary_context(cgm_context *ctx)
     ctx->funcs.characterCodingAnnouncer = cgmb_cannounce_p;
     ctx->funcs.scalingMode = cgmb_scalmode_p;
     ctx->funcs.colorMode = cgmb_colselmode_p;
+    ctx->funcs.lineWidthMode = cgmb_lwsmode_p;
   ctx->cgm[begin] = CGM_FUNC cgmb_begin;
   ctx->cgm[end] = CGM_FUNC cgmb_end;
   ctx->cgm[bp] = CGM_FUNC cgmb_bp;
