@@ -6,6 +6,7 @@ add_library(cgm
     gks.h
     gkscore.h
     gkscore.cpp
+    ../ReadMe.md
     )
 target_include_directories(cgm PUBLIC include)
 target_include_directories(cgm PRIVATE .)
