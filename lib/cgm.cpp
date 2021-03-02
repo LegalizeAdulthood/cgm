@@ -2928,15 +2928,19 @@ static void cgmb_cexpfac(double factor)
 
 /* Character space */
 
+static void cgmb_cspace_p(cgm_context *ctx, double space)
+{
+  cgmb_start_cmd(ctx, 5, (int) CSpace);
+
+  cgmb_fixed(ctx, space);
+
+  cgmb_flush_cmd(ctx, final_flush);
+  cgmb_fb(ctx);
+}
 static void cgmb_cspace(double space)
 {
-  cgmb_start_cmd(5, (int) CSpace);
-
-  cgmb_fixed(space);
-
-  cgmb_flush_cmd(final_flush);
+    cgmb_cspace_p(g_p, space);
 }
-
 
 
 /* Text colour */
@@ -3654,6 +3658,7 @@ static void setup_binary_context(cgm_context *ctx)
     ctx->funcs.textFontIndex = cgmb_tfindex_p;
     ctx->funcs.textPrecision = cgmb_tprec_p;
     ctx->funcs.charExpansion = cgmb_cexpfac_p;
+    ctx->funcs.charSpacing = cgmb_cspace_p;
   ctx->cgm[begin] = CGM_FUNC cgmb_begin;
   ctx->cgm[end] = CGM_FUNC cgmb_end;
   ctx->cgm[bp] = CGM_FUNC cgmb_bp;

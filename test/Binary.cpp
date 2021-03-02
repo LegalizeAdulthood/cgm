@@ -810,7 +810,15 @@ TEST_CASE("binary encoding")
 
         const std::string str = stream.str();
         REQUIRE(header(str) == OpCode{Attribute, CharExpansion, 4});
-        // TODO: validate 16p16 expansion factor
+        // TODO: validate 16p16 char expansion factor
+    }
+    SECTION("character spacing")
+    {
+        writer->charSpacing(0.1f);
+
+        const std::string str = stream.str();
+        REQUIRE(header(str) == OpCode{Attribute, CharSpacing, 4});
+        // TODO: validate 16p16 char spacing
     }
 }
 
@@ -819,12 +827,6 @@ TEST_CASE("TODO", "[.]")
     std::ostringstream stream;
     std::unique_ptr<cgm::MetafileWriter> writer{create(stream, cgm::Encoding::Binary)};
 
-    SECTION("character spacing")
-    {
-        writer->charSpacing(0.1f);
-
-        REQUIRE(stream.str() == "CharSpace 0.100000;\n");
-    }
     SECTION("text color")
     {
         writer->textColor(6);
