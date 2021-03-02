@@ -674,6 +674,16 @@ TEST_CASE("binary encoding")
     }
     // restricted text
     // append text
+    SECTION("polygon")
+    {
+        const std::vector<cgm::Point<int>> points{{10, 10}, {20, 10}, {20, 20}, {10, 20}};
+
+        writer->polygon(points);
+
+        const std::string str = stream.str();
+        REQUIRE(header(str) == OpCode{Primitive, Polygon, 4*2*2});
+    }
+    // polygon set
 }
 
 TEST_CASE("TODO", "[.]")
@@ -681,15 +691,6 @@ TEST_CASE("TODO", "[.]")
     std::ostringstream stream;
     std::unique_ptr<cgm::MetafileWriter> writer{create(stream, cgm::Encoding::Binary)};
 
-    SECTION("polygon")
-    {
-        const std::vector<cgm::Point<int>> points{{10, 10}, {20, 10}, {20, 20}, {10, 20}};
-
-        writer->polygon(points);
-
-        REQUIRE(stream.str() == "Polygon 10,10 20,10 20,20 10,20;\n");
-    }
-    // polygon set
     SECTION("cell array")
     {
         std::array<int, 16> cellArray{0, 0, 0, 0,

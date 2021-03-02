@@ -2689,22 +2689,40 @@ static void cgmb_text(int x, int y, int final, const char *buffer)
 
 
 /* Polygon */
+static void cgmb_pgon_pt(cgm_context *ctx, int no_pairs, const cgm::Point<int> *pts)
+{
+    int i;
 
-static void cgmb_pgon(int no_pairs, int *x1_ptr, int *y1_ptr)
+    cgmb_start_cmd(ctx, 4, (int) C_Polygon);
+
+    for (i = 0; i < no_pairs; ++i)
+    {
+        cgmb_vint(ctx, pts[i].x);
+        cgmb_vint(ctx, pts[i].y);
+    }
+
+    cgmb_flush_cmd(ctx, final_flush);
+    cgmb_fb(ctx);
+}
+static void cgmb_pgon_p(cgm_context *ctx, int no_pairs, int *x1_ptr, int *y1_ptr)
 {
   int i;
 
-  cgmb_start_cmd(4, (int) C_Polygon);
+  cgmb_start_cmd(ctx, 4, (int) C_Polygon);
 
   for (i = 0; i < no_pairs; ++i)
     {
-      cgmb_vint(x1_ptr[i]);
-      cgmb_vint(y1_ptr[i]);
+      cgmb_vint(ctx, x1_ptr[i]);
+      cgmb_vint(ctx, y1_ptr[i]);
     }
 
-  cgmb_flush_cmd(final_flush);
+  cgmb_flush_cmd(ctx, final_flush);
+  cgmb_fb(ctx);
 }
-
+static void cgmb_pgon(int no_pairs, int *x1_ptr, int *y1_ptr)
+{
+    cgmb_pgon_p(g_p, no_pairs, x1_ptr, y1_ptr);
+}
 
 
 /* Cell array */
@@ -3582,6 +3600,7 @@ static void setup_binary_context(cgm_context *ctx)
     ctx->funcs.polylineInt = cgmb_pline_pt;
     ctx->funcs.polymarkerInt = cgmb_pmarker_pt;
     ctx->funcs.textInt = cgmb_text_p;
+    ctx->funcs.polygonInt = cgmb_pgon_pt;
   ctx->cgm[begin] = CGM_FUNC cgmb_begin;
   ctx->cgm[end] = CGM_FUNC cgmb_end;
   ctx->cgm[bp] = CGM_FUNC cgmb_bp;
