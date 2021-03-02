@@ -122,7 +122,7 @@ struct cgm_funcs
     void (*polymarkerInt)(cgm_context *p, int numPoints, const cgm::Point<int> *points);
     void (*textInt)(cgm_context *p, int x, int y, int flag, const char *text);
     void (*polygonInt)(cgm_context *p, int numPoints, const cgm::Point<int> *points);
-    void (*cellArray)(cgm_context *p, int c1x, int c1y, int c2x, int c2y, int c3x, int c3y, int nx, int ny, int dimx, int *colors);
+    void (*cellArray)(cgm_context *p, int c1x, int c1y, int c2x, int c2y, int c3x, int c3y, int colorPrecision, int nx, int ny, int dimx, const int *colors);
     void (*lineType)(cgm_context *p, int line_type);
     void (*lineWidth)(cgm_context *p, double rmul);
     void (*lineColor)(cgm_context *p, int index);
@@ -1518,7 +1518,7 @@ static void cgmt_coltab(int beg_index, int no_entries, double *ctab)
 
 
 /* Cell array */
-static void cgmt_carray_p(cgm_context *ctx, int c1x, int c1y, int c2x, int c2y, int c3x, int c3y, int nx, int ny, int dimx, int *array)
+static void cgmt_carray_p(cgm_context *ctx, int c1x, int c1y, int c2x, int c2y, int c3x, int c3y, int colorPrecision, int nx, int ny, int dimx, const int *array)
 {
     int ix, iy, c;
 
@@ -1529,7 +1529,7 @@ static void cgmt_carray_p(cgm_context *ctx, int c1x, int c1y, int c2x, int c2y, 
     cgmt_ipoint(ctx, c3x, c3y);
     cgmt_int(ctx, nx);
     cgmt_int(ctx, ny);
-    cgmt_int(ctx, max_colors - 1);
+    cgmt_int(ctx, colorPrecision);
 
     for (iy = 0; iy < ny; iy++)
     {
@@ -1549,9 +1549,9 @@ static void cgmt_carray_p(cgm_context *ctx, int c1x, int c1y, int c2x, int c2y, 
     cgmt_flush_cmd(ctx, final_flush);
 }
 static void cgmt_carray(int xmin, int xmax, int ymin, int ymax, int dx,
-			int dy, int dimx, int *array)
+			int dy, int dimx, const int *array)
 {
-    cgmt_carray_p(g_p, xmin, ymin, xmax, ymax, xmax, ymin, dx, dy, dimx, array);
+    cgmt_carray_p(g_p, xmin, ymin, xmax, ymax, xmax, ymin, max_colors - 1, dx, dy, dimx, array);
 }
 
 
@@ -2727,24 +2727,24 @@ static void cgmb_pgon(int no_pairs, int *x1_ptr, int *y1_ptr)
 
 /* Cell array */
 
-static void cgmb_carray(int xmin, int xmax, int ymin, int ymax, int dx,
-			int dy, int dimx, int *array)
+static void cgmb_carray_p(cgm_context *ctx, int c1x, int c1y, int c2x, int c2y, int c3x,
+    int c3y, int colorPrecision, int dx, int dy, int dimx, const int *array)
 {
   int ix, iy, c;
 
-  cgmb_start_cmd(4, (int) Cell_Array);
+  cgmb_start_cmd(ctx, 4, (int) Cell_Array);
 
-  cgmb_vint(xmin);
-  cgmb_vint(ymin);
-  cgmb_vint(xmax);
-  cgmb_vint(ymax);
-  cgmb_vint(xmax);
-  cgmb_vint(ymin);
+  cgmb_vint(ctx, c1x);
+  cgmb_vint(ctx, c1y);
+  cgmb_vint(ctx, c2x);
+  cgmb_vint(ctx, c2y);
+  cgmb_vint(ctx, c3x);
+  cgmb_vint(ctx, c3y);
 
-  cgmb_sint(dx);
-  cgmb_sint(dy);
-  cgmb_sint(cprec);
-  cgmb_eint(1);
+  cgmb_sint(ctx, dx);
+  cgmb_sint(ctx, dy);
+  cgmb_sint(ctx, colorPrecision);
+  cgmb_eint(ctx, 1);
 
   for (iy = 0; iy < dy; iy++)
     {
@@ -2752,16 +2752,21 @@ static void cgmb_carray(int xmin, int xmax, int ymin, int ymax, int dx,
 	{
 	  c = array[dimx * iy + ix];
 	  c = Color8Bit(c);
-	  cgmb_out_bc(c);
+	  cgmb_out_bc(ctx, c);
 	}
 
       if (odd(dx))
-	cgmb_out_bc(0);
+	cgmb_out_bc(ctx, 0);
     }
 
-  cgmb_flush_cmd(final_flush);
+  cgmb_flush_cmd(ctx, final_flush);
+  cgmb_fb(ctx);
 }
-
+static void cgmb_carray(int xmin, int xmax, int ymin, int ymax, int dx,
+    int dy, int dimx, int *array)
+{
+    cgmb_carray_p(g_p, xmin, xmax, ymin, ymax, xmax, ymin, cprec, dx, dy, dimx, array);
+}
 
 
 /* Line type */
@@ -3601,6 +3606,7 @@ static void setup_binary_context(cgm_context *ctx)
     ctx->funcs.polymarkerInt = cgmb_pmarker_pt;
     ctx->funcs.textInt = cgmb_text_p;
     ctx->funcs.polygonInt = cgmb_pgon_pt;
+    ctx->funcs.cellArray = cgmb_carray_p;
   ctx->cgm[begin] = CGM_FUNC cgmb_begin;
   ctx->cgm[end] = CGM_FUNC cgmb_end;
   ctx->cgm[bp] = CGM_FUNC cgmb_bp;
@@ -3990,7 +3996,7 @@ public:
     void polymarker(const std::vector<Point<int>> &points) override;
     void text(Point<int> point, TextFlag flag, const char *text) override;
     void polygon(const std::vector<Point<int>> &points) override;
-    void cellArray(Point<int> c1, Point<int> c2, Point<int> c3, int nx, int ny, int *colors) override;
+    void cellArray(Point<int> c1, Point<int> c2, Point<int> c3, int colorPrecision, int nx, int ny, int *colors) override;
     void lineType(int value) override;
     void lineWidth(float value) override;
     void lineColor(int value) override;
@@ -4236,9 +4242,9 @@ void MetafileStreamWriter::polygon(const std::vector<Point<int>> &points)
     m_context.funcs.polygonInt(&m_context, static_cast<int>(points.size()), points.data());
 }
 
-void MetafileStreamWriter::cellArray(Point<int> c1, Point<int> c2, Point<int> c3, int nx, int ny, int *colors)
+void MetafileStreamWriter::cellArray(Point<int> c1, Point<int> c2, Point<int> c3, int colorPrecision, int nx, int ny, int *colors)
 {
-    m_context.funcs.cellArray(&m_context, c1.x, c1.y, c2.x, c2.y, c3.x, c3.y, nx, ny, nx, colors);
+    m_context.funcs.cellArray(&m_context, c1.x, c1.y, c2.x, c2.y, c3.x, c3.y, colorPrecision, nx, ny, nx, colors);
 }
 
 void MetafileStreamWriter::lineType(int value)

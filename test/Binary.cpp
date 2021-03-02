@@ -684,21 +684,29 @@ TEST_CASE("binary encoding")
         REQUIRE(header(str) == OpCode{Primitive, Polygon, 4*2*2});
     }
     // polygon set
-}
-
-TEST_CASE("TODO", "[.]")
-{
-    std::ostringstream stream;
-    std::unique_ptr<cgm::MetafileWriter> writer{create(stream, cgm::Encoding::Binary)};
-
     SECTION("cell array")
     {
-        std::array<int, 16> cellArray{0, 0, 0, 0,
-            0, 1, 0, 0,
-            0, 0, 1, 0,
-            0, 0, 0, 0};
+        // clang-format off
+        std::array<int, 14> cellArray{
+            0, 0, 0, 0, 0, 1, 0,
+            0, 0, 1, 0, 0, 0, 0};
+        // clang-format on
 
-        writer->cellArray({0, 0}, {10, 0}, {10, 10}, 4, 4, cellArray.data());
+        writer->cellArray({0, 1}, {10, 11}, {20, 21}, 8, 7, 2, cellArray.data());
+
+        const std::string str = stream.str();
+        REQUIRE(header(str) == OpCode{Primitive, CellArray, 31});
+        REQUIRE(i16(str, 2) == 11*2 + 14);
+        REQUIRE(i16(str, 4) == 0);
+        REQUIRE(i16(str, 6) == 1);
+        REQUIRE(i16(str, 8) == 10);
+        REQUIRE(i16(str, 10) == 11);
+        REQUIRE(i16(str, 12) == 20);
+        REQUIRE(i16(str, 14) == 21);
+        REQUIRE(i16(str, 16) == 7);
+        REQUIRE(i16(str, 18) == 2);
+        REQUIRE(i16(str, 20) == 8);
+        REQUIRE(i16(str, 22) == 1);
     }
     // generalized drawing primitive
     // rectangle
@@ -711,6 +719,13 @@ TEST_CASE("TODO", "[.]")
     // elliptical arc
     // elliptical arc close
     // line bundle index
+}
+
+TEST_CASE("TODO", "[.]")
+{
+    std::ostringstream stream;
+    std::unique_ptr<cgm::MetafileWriter> writer{create(stream, cgm::Encoding::Binary)};
+
     SECTION("line type")
     {
         writer->lineType(1);

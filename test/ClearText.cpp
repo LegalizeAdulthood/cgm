@@ -287,7 +287,7 @@ TEST_CASE("clear text encoding")
             0, 0, 1, 0,
             0, 0, 0, 0};
 
-        writer->cellArray({0, 0}, {10, 0}, {10, 10}, 4, 4, cellArray.data());
+        writer->cellArray({0, 0}, {10, 0}, {10, 10}, 16, 4, 4, cellArray.data());
     }
     // generalized drawing primitive
     // rectangle
