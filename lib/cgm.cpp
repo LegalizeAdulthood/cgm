@@ -3105,25 +3105,46 @@ static void cgmb_pindex(int new_index)
 
 /* Colour table */
 
-static void cgmb_coltab(int beg_index, int no_entries, double *ctab)
+static void cgmb_coltab_c(cgm_context *ctx, int startIndex, int numColors, const cgm::Color *colors)
+{
+    int i, j;
+
+    cgmb_start_cmd(ctx, 5, (int) ColTab);
+    cgmb_cxint(ctx, startIndex);
+
+    for (i = startIndex; i < (startIndex + numColors); ++i)
+    {
+        cgmb_dcint(ctx, (int) (colors[(i - startIndex)].red * (max_colors - 1)));
+        cgmb_dcint(ctx, (int) (colors[(i - startIndex)].green * (max_colors - 1)));
+        cgmb_dcint(ctx, (int) (colors[(i - startIndex)].blue * (max_colors - 1)));
+    }
+
+    cgmb_flush_cmd(ctx, final_flush);
+    cgmb_fb(ctx);
+}
+static void cgmb_coltab_p(cgm_context *ctx, int beg_index, int no_entries, double *ctab)
 {
   int i, j;
 
-  cgmb_start_cmd(5, (int) ColTab);
-  cgmb_cxint(beg_index);
+  cgmb_start_cmd(ctx, 5, (int) ColTab);
+  cgmb_cxint(ctx, beg_index);
 
   for (i = beg_index; i < (beg_index + no_entries); ++i)
     {
       for (j = 0; j < 3; ++j)
 	{
-	  cgmb_dcint((int)
+	  cgmb_dcint(ctx, (int)
 		     (ctab[(i - beg_index) * 3 + j] * (max_colors - 1)));
 	}
     }
 
-  cgmb_flush_cmd(final_flush);
+  cgmb_flush_cmd(ctx, final_flush);
+  cgmb_fb(ctx);
 }
-
+static void cgmb_coltab(int beg_index, int no_entries, double *ctab)
+{
+    cgmb_coltab_p(g_p, beg_index, no_entries, ctab);
+}
 
 
 static void init_color_table(void)
@@ -3703,6 +3724,7 @@ static void setup_binary_context(cgm_context *ctx)
     ctx->funcs.fillColor = cgmb_fillcolor_p;
     ctx->funcs.hatchIndex = cgmb_hindex_p;
     ctx->funcs.patternIndex = cgmb_pindex_p;
+    ctx->funcs.colorTable = cgmb_coltab_c;
   ctx->cgm[begin] = CGM_FUNC cgmb_begin;
   ctx->cgm[end] = CGM_FUNC cgmb_end;
   ctx->cgm[bp] = CGM_FUNC cgmb_bp;

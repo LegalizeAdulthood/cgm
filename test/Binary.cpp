@@ -1033,19 +1033,20 @@ TEST_CASE("binary encoding")
     // fill reference point
     // pattern table
     // pattern size
-}
-
-TEST_CASE("TODO", "[.]")
-{
-    std::ostringstream stream;
-    std::unique_ptr<cgm::MetafileWriter> writer{create(stream, cgm::Encoding::Binary)};
-
     SECTION("color table")
     {
+        // TODO: Colors should be specified as integers with suitable representation?
         std::vector<cgm::Color> colors{{0.0f, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f}};
         writer->colorTable(6, colors);
 
-        REQUIRE(stream.str() == "ColrTable 6 0 0 0 255 0 0 0 255 0 0 0 255 255 255 255;\n");
+        const std::string str = stream.str();
+        REQUIRE(header(str) == OpCode{Attribute, ColorTable, 2 + 3*5});
+        REQUIRE(i16(str, 2) == 6);
+        REQUIRE(u8(str, 4) == 0); REQUIRE(u8(str, 5) == 0); REQUIRE(u8(str, 6) == 0);
+        REQUIRE(u8(str, 7) == 255); REQUIRE(u8(str, 8) == 0); REQUIRE(u8(str, 9) == 0);
+        REQUIRE(u8(str, 10) == 0); REQUIRE(u8(str, 11) == 255); REQUIRE(u8(str, 12) == 0);
+        REQUIRE(u8(str, 13) == 0); REQUIRE(u8(str, 14) == 0); REQUIRE(u8(str, 15) == 255);
+        REQUIRE(u8(str, 16) == 255); REQUIRE(u8(str, 17) == 255); REQUIRE(u8(str, 18) == 255);
     }
     // aspect source flags
     // escape
