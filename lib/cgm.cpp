@@ -2447,15 +2447,19 @@ static void cgmb_scalmode(void)
 
 /* Colour selection mode */
 
+static void cgmb_colselmode_p(cgm_context *ctx, int value)
+{
+  cgmb_start_cmd(ctx, 2, (int) ColSelMode);
+
+  cgmb_eint(ctx, value);
+
+  cgmb_flush_cmd(ctx, final_flush);
+  cgmb_fb(ctx);
+}
 static void cgmb_colselmode(void)
 {
-  cgmb_start_cmd(2, (int) ColSelMode);
-
-  cgmb_eint((int) i_c_mode);
-
-  cgmb_flush_cmd(final_flush);
+    cgmb_colselmode_p(g_p, (int) i_c_mode);
 }
-
 
 
 
@@ -3496,6 +3500,7 @@ static void setup_binary_context(cgm_context *ctx)
     ctx->funcs.fontList = cgmb_fontlist_p;
     ctx->funcs.characterCodingAnnouncer = cgmb_cannounce_p;
     ctx->funcs.scalingMode = cgmb_scalmode_p;
+    ctx->funcs.colorMode = cgmb_colselmode_p;
   ctx->cgm[begin] = CGM_FUNC cgmb_begin;
   ctx->cgm[end] = CGM_FUNC cgmb_end;
   ctx->cgm[bp] = CGM_FUNC cgmb_bp;

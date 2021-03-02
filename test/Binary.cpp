@@ -523,6 +523,25 @@ TEST_CASE("binary encoding")
             // TODO: decode 16.16 fixed-point as float
             //REQUIRE(f32(str, 4) == 1.0f);
         }
+        SECTION("color selection mode")
+        {
+            SECTION("indexed")
+            {
+                writer->colorMode(cgm::ColorMode::Indexed);
+
+                const std::string str = stream.str();
+                REQUIRE(header(str) == OpCode{PictureDescriptor, ColorMode, 2});
+                REQUIRE(i16(str, 2) == static_cast<int>(cgm::ColorMode::Indexed));
+            }
+            SECTION("direct")
+            {
+                writer->colorMode(cgm::ColorMode::Direct);
+
+                const std::string str = stream.str();
+                REQUIRE(header(str) == OpCode{PictureDescriptor, ColorMode, 2});
+                REQUIRE(i16(str, 2) == static_cast<int>(cgm::ColorMode::Direct));
+            }
+        }
     }
 }
 
@@ -531,21 +550,6 @@ TEST_CASE("TODO", "[.]")
     std::ostringstream stream;
     std::unique_ptr<cgm::MetafileWriter> writer{create(stream, cgm::Encoding::Binary)};
 
-    SECTION("color selection mode")
-    {
-        SECTION("indexed")
-        {
-            writer->colorMode(cgm::ColorMode::Indexed);
-
-            REQUIRE(stream.str() == "ColrMode Indexed;\n");
-        }
-        SECTION("direct")
-        {
-            writer->colorMode(cgm::ColorMode::Direct);
-
-            REQUIRE(stream.str() == "ColrMode Direct;\n");
-        }
-    }
     SECTION("line width specification mode")
     {
         SECTION("absolute")
