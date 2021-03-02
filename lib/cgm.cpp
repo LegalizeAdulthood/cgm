@@ -1860,7 +1860,7 @@ static void cgmb_uint(unsigned int xin, int precision)
 
 /* Write fixed point variable */
 
-static void cgmb_fixed(double xin)
+static void cgmb_fixed(cgm_context *ctx, double xin)
 {
   int exp_part, fract_part;
   double fract_real;
@@ -1874,10 +1874,13 @@ static void cgmb_fixed(double xin)
   fract_real = xin - exp_part;
   fract_part = (int) (fract_real * (01 << real_prec_fract));
 
-  cgmb_gint(exp_part, real_prec_exp);
-  cgmb_uint(fract_part, real_prec_fract);
+  cgmb_gint(ctx, exp_part, real_prec_exp);
+  cgmb_uint(ctx, fract_part, real_prec_fract);
 }
-
+static void cgmb_fixed(double xin)
+{
+    cgmb_fixed(g_p, xin);
+}
 
 
 /* Write IEEE floating point variable */
@@ -2789,15 +2792,19 @@ static void cgmb_ltype(int line_type)
 
 /* Line width */
 
+static void cgmb_lwidth_p(cgm_context *ctx, double rmul)
+{
+  cgmb_start_cmd(ctx, 5, (int) LWidth);
+
+  cgmb_fixed(ctx, rmul);
+
+  cgmb_flush_cmd(ctx, final_flush);
+  cgmb_fb(ctx);
+}
 static void cgmb_lwidth(double rmul)
 {
-  cgmb_start_cmd(5, (int) LWidth);
-
-  cgmb_fixed(rmul);
-
-  cgmb_flush_cmd(final_flush);
+    cgmb_lwidth_p(g_p, rmul);
 }
-
 
 
 /* Line colour */
@@ -3612,6 +3619,7 @@ static void setup_binary_context(cgm_context *ctx)
     ctx->funcs.polygonInt = cgmb_pgon_pt;
     ctx->funcs.cellArray = cgmb_carray_p;
     ctx->funcs.lineType = cgmb_ltype_p;
+    ctx->funcs.lineWidth = cgmb_lwidth_p;
   ctx->cgm[begin] = CGM_FUNC cgmb_begin;
   ctx->cgm[end] = CGM_FUNC cgmb_end;
   ctx->cgm[bp] = CGM_FUNC cgmb_bp;

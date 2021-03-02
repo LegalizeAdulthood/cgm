@@ -312,7 +312,6 @@ TEST_CASE("clear text encoding")
 
         REQUIRE(stream.str() == "LineWidth 1.000000;\n");
     }
-    // line color
     SECTION("line color")
     {
         writer->lineColor(6);
@@ -326,7 +325,6 @@ TEST_CASE("clear text encoding")
 
         REQUIRE(stream.str() == "MarkerType 6;\n");
     }
-    // marker size
     SECTION("marker size")
     {
         writer->markerSize(0.1f);
