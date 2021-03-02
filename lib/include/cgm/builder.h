@@ -193,8 +193,9 @@ private:
 
 class PictureDescriptorBuilder
 {
-public:
     using Self = PictureDescriptorBuilder;
+
+public:
     PictureDescriptorBuilder(std::unique_ptr<MetafileWriter> &&writer)
         : m_writer(std::move(writer))
     {
@@ -248,8 +249,9 @@ inline PictureDescriptorBuilder NewPictureBuilder::beginPicture(const char *iden
 
 class MetafileDescriptorBuilder
 {
-public:
     using Self = MetafileDescriptorBuilder;
+
+public:
     MetafileDescriptorBuilder(std::unique_ptr<MetafileWriter> &&writer)
         : m_writer(std::move(writer))
     {
