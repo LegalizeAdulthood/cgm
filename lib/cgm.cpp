@@ -2594,22 +2594,40 @@ static void cgmb_clipindic(int clip_ind)
 
 
 /* Polyline */
+static void cgmb_pline_pt(cgm_context *ctx, int numPts, const cgm::Point<int> *pts)
+{
+    int i;
 
-static void cgmb_pline(int no_pairs, int *x1_ptr, int *y1_ptr)
+    cgmb_start_cmd(ctx, 4, (int) PolyLine);
+
+    for (i = 0; i < numPts; ++i)
+    {
+        cgmb_vint(ctx, pts[i].x);
+        cgmb_vint(ctx, pts[i].y);
+    }
+
+    cgmb_flush_cmd(ctx, final_flush);
+    cgmb_fb(ctx);
+}
+static void cgmb_pline_p(cgm_context *ctx, int no_pairs, int *x1_ptr, int *y1_ptr)
 {
   int i;
 
-  cgmb_start_cmd(4, (int) PolyLine);
+  cgmb_start_cmd(ctx, 4, (int) PolyLine);
 
   for (i = 0; i < no_pairs; ++i)
     {
-      cgmb_vint(x1_ptr[i]);
-      cgmb_vint(y1_ptr[i]);
+      cgmb_vint(ctx, x1_ptr[i]);
+      cgmb_vint(ctx, y1_ptr[i]);
     }
 
-  cgmb_flush_cmd(final_flush);
+  cgmb_flush_cmd(ctx, final_flush);
+  cgmb_fb(ctx);
 }
-
+static void cgmb_pline(int no_pairs, int *x1_ptr, int *y1_ptr)
+{
+    cgmb_pline_p(g_p, no_pairs, x1_ptr, y1_ptr);
+}
 
 
 /* Polymarker */
@@ -3539,6 +3557,7 @@ static void setup_binary_context(cgm_context *ctx)
     ctx->funcs.vdcIntegerPrecisionBinary = cgmb_vdcintprec_p;
     ctx->funcs.clipRectangle = cgmb_cliprect_p;
     ctx->funcs.clipIndicator = cgmb_clipindic_p;
+    ctx->funcs.polylineInt = cgmb_pline_pt;
   ctx->cgm[begin] = CGM_FUNC cgmb_begin;
   ctx->cgm[end] = CGM_FUNC cgmb_end;
   ctx->cgm[bp] = CGM_FUNC cgmb_bp;

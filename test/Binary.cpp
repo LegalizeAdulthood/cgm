@@ -633,6 +633,20 @@ TEST_CASE("binary encoding")
         REQUIRE(header(str) == OpCode{Control, ClipIndicator, 2});
         REQUIRE(i16(str, 2) == 1);
     }
+    SECTION("polyline")
+    {
+        const std::vector<cgm::Point<int>> points{{11, 12}, {21, 22}};
+
+        writer->polyline(points);
+
+        const std::string str = stream.str();
+        REQUIRE(header(str) == OpCode{Primitive, Polyline, 4*2});
+        REQUIRE(i16(str, 2) == 11);
+        REQUIRE(i16(str, 4) == 12);
+        REQUIRE(i16(str, 6) == 21);
+        REQUIRE(i16(str, 8) == 22);
+    }
+    // disjoint polyline
 }
 
 TEST_CASE("TODO", "[.]")
@@ -640,15 +654,6 @@ TEST_CASE("TODO", "[.]")
     std::ostringstream stream;
     std::unique_ptr<cgm::MetafileWriter> writer{create(stream, cgm::Encoding::Binary)};
 
-    SECTION("polyline")
-    {
-        const std::vector<cgm::Point<int>> points{{10, 10}, {20, 20}};
-
-        writer->polyline(points);
-
-        REQUIRE(stream.str() == "Line 10,10 20,20;\n");
-    }
-    // disjoint polyline
     SECTION("polymarker")
     {
         const std::vector<cgm::Point<int>> points{{10, 10}, {20, 20}};
