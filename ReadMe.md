@@ -13,6 +13,12 @@ character and clear text.  The [binary](doc/ISO_IEC_8632-3_1999%28E%29%20CGM%20B
 and [clear text](doc/ISO_IEC_8632-4_1999%28E%29%20CGM%20Clear%20Text%20Encoding.pdf) encodings
 are publicly documented, while the character encoding is considered obsolete.
 
+CGM is not to be confused with the metafile format described in Annex E to
+the [Graphical Kernel System](https://en.wikipedia.org/wiki/Graphical_Kernel_System) standard,
+often referred to as a GKS Metafile (GKSM).  GKS metafiles map directly to the
+functional specification of GKS, whereas the CGM functional description provides
+for some facililities that cannot be directly expressed by standard GKS functions.
+
 # This Library
 
 This library implements writing of binary and clear text encoded metafiles
@@ -37,7 +43,7 @@ reading and writing CGM files via a [GKS](http://github.com/LegalizeAdulthood/gk
 metafile workstation type.  The original code was created purely for such
 a metafile output (MO) workstation in the implementation of GKS for the GR Framework.
 
-Tt can be useful to have a generic CGM library for the purposes of
+It is useful to have a generic CGM library for the purposes of
 other CGM tools such as analyzers, inspectors, encoding converters, etc.
 
 To achieve the goals beyond of a GKS MO workstation with the assumed constraints,
