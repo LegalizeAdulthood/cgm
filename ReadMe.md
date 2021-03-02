@@ -9,8 +9,8 @@ semantics of the data elements in a
 and one or more element encodings.
 
 When CGM was originally defined, three encodings were standardized: binary,
-character and clear text.  The [binary](doc/ISO_IEC_8632-3_1999%28E%29 CGM Binary Encoding.pdf)
-and [clear text](doc/ISO_IEC_8632-4_1999%28E%29 CGM Clear Text Encoding.pdf) encodings
+character and clear text.  The [binary](doc/ISO_IEC_8632-3_1999%28E%29%20CGM%20Binary%20Encoding.pdf)
+and [clear text](doc/ISO_IEC_8632-4_1999%28E%29%20CGM%20Clear%20Text%20Encoding.pdf) encodings
 are publicly documented, while the character encoding is considered obsolete.
 
 # This Library
