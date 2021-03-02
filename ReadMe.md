@@ -1,7 +1,7 @@
 # Computer Graphics Metafile
 
 The Computer Graphics Metafile (CGM) is an ISO/ANSI standard for the
-interchange of 2D picture descriptions created in 1985.  Graphical data
+interchange of 2D picture descriptions [created in 1986](https://en.wikipedia.org/wiki/Computer_Graphics_Metafile).  Graphical data
 for interchange must conform to uniform semantics in different software
 applications in order for the interchange to be useflu.  CGM defines the
 semantics of the data elements in a
