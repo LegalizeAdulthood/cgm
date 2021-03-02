@@ -4058,14 +4058,6 @@ namespace
 
 class MetafileStreamWriter : public MetafileWriter
 {
-protected:
-    std::ostream &m_stream;
-    cgm_context m_context;
-
-private:
-    void flushBuffer();
-    static int flushBufferCb(cgm_context *ctx, void *data);
-
 public:
     MetafileStreamWriter(std::ostream &stream)
         : m_stream(stream),
@@ -4135,6 +4127,14 @@ public:
     void hatchIndex(int value) override;
     void patternIndex(int value) override;
     void colorTable(int startIndex, std::vector<Color> const &colors) override;
+
+protected:
+    std::ostream &m_stream;
+    cgm_context m_context;
+
+private:
+    void flushBuffer();
+    static int flushBufferCb(cgm_context *ctx, void *data);
 };
 
 class BinaryMetafileWriter : public MetafileStreamWriter
