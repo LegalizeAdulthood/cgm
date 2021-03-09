@@ -21,7 +21,7 @@ void gks_free(void *ptr);
 void gks_perror(const char *format, ...);
 void gks_fatal_error(const char *, ...);
 
-void gks_inq_rgb(int idx, double *r, double *g, double *b);
+void gks_inq_rgb(int index, double *red, double *green, double *blue);
 void gks_inq_current_xformno(int *error, int *value);
 void gks_inq_xform(int num, int *error, double wn[4], double vp[4]);
 void gks_inq_clip(int *error, int *value, double rect[4]);
