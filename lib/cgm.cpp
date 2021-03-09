@@ -155,7 +155,7 @@ struct cgm_context
   int buffer_ind;		/* output buffer index */
   char buffer[max_buffer + 2];	/* output buffer */
   void *flush_buffer_context;
-  int (*flush_buffer)(cgm_context *p, void *data);
+  void (*flush_buffer)(cgm_context *p, void *data);
   double color_t[MAX_COLOR * 3];	/* color table */
   int conid;			/* GKS connection id */
   unsigned active;		/* indicates active workstation */
@@ -3840,7 +3840,7 @@ enum class Function
     SetWorkstationViewport = 55,
 };
 
-static int gks_flush_buffer(cgm_context *ctx, void *data)
+static void gks_flush_buffer(cgm_context *ctx, void *data)
 {
     gks_write_file(ctx->conid, ctx->buffer, ctx->buffer_ind);
 }
@@ -4139,7 +4139,7 @@ protected:
 
 private:
     void flushBuffer();
-    static int flushBufferCb(cgm_context *ctx, void *data);
+    static void flushBufferCb(cgm_context *ctx, void *data);
 };
 
 class BinaryMetafileWriter : public MetafileStreamWriter
@@ -4472,10 +4472,9 @@ void MetafileStreamWriter::flushBuffer()
     m_context.buffer[0] = 0;
 }
 
-int MetafileStreamWriter::flushBufferCb(cgm_context *ctx, void *data)
+void MetafileStreamWriter::flushBufferCb(cgm_context *ctx, void *data)
 {
     static_cast<MetafileStreamWriter*>(data)->flushBuffer();
-    return 0;
 }
 
 }
