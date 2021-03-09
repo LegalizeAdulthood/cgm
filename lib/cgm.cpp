@@ -21,11 +21,6 @@
 #include "gkscore.h"
 
 
-#define TRUE 1
-#define FALSE 0
-#define NIL 0
-
-
 #define odd(number)   ((number) & 01)
 #define nint(a)       ((int)((a) + 0.5))
 
@@ -116,10 +111,10 @@ struct cgm_funcs
     void (*vdcIntegerPrecisionClearText)(cgm_context *p, int min, int max);
     void (*vdcIntegerPrecisionBinary)(cgm_context *p, int value);
     void (*clipRectangle)(cgm_context *p, int llx, int lly, int urx, int ury);
-    void (*clipIndicator)(cgm_context *p, int clip_ind);
+    void (*clipIndicator)(cgm_context *p, bool clip_ind);
     void (*polylineInt)(cgm_context *p, int numPoints, const cgm::Point<int> *points);
     void (*polymarkerInt)(cgm_context *p, int numPoints, const cgm::Point<int> *points);
-    void (*textInt)(cgm_context *p, int x, int y, int flag, const char *text);
+    void (*textInt)(cgm_context *p, int x, int y, bool flag, const char *text);
     void (*polygonInt)(cgm_context *p, int numPoints, const cgm::Point<int> *points);
     void (*cellArray)(cgm_context *p, int c1x, int c1y, int c2x, int c2y, int c3x, int c3y, int colorPrecision, int nx, int ny, int dimx, const int *colors);
     void (*lineType)(cgm_context *p, int line_type);
@@ -157,8 +152,8 @@ struct cgm_context
   void (*flush_buffer)(cgm_context *p, void *data);
   double color_t[MAX_COLOR * 3];	/* color table */
   int conid;			/* GKS connection id */
-  unsigned active;		/* indicates active workstation */
-  unsigned begin_page;		/* indicates begin page */
+  bool active;		/* indicates active workstation */
+  bool begin_page;		/* indicates begin page */
   double vp[4];			/* current GKS viewport */
   double wn[4];			/* current GKS window */
   int xext, yext;		/* VDC extent */
@@ -928,7 +923,7 @@ static void cgmt_cliprect(int *int_coords)
 
 
 /* Clip indicator */
-static void cgmt_clipindic_p(cgm_context *ctx, int clip_ind)
+static void cgmt_clipindic_p(cgm_context *ctx, bool clip_ind)
 {
     cgmt_start_cmd(ctx, 3, (int) ClipIndic);
 
@@ -936,7 +931,7 @@ static void cgmt_clipindic_p(cgm_context *ctx, int clip_ind)
 
     cgmt_flush_cmd(ctx, final_flush);
 }
-static void cgmt_clipindic(int clip_ind)
+static void cgmt_clipindic(bool clip_ind)
 {
     cgmt_clipindic_p(g_p, clip_ind);
 }
@@ -1011,7 +1006,7 @@ static void cgmt_pmarker(int no_pairs, int *x1_ptr, int *y1_ptr)
 
 
 /* Text */
-static void cgmt_text_p(cgm_context *ctx, int x, int y, int final, const char *buffer)
+static void cgmt_text_p(cgm_context *ctx, int x, int y, bool final, const char *buffer)
 {
     cgmt_start_cmd(ctx, 4, (int) Text);
 
@@ -1025,7 +1020,7 @@ static void cgmt_text_p(cgm_context *ctx, int x, int y, int final, const char *b
 }
 static void cgmt_text(int x, int y, int final, const char *buffer)
 {
-    cgmt_text_p(g_p, x, y, final, buffer);
+    cgmt_text_p(g_p, x, y, final != 0, buffer);
 }
 
 
@@ -2580,16 +2575,16 @@ static void cgmb_cliprect(int *int_coords)
 
 /* Clip indicator */
 
-static void cgmb_clipindic_p(cgm_context *ctx, int clip_ind)
+static void cgmb_clipindic_p(cgm_context *ctx, bool clip_ind)
 {
   cgmb_start_cmd(ctx, 3, (int) ClipIndic);
 
-  cgmb_eint(ctx, clip_ind);
+  cgmb_eint(ctx, clip_ind ? 1 : 0);
 
   cgmb_flush_cmd(ctx, final_flush);
   cgmb_fb(ctx);
 }
-static void cgmb_clipindic(int clip_ind)
+static void cgmb_clipindic(bool clip_ind)
 {
     cgmb_clipindic_p(g_p, clip_ind);
 }
@@ -2671,7 +2666,7 @@ static void cgmb_pmarker(int no_pairs, int *x1_ptr, int *y1_ptr)
 
 /* Text */
 
-static void cgmb_text_p(cgm_context *ctx, int x, int y, int final, const char *buffer)
+static void cgmb_text_p(cgm_context *ctx, int x, int y, bool final, const char *buffer)
 {
   cgmb_start_cmd(ctx, 4, (int) Text);
 
@@ -2686,7 +2681,7 @@ static void cgmb_text_p(cgm_context *ctx, int x, int y, int final, const char *b
 }
 static void cgmb_text(int x, int y, int final, const char *buffer)
 {
-    cgmb_text_p(g_p, x, y, final, buffer);
+    cgmb_text_p(g_p, x, y, final != 0, buffer);
 }
 
 
@@ -3170,7 +3165,7 @@ static void setup_colors(void)
 
 
 
-static void set_xform(unsigned init)
+static void set_xform(bool init)
 {
   int errind, tnr;
   double vp_new[4], wn_new[4];
@@ -3178,7 +3173,7 @@ static void set_xform(unsigned init)
   static int clip_old;
   int clip_new, clip_rect[4];
   int i;
-  unsigned update = FALSE;
+  bool update = false;
 
   if (init)
     {
@@ -3196,12 +3191,12 @@ static void set_xform(unsigned init)
       if (vp_new[i] != g_p->vp[i])
 	{
 	  g_p->vp[i] = vp_new[i];
-	  update = TRUE;
+	  update = true;
 	}
       if (wn_new[i] != g_p->wn[i])
 	{
 	  g_p->wn[i] = wn_new[i];
-	  update = TRUE;
+	  update = true;
 	}
     }
 
@@ -3222,11 +3217,11 @@ static void set_xform(unsigned init)
 	      clip_rect[3] = (int) (vp_new[3] * max_coord);
 
 	      g_p->cgm[cliprect] (clip_rect);
-	      g_p->cgm[clipindic] (TRUE);
+	      g_p->cgm[clipindic] (true);
 	    }
 	  else
 	    {
-	      g_p->cgm[clipindic] (FALSE);
+	      g_p->cgm[clipindic] (false);
 	    }
 	  clip_old = clip_new;
 	}
@@ -3242,11 +3237,11 @@ static void set_xform(unsigned init)
 		  clip_rect[3] = (int) (vp_new[3] * max_coord);
 
 		  g_p->cgm[cliprect] (clip_rect);
-		  g_p->cgm[clipindic] (TRUE);
+		  g_p->cgm[clipindic] (true);
 		}
 	      else
 		{
-		  g_p->cgm[clipindic] (FALSE);
+		  g_p->cgm[clipindic] (false);
 		}
 	      clip_old = clip_new;
 	    }
@@ -3263,7 +3258,7 @@ static void output_points(void (*output_func) (int, int *, int *),
   static int x_buffer[max_pbuffer], y_buffer[max_pbuffer];
   int *d_x_buffer, *d_y_buffer;
 
-  set_xform(FALSE);
+  set_xform(false);
 
   if (n_points > max_pbuffer)
     {
@@ -3293,7 +3288,7 @@ static void output_points(void (*output_func) (int, int *, int *),
 
 
 
-static void setup_polyline_attributes(unsigned init)
+static void setup_polyline_attributes(bool init)
 {
   line_attributes newpline;
   int errind;
@@ -3336,7 +3331,7 @@ static void setup_polyline_attributes(unsigned init)
 
 
 
-static void setup_polymarker_attributes(unsigned init)
+static void setup_polymarker_attributes(bool init)
 {
   marker_attributes newpmark;
   int errind;
@@ -3381,7 +3376,7 @@ static void setup_polymarker_attributes(unsigned init)
 
 
 
-static void setup_text_attributes(unsigned init)
+static void setup_text_attributes(bool init)
 {
   text_attributes newtext;
   int errind;
@@ -3480,7 +3475,7 @@ static void setup_text_attributes(unsigned init)
 
 
 
-static void setup_fill_attributes(unsigned init)
+static void setup_fill_attributes(bool init)
 {
   fill_attributes newfill;
   int errind;
@@ -3812,14 +3807,14 @@ static void cgm_begin_page(void)
 
   setup_colors();
 
-  set_xform(TRUE);
+  set_xform(true);
 
-  setup_polyline_attributes(TRUE);
-  setup_polymarker_attributes(TRUE);
-  setup_text_attributes(TRUE);
-  setup_fill_attributes(TRUE);
+  setup_polyline_attributes(true);
+  setup_polymarker_attributes(true);
+  setup_text_attributes(true);
+  setup_fill_attributes(true);
 
-  g_p->begin_page = FALSE;
+  g_p->begin_page = false;
 }
 
 enum class Function
@@ -3923,8 +3918,8 @@ static void gks_drv_cgm(Function fctid, int dx, int dy, int dimx, int *ia,
 
       g_p->xext = g_p->yext = max_coord;
 
-      g_p->begin_page = TRUE;
-      g_p->active = FALSE;
+      g_p->begin_page = true;
+      g_p->active = false;
 
       *context = g_p;
       break;
@@ -3937,18 +3932,18 @@ static void gks_drv_cgm(Function fctid, int dx, int dy, int dimx, int *ia,
       break;
 
   case Function::ActivateWorkstation:
-      g_p->active = TRUE;
+      g_p->active = true;
       break;
 
   case Function::DeactivateWorkstation:
-      g_p->active = FALSE;
+      g_p->active = false;
       break;
 
   case Function::ClearWorkstation:
       if (!g_p->begin_page)
 	{
 	  g_p->cgm[epage] ();
-	  g_p->begin_page = TRUE;
+	  g_p->begin_page = true;
 	}
       break;
 
@@ -3958,7 +3953,7 @@ static void gks_drv_cgm(Function fctid, int dx, int dy, int dimx, int *ia,
 	  if (g_p->begin_page)
 	    cgm_begin_page();
 
-	  setup_polyline_attributes(FALSE);
+	  setup_polyline_attributes(false);
 	  output_points((void (*)(int, int *, int *)) g_p->cgm[pline],
 			ia[0], r1, r2);
 	}
@@ -3970,7 +3965,7 @@ static void gks_drv_cgm(Function fctid, int dx, int dy, int dimx, int *ia,
 	  if (g_p->begin_page)
 	    cgm_begin_page();
 
-	  setup_polymarker_attributes(FALSE);
+	  setup_polymarker_attributes(false);
 	  output_points((void (*)(int, int *, int *)) g_p->cgm[pmarker],
 			ia[0], r1, r2);
 	}
@@ -3984,11 +3979,11 @@ static void gks_drv_cgm(Function fctid, int dx, int dy, int dimx, int *ia,
 	  if (g_p->begin_page)
 	    cgm_begin_page();
 
-	  set_xform(FALSE);
-	  setup_text_attributes(FALSE);
+	  set_xform(false);
+	  setup_text_attributes(false);
 
 	  WC_to_VDC(r1[0], r2[0], &x, &y);
-	  g_p->cgm[text] (x, y, TRUE, chars);
+	  g_p->cgm[text](x, y, true, chars);
 	}
       break;
 
@@ -3998,7 +3993,7 @@ static void gks_drv_cgm(Function fctid, int dx, int dy, int dimx, int *ia,
 	  if (g_p->begin_page)
 	    cgm_begin_page();
 
-	  setup_fill_attributes(FALSE);
+	  setup_fill_attributes(false);
 	  output_points((void (*)(int, int *, int *)) g_p->cgm[pgon],
 			ia[0], r1, r2);
 	}
@@ -4012,7 +4007,7 @@ static void gks_drv_cgm(Function fctid, int dx, int dy, int dimx, int *ia,
 	  if (g_p->begin_page)
 	    cgm_begin_page();
 
-	  set_xform(FALSE);
+	  set_xform(false);
 
 	  WC_to_VDC(r1[0], r2[0], &xmin, &ymin);
 	  WC_to_VDC(r1[1], r2[1], &xmax, &ymax);
@@ -4336,7 +4331,7 @@ void MetafileStreamWriter::clipRectangle(int llx, int lly, int urx, int ury)
 
 void MetafileStreamWriter::clipIndicator(bool enabled)
 {
-    m_context.funcs.clipIndicator(&m_context, static_cast<int>(enabled));
+    m_context.funcs.clipIndicator(&m_context, enabled);
 }
 
 void MetafileStreamWriter::polyline(const std::vector<Point<int>> &points)
@@ -4351,7 +4346,7 @@ void MetafileStreamWriter::polymarker(const std::vector<Point<int>> &points)
 
 void MetafileStreamWriter::text(Point<int> point, TextFlag flag, const char *text)
 {
-    m_context.funcs.textInt(&m_context, point.x, point.y, static_cast<int>(flag), text);
+    m_context.funcs.textInt(&m_context, point.x, point.y, flag == TextFlag::Final, text);
 }
 
 void MetafileStreamWriter::polygon(const std::vector<Point<int>> &points)
