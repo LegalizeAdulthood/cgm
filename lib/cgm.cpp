@@ -1,4 +1,3 @@
-#include <functional>
 #include <iostream>
 #include <memory>
 #include <stdexcept>
@@ -3891,7 +3890,7 @@ static void gks_drv_cgm(Function fctid, int dx, int dy, int dimx, int *ia,
 
       buffer = "GKS, Copyright @ 2001, Josef Heinen";
 
-      if (((char *) gks_getenv("GKS_SCALE_MODE_METRIC")) != NULL)
+      if (getenv("CGM_SCALE_MODE_METRIC") != nullptr)
 	g_p->mm = 0.19685 / max_coord * 1000;
       else
 	g_p->mm = 0;
@@ -4066,7 +4065,7 @@ public:
         m_context.flush_buffer_context = this;
         m_context.flush_buffer = flushBufferCb;
 
-        if (((char *) gks_getenv("GKS_SCALE_MODE_METRIC")) != NULL)
+        if (getenv("CGM_SCALE_MODE_METRIC") != nullptr)
             m_context.mm = 0.19685 / max_coord * 1000;
         else
             m_context.mm = 0;

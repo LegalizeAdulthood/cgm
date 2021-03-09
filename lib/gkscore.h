@@ -14,8 +14,6 @@ int gks_read_file(int fd, void *buf, int count);
 int gks_write_file(int fd, const void *buf, int count);
 int gks_close_file(int fd);
 
-const char *gks_getenv(const char *env);
-
 char *gks_malloc(int size);
 char *gks_realloc(void *ptr, int size);
 void gks_free(void *ptr);
