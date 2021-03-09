@@ -16,7 +16,6 @@
 
 #include <cgm/cgm.h>
 
-#include "gks.h"
 #include "gkscore.h"
 #include "impl.h"
 

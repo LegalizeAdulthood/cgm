@@ -4,7 +4,6 @@ add_library(cgm
     impl.h
     cgm.cpp
     io.cpp
-    gks.h
     gkscore.h
     gkscore.cpp
     ../ReadMe.md
