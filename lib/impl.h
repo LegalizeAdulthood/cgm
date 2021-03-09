@@ -1,3 +1,4 @@
+#pragma once
 
 #define term_char	    ';'		    /* std. terminator character */
 #define quote_char	    '\"'	    /* std. quote character */
