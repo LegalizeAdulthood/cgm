@@ -37,7 +37,7 @@ This library has limitations based on its origin:
 - Some assumptions of precision are made
 - VDC coordinates are assumed to be integer (e.g. pixel) coordinates
 
-This library is intended for use in a historical simulations of graphic
+This library is intended for use in historical simulations of graphic
 environments and in particular is intended to serve as the basis for
 reading and writing CGM files via a [GKS](http://github.com/LegalizeAdulthood/gks)
 metafile workstation type.  The original code was created purely for such
@@ -49,3 +49,17 @@ other CGM tools such as analyzers, inspectors, encoding converters, etc.
 To achieve the goals beyond of a GKS MO workstation with the assumed constraints,
 new code will need to be written.  However, starting from an existing implementation
 is easier than starting from scratch.
+
+# Building
+
+This repository uses [VcPkg](https://github.com/microsoft/vcpkg) to obtain the
+[Catch2](https://github.com/catchorg/Catch2) unit test framework and
+uses [CMake](http://cmake.org) to describe the build.
+
+```cmd
+> cmake -B [build directory] -S . -DCMAKE_TOOLCHAIN_FILE=[path to vcpkg]/scripts/buildsystems/vcpkg.cmake
+> cmake --build [build directory]
+```
+
+Once you've generated the necessary build files with CMake, you will have a target
+for the library and a target for the test executable.
