@@ -54,7 +54,10 @@ is easier than starting from scratch.
 
 This repository uses [VcPkg](https://github.com/microsoft/vcpkg) to obtain the
 [Catch2](https://github.com/catchorg/Catch2) unit test framework and
-uses [CMake](http://cmake.org) to describe the build.
+uses [CMake](http://cmake.org) to describe the build.  Clone the VcPkg repo
+from github to somewhere on your machine and invoke the bootstrap script in
+the repo to get vcpkg downloaded and configured.  Then invoke CMake using
+the toolchain file provided by vcpkg to generate the necessary build files.
 
 ```cmd
 > cmake -B [build directory] -S . -DCMAKE_TOOLCHAIN_FILE=[path to vcpkg]/scripts/buildsystems/vcpkg.cmake
