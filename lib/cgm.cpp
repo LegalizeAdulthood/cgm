@@ -22,12 +22,6 @@
 #define odd(number) ((number) &01)
 #define nint(a) ((int) ((a) + 0.5))
 
-#if defined(__cplusplus) || defined(c_plusplus)
-#define CGM_FUNC (void (*)(...))
-#else
-#define CGM_FUNC (void (*)())
-#endif
-
 struct norm_xform
 {
     double a, b, c, d;
