@@ -1,11 +1,6 @@
 #if !defined(GKS_CORE_H)
 #define GKS_CORE_H
 
-#define Color8Bit(c)                                                         \
-  c <= 256 || c >= 980 ? c :                                                 \
-  c >= 588 ? 80 + (c - 588) / 56 * 12 + nint((c - 588) % 56 * 11.0 / 56.0) : \
-  8 + nint((c - 257) / 330.0 * (72 - 1))
-
 void gks_seg_xform(double *x, double *y);
 int gks_open_file(const char *path, const char *mode);
 int gks_read_file(int fd, void *buf, int count);

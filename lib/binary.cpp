@@ -21,7 +21,6 @@
 #include "impl.h"
 
 #define odd(number) ((number) &01)
-#define nint(a) ((int) ((a) + 0.5))
 
 /* Flush output buffer */
 static void cgmb_fb(cgm_context *ctx)
@@ -390,14 +389,12 @@ static void cgmb_dcint(cgm_context *ctx, int xin)
 }
 
 /* Write a signed int at VDC integer precision */
-
 static void cgmb_vint(cgm_context *ctx, int xin)
 {
     cgmb_gint(ctx, xin, 16);
 }
 
 /* Write a standard CGM signed int */
-
 static void cgmb_sint(cgm_context *ctx, int xin)
 {
     cgmb_gint(ctx, xin, 16);
@@ -843,7 +840,6 @@ static void cgmb_pmarker_p(cgm_context *ctx, int no_pairs, int *x1_ptr, int *y1_
 }
 
 /* Text */
-
 static void cgmb_text_p(cgm_context *ctx, int x, int y, bool final, const char *buffer)
 {
     cgmb_start_cmd(ctx, 4, (int) Text);
@@ -891,7 +887,6 @@ static void cgmb_pgon_p(cgm_context *ctx, int no_pairs, int *x1_ptr, int *y1_ptr
 }
 
 /* Cell array */
-
 static void cgmb_carray_p(cgm_context *ctx, int c1x, int c1y, int c2x, int c2y, int c3x,
     int c3y, int colorPrecision, int dx, int dy, int dimx, const int *array)
 {
@@ -916,7 +911,6 @@ static void cgmb_carray_p(cgm_context *ctx, int c1x, int c1y, int c2x, int c2y, 
         for (ix = 0; ix < dx; ix++)
         {
             c = array[dimx * iy + ix];
-            c = Color8Bit(c);
             cgmb_out_bc(ctx, c);
         }
 
@@ -929,7 +923,6 @@ static void cgmb_carray_p(cgm_context *ctx, int c1x, int c1y, int c2x, int c2y, 
 }
 
 /* Line type */
-
 static void cgmb_ltype_p(cgm_context *ctx, int line_type)
 {
     cgmb_start_cmd(ctx, 5, (int) LType);
@@ -941,7 +934,6 @@ static void cgmb_ltype_p(cgm_context *ctx, int line_type)
 }
 
 /* Line width */
-
 static void cgmb_lwidth_p(cgm_context *ctx, double rmul)
 {
     cgmb_start_cmd(ctx, 5, (int) LWidth);
@@ -953,7 +945,6 @@ static void cgmb_lwidth_p(cgm_context *ctx, double rmul)
 }
 
 /* Line colour */
-
 static void cgmb_lcolor_p(cgm_context *ctx, int index)
 {
     cgmb_start_cmd(ctx, 5, (int) LColour);
@@ -965,7 +956,6 @@ static void cgmb_lcolor_p(cgm_context *ctx, int index)
 }
 
 /* Marker type */
-
 static void cgmb_mtype_p(cgm_context *ctx, int marker)
 {
     cgmb_start_cmd(ctx, 5, (int) MType);
@@ -977,7 +967,6 @@ static void cgmb_mtype_p(cgm_context *ctx, int marker)
 }
 
 /* Marker size */
-
 static void cgmb_msize_p(cgm_context *ctx, double rmul)
 {
     cgmb_start_cmd(ctx, 5, (int) MSize);
@@ -989,7 +978,6 @@ static void cgmb_msize_p(cgm_context *ctx, double rmul)
 }
 
 /* Marker colour */
-
 static void cgmb_mcolor_p(cgm_context *ctx, int index)
 {
     cgmb_start_cmd(ctx, 5, (int) MColour);
@@ -1001,7 +989,6 @@ static void cgmb_mcolor_p(cgm_context *ctx, int index)
 }
 
 /* Text font index */
-
 static void cgmb_tfindex_p(cgm_context *ctx, int index)
 {
     cgmb_start_cmd(ctx, 5, (int) TFIndex);
@@ -1013,7 +1000,6 @@ static void cgmb_tfindex_p(cgm_context *ctx, int index)
 }
 
 /* Text precision */
-
 static void cgmb_tprec_p(cgm_context *ctx, int precision)
 {
     cgmb_start_cmd(ctx, 5, (int) TPrec);
@@ -1025,7 +1011,6 @@ static void cgmb_tprec_p(cgm_context *ctx, int precision)
 }
 
 /* Character expansion factor */
-
 static void cgmb_cexpfac_p(cgm_context *ctx, double factor)
 {
     cgmb_start_cmd(ctx, 5, (int) CExpFac);
@@ -1037,7 +1022,6 @@ static void cgmb_cexpfac_p(cgm_context *ctx, double factor)
 }
 
 /* Character space */
-
 static void cgmb_cspace_p(cgm_context *ctx, double space)
 {
     cgmb_start_cmd(ctx, 5, (int) CSpace);
@@ -1049,7 +1033,6 @@ static void cgmb_cspace_p(cgm_context *ctx, double space)
 }
 
 /* Text colour */
-
 static void cgmb_tcolor_p(cgm_context *ctx, int index)
 {
     cgmb_start_cmd(ctx, 5, (int) TColour);
@@ -1061,7 +1044,6 @@ static void cgmb_tcolor_p(cgm_context *ctx, int index)
 }
 
 /* Character height */
-
 static void cgmb_cheight_p(cgm_context *ctx, int height)
 {
     cgmb_start_cmd(ctx, 5, (int) CHeight);
@@ -1073,7 +1055,6 @@ static void cgmb_cheight_p(cgm_context *ctx, int height)
 }
 
 /* Character orientation */
-
 static void cgmb_corient_p(cgm_context *ctx, int x_up, int y_up, int x_base, int y_base)
 {
     cgmb_start_cmd(ctx, 5, (int) COrient);
@@ -1088,7 +1069,6 @@ static void cgmb_corient_p(cgm_context *ctx, int x_up, int y_up, int x_base, int
 }
 
 /* Text path */
-
 static void cgmb_tpath_p(cgm_context *ctx, int new_path)
 {
     cgmb_start_cmd(ctx, 5, (int) TPath);
@@ -1100,7 +1080,6 @@ static void cgmb_tpath_p(cgm_context *ctx, int new_path)
 }
 
 /* Text alignment */
-
 static void cgmb_talign_p(cgm_context *ctx, int hor, int ver, double contHoriz, double contVert)
 {
     cgmb_start_cmd(ctx, 5, (int) TAlign);
@@ -1115,7 +1094,6 @@ static void cgmb_talign_p(cgm_context *ctx, int hor, int ver, double contHoriz, 
 }
 
 /* Interior style */
-
 static void cgmb_intstyle_p(cgm_context *ctx, int style)
 {
     cgmb_start_cmd(ctx, 5, (int) IntStyle);
@@ -1127,7 +1105,6 @@ static void cgmb_intstyle_p(cgm_context *ctx, int style)
 }
 
 /* Fill colour */
-
 static void cgmb_fillcolor_p(cgm_context *ctx, int index)
 {
     cgmb_start_cmd(ctx, 5, (int) FillColour);
@@ -1139,7 +1116,6 @@ static void cgmb_fillcolor_p(cgm_context *ctx, int index)
 }
 
 /* Hatch index */
-
 static void cgmb_hindex_p(cgm_context *ctx, int new_index)
 {
     cgmb_start_cmd(ctx, 5, (int) HatchIndex);
@@ -1151,7 +1127,6 @@ static void cgmb_hindex_p(cgm_context *ctx, int new_index)
 }
 
 /* Pattern index */
-
 static void cgmb_pindex_p(cgm_context *ctx, int new_index)
 {
     cgmb_start_cmd(ctx, 5, (int) PatIndex);
@@ -1163,7 +1138,6 @@ static void cgmb_pindex_p(cgm_context *ctx, int new_index)
 }
 
 /* Colour table */
-
 static void cgmb_coltab_c(cgm_context *ctx, int startIndex, int numColors, const cgm::Color *colors)
 {
     int i, j;

@@ -20,54 +20,9 @@
 #include "gkscore.h"
 #include "impl.h"
 
-#define odd(number) ((number) &01)
-#define nint(a) ((int) ((a) + 0.5))
-
-static cgm_context *g_p;
-
 static char digits[10] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
 
-static const char *fonts[max_std_textfont] = {
-    "Times-Roman", "Times-Italic", "Times-Bold", "Times-BoldItalic",
-    "Helvetica", "Helvetica-Oblique", "Helvetica-Bold", "Helvetica-BoldOblique",
-    "Courier", "Courier-Oblique", "Courier-Bold", "Courier-BoldOblique",
-    "Symbol",
-    "Bookman-Light", "Bookman-LightItalic", "Bookman-Demi", "Bookman-DemiItalic",
-    "NewCenturySchlbk-Roman", "NewCenturySchlbk-Italic", "NewCenturySchlbk-Bold", "NewCenturySchlbk-BoldItalic",
-    "AvantGarde-Book", "AvantGarde-BookOblique", "AvantGarde-Demi", "AvantGarde-DemiOblique",
-    "Palatino-Roman", "Palatino-Italic", "Palatino-Bold", "Palatino-BoldItalic"
-};
-
-static int map[] = {
-    22, 9, 5, 14, 18, 26, 13, 1,
-    24, 11, 7, 16, 20, 28, 13, 3,
-    23, 10, 6, 15, 19, 27, 13, 2,
-    25, 12, 8, 17, 21, 29, 13, 4
-};
-
-/* Transform world coordinates to virtual device coordinates */
-
-static void WC_to_VDC(double xin, double yin, int *xout, int *yout)
-{
-    double x, y;
-
-    /* Normalization transformation */
-
-    x = g_p->xform.a * xin + g_p->xform.b;
-    y = g_p->xform.c * yin + g_p->xform.d;
-
-    /* Segment transformation */
-
-    gks_seg_xform(&x, &y);
-
-    /* Virtual device transformation */
-
-    *xout = (int) (x * max_coord);
-    *yout = (int) (y * max_coord);
-}
-
 /* Flush output buffer */
-
 static void cgmt_fb(cgm_context *ctx)
 {
     if (ctx->buffer_ind != 0)
@@ -82,7 +37,6 @@ static void cgmt_fb(cgm_context *ctx)
 }
 
 /* Write a character to CGM clear text */
-
 static void cgmt_outc(cgm_context *ctx, char chr)
 {
     if (ctx->buffer_ind >= cgmt_recl)
@@ -93,7 +47,6 @@ static void cgmt_outc(cgm_context *ctx, char chr)
 }
 
 /* Write string to CGM clear text */
-
 static void cgmt_out_string(cgm_context *ctx, const char *string)
 {
     if ((int) (ctx->buffer_ind + strlen(string)) >= cgmt_recl)
@@ -114,7 +67,6 @@ static void cgmt_start_cmd(cgm_context *p, int cl, int el)
 }
 
 /* Flush output command */
-
 static void cgmt_flush_cmd(cgm_context *ctx, int this_flush)
 {
     cgmt_outc(ctx, term_char);
@@ -219,7 +171,6 @@ static void cgmt_begin_p(cgm_context *p, const char *comment)
 }
 
 /* End metafile */
-
 static void cgmt_end_p(cgm_context *ctx)
 {
     cgmt_start_cmd(ctx, 0, (int) E_Mf);
@@ -259,7 +210,6 @@ static void cgmt_epage_p(cgm_context *ctx)
 }
 
 /* Metafile version */
-
 static void cgmt_mfversion_p(cgm_context *ctx, int version)
 {
     cgmt_start_cmd(ctx, 1, version);
@@ -985,7 +935,6 @@ static void cgmt_carray_p(cgm_context *ctx, int c1x, int c1y, int c2x, int c2y, 
         for (ix = 0; ix < nx; ix++)
         {
             c = array[dimx * iy + ix];
-            c = Color8Bit(c);
             cgmt_int(ctx, c);
 
             if (ix < nx - 1)
