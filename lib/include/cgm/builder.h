@@ -209,7 +209,7 @@ public:
     {
         return *this;
     }
-    Self &lineWidthMode(LineWidthMode mode)
+    Self &lineWidthMode(SpecificationMode mode)
     {
         return *this;
     }

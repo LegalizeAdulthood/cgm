@@ -131,13 +131,6 @@ TEST_CASE("clear text encoding")
             "   CharSpace TextColr CharHeight CharOri TextPath TextAlign IntStyle FillColr \n"
             "   HatchIndex PatIndex ColrTable\";\n");
     }
-    SECTION("metafile defaults replacement")
-    {
-        writer->metafileDefaultsReplacement();
-
-        REQUIRE(stream.str() == "BegMFDefaults;\n"
-            "EndMFDefaults;\n");
-    }
     SECTION("font list")
     {
         std::vector<std::string> fonts{"Hershey Simplex", "Hershey Roman"};
@@ -171,13 +164,13 @@ TEST_CASE("clear text encoding")
     {
         SECTION("indexed")
         {
-            writer->colorMode(cgm::ColorMode::Indexed);
+            writer->colorSelectionMode(cgm::ColorMode::Indexed);
 
             REQUIRE(stream.str() == "ColrMode Indexed;\n");
         }
         SECTION("direct")
         {
-            writer->colorMode(cgm::ColorMode::Direct);
+            writer->colorSelectionMode(cgm::ColorMode::Direct);
 
             REQUIRE(stream.str() == "ColrMode Direct;\n");
         }
@@ -186,13 +179,13 @@ TEST_CASE("clear text encoding")
     {
         SECTION("absolute")
         {
-            writer->lineWidthMode(cgm::LineWidthMode::Absolute);
+            writer->lineWidthSpecificationMode(cgm::SpecificationMode::Absolute);
 
             REQUIRE(stream.str() == "LineWidthMode Absolute;\n");
         }
         SECTION("scaled")
         {
-            writer->lineWidthMode(cgm::LineWidthMode::Scaled);
+            writer->lineWidthSpecificationMode(cgm::SpecificationMode::Scaled);
 
             REQUIRE(stream.str() == "LineWidthMode Scaled;\n");
         }
@@ -201,13 +194,13 @@ TEST_CASE("clear text encoding")
     {
         SECTION("absolute")
         {
-            writer->markerSizeMode(cgm::MarkerSizeMode::Absolute);
+            writer->markerSizeSpecificationMode(cgm::SpecificationMode::Absolute);
 
             REQUIRE(stream.str() == "MarkerSizeMode Absolute;\n");
         }
         SECTION("scaled")
         {
-            writer->markerSizeMode(cgm::MarkerSizeMode::Scaled);
+            writer->markerSizeSpecificationMode(cgm::SpecificationMode::Scaled);
 
             REQUIRE(stream.str() == "MarkerSizeMode Scaled;\n");
         }

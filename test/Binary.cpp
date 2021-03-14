@@ -555,7 +555,7 @@ TEST_CASE("binary encoding")
     {
         SECTION("indexed")
         {
-            writer->colorMode(cgm::ColorMode::Indexed);
+            writer->colorSelectionMode(cgm::ColorMode::Indexed);
 
             const std::string str = stream.str();
             REQUIRE(str.size() == headerLen + 2);
@@ -564,7 +564,7 @@ TEST_CASE("binary encoding")
         }
         SECTION("direct")
         {
-            writer->colorMode(cgm::ColorMode::Direct);
+            writer->colorSelectionMode(cgm::ColorMode::Direct);
 
             const std::string str = stream.str();
             REQUIRE(str.size() == headerLen + 2);
@@ -576,42 +576,42 @@ TEST_CASE("binary encoding")
     {
         SECTION("absolute")
         {
-            writer->lineWidthMode(cgm::LineWidthMode::Absolute);
+            writer->lineWidthSpecificationMode(cgm::SpecificationMode::Absolute);
 
             const std::string str = stream.str();
             REQUIRE(str.size() == headerLen + 2);
             REQUIRE(header(str) == OpCode{PictureDescriptor, LineWidthMode, 2});
-            REQUIRE(i16(str, 2) == static_cast<int>(cgm::LineWidthMode::Absolute));
+            REQUIRE(i16(str, 2) == static_cast<int>(cgm::SpecificationMode::Absolute));
         }
         SECTION("scaled")
         {
-            writer->lineWidthMode(cgm::LineWidthMode::Scaled);
+            writer->lineWidthSpecificationMode(cgm::SpecificationMode::Scaled);
 
             const std::string str = stream.str();
             REQUIRE(str.size() == headerLen + 2);
             REQUIRE(header(str) == OpCode{PictureDescriptor, LineWidthMode, 2});
-            REQUIRE(i16(str, 2) == static_cast<int>(cgm::LineWidthMode::Scaled));
+            REQUIRE(i16(str, 2) == static_cast<int>(cgm::SpecificationMode::Scaled));
         }
     }
     SECTION("marker size specification mode")
     {
         SECTION("absolute")
         {
-            writer->markerSizeMode(cgm::MarkerSizeMode::Absolute);
+            writer->markerSizeSpecificationMode(cgm::SpecificationMode::Absolute);
 
             const std::string str = stream.str();
             REQUIRE(str.size() == headerLen + 2);
             REQUIRE(header(str) == OpCode{PictureDescriptor, MarkerSizeMode, 2});
-            REQUIRE(i16(str, 2) == static_cast<int>(cgm::MarkerSizeMode::Absolute));
+            REQUIRE(i16(str, 2) == static_cast<int>(cgm::SpecificationMode::Absolute));
         }
         SECTION("scaled")
         {
-            writer->markerSizeMode(cgm::MarkerSizeMode::Scaled);
+            writer->markerSizeSpecificationMode(cgm::SpecificationMode::Scaled);
 
             const std::string str = stream.str();
             REQUIRE(str.size() == headerLen + 2);
             REQUIRE(header(str) == OpCode{PictureDescriptor, MarkerSizeMode, 2});
-            REQUIRE(i16(str, 2) == static_cast<int>(cgm::MarkerSizeMode::Scaled));
+            REQUIRE(i16(str, 2) == static_cast<int>(cgm::SpecificationMode::Scaled));
         }
     }
     // edge width specification mode

@@ -41,13 +41,7 @@ enum class ColorMode
     Direct
 };
 
-enum class LineWidthMode
-{
-    Absolute,
-    Scaled
-};
-
-enum class MarkerSizeMode
+enum class SpecificationMode
 {
     Absolute,
     Scaled
@@ -149,13 +143,12 @@ public:
     virtual void maximumColorIndex(int max) = 0;
     virtual void colorValueExtent(int redMin, int redMax, int greenMin, int greenMax, int blueMin, int blueMax) = 0;
     virtual void metafileElementList() = 0;
-    virtual void metafileDefaultsReplacement() = 0;
     virtual void fontList(std::vector<std::string> const & fonts) = 0;
     virtual void characterCodingAnnouncer(CharCodeAnnouncer value) = 0;
     virtual void scaleMode(ScaleMode mode, float value) = 0;
-    virtual void colorMode(ColorMode mode) = 0;
-    virtual void lineWidthMode(LineWidthMode mode) = 0;
-    virtual void markerSizeMode(MarkerSizeMode mode) = 0;
+    virtual void colorSelectionMode(ColorMode mode) = 0;
+    virtual void lineWidthSpecificationMode(SpecificationMode mode) = 0;
+    virtual void markerSizeSpecificationMode(SpecificationMode mode) = 0;
     virtual void vdcExtent(int llx, int lly, int urx, int ury) = 0;
     virtual void backgroundColor(int red, int green, int blue) = 0;
     virtual void vdcIntegerPrecisionClearText(int min, int max) = 0;

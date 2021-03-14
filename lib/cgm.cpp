@@ -70,10 +70,33 @@ struct fill_attributes
     int color;
 };
 
-struct cgm_context;
-
-struct cgm_funcs
+struct cgm_context
 {
+    norm_xform xform;            /* internal transformation */
+    line_attributes pline;       /* current polyline attributes */
+    marker_attributes pmark;     /* current marker attributes */
+    text_attributes text;        /* current text attributes */
+    fill_attributes fill;        /* current fill area attributes */
+    int buffer_ind;              /* output buffer index */
+    char buffer[max_buffer + 2]; /* output buffer */
+    void *flush_buffer_context;
+    void (*flush_buffer)(cgm_context *p, void *data);
+    double color_t[MAX_COLOR * 3];        /* color table */
+    int conid;                            /* GKS connection id */
+    bool active;                          /* indicates active workstation */
+    bool begin_page;                      /* indicates begin page */
+    double vp[4];                         /* current GKS viewport */
+    double wn[4];                         /* current GKS window */
+    int xext, yext;                       /* VDC extent */
+    double mm;                            /* metric size in mm */
+    char cmd_buffer[hdr_long + max_long]; /* where we buffer output */
+    char *cmd_hdr;                        /* the command header */
+    char *cmd_data;                       /* the command data */
+    int cmd_index;                        /* index into the command data */
+    int bfr_index;                        /* index into the buffer */
+    int partition;                        /* which partition in the output */
+    enum encode_enum encode;              /* type of encoding */
+
     void (*beginMetafile)(cgm_context *p, const char *identifier);
     void (*endMetafile)(cgm_context *p);
     void (*beginPicture)(cgm_context *p, const char *identifier);
@@ -95,14 +118,13 @@ struct cgm_funcs
     void (*maximumColorIndex)(cgm_context *p, int max);
     void (*colorValueExtent)(cgm_context *p, int redMin, int redMax, int greenMin, int greenMax, int blueMin, int blueMax);
     void (*metafileElementList)(cgm_context *p);
-    void (*metafileDefaultsReplacement)(cgm_context *p);
     void (*fontList)(cgm_context *p, int numFonts, const char **fontNames);
     // character set list
     void (*characterCodingAnnouncer)(cgm_context *p, int value);
     void (*scalingMode)(cgm_context *p, int mode, double value);
-    void (*colorMode)(cgm_context *p, int mode);
-    void (*lineWidthMode)(cgm_context *p, int mode);
-    void (*markerSizeMode)(cgm_context *p, int mode);
+    void (*colorSelectionMode)(cgm_context *p, int mode);
+    void (*lineWidthSpecificationMode)(cgm_context *p, int mode);
+    void (*markerSizeSpecificationMode)(cgm_context *p, int mode);
     void (*vdcExtentInt)(cgm_context *p, int llx, int lly, int urx, int ury);
     void (*backgroundColor)(cgm_context *p, int red, int green, int blue);
     void (*vdcIntegerPrecisionClearText)(cgm_context *p, int min, int max);
@@ -134,35 +156,7 @@ struct cgm_funcs
     void (*hatchIndex)(cgm_context *p, int value);
     void (*patternIndex)(cgm_context *p, int value);
     void (*colorTable)(cgm_context *p, int startIndex, int numColors, const cgm::Color *colors);
-};
 
-struct cgm_context
-{
-    norm_xform xform;            /* internal transformation */
-    line_attributes pline;       /* current polyline attributes */
-    marker_attributes pmark;     /* current marker attributes */
-    text_attributes text;        /* current text attributes */
-    fill_attributes fill;        /* current fill area attributes */
-    int buffer_ind;              /* output buffer index */
-    char buffer[max_buffer + 2]; /* output buffer */
-    void *flush_buffer_context;
-    void (*flush_buffer)(cgm_context *p, void *data);
-    double color_t[MAX_COLOR * 3];        /* color table */
-    int conid;                            /* GKS connection id */
-    bool active;                          /* indicates active workstation */
-    bool begin_page;                      /* indicates begin page */
-    double vp[4];                         /* current GKS viewport */
-    double wn[4];                         /* current GKS window */
-    int xext, yext;                       /* VDC extent */
-    double mm;                            /* metric size in mm */
-    char cmd_buffer[hdr_long + max_long]; /* where we buffer output */
-    char *cmd_hdr;                        /* the command header */
-    char *cmd_data;                       /* the command data */
-    int cmd_index;                        /* index into the command data */
-    int bfr_index;                        /* index into the buffer */
-    int partition;                        /* which partition in the output */
-    enum encode_enum encode;              /* type of encoding */
-    cgm_funcs funcs;
 #if defined(__cplusplus) || defined(c_plusplus)
     void (*cgm[n_melements])(...); /* cgm functions and procedures */
 #else
@@ -542,13 +536,7 @@ static void cgmt_realprec_p(cgm_context *ctx, double minReal, double maxReal, in
 }
 static void cgmt_realprec(void)
 {
-    cgmt_start_cmd(1, (int) RealPrec);
-
-    cgmt_real(-32768.);
-    cgmt_real(32768.);
-    cgmt_int(4);
-
-    cgmt_flush_cmd(final_flush);
+    cgmt_realprec_p(g_p, -32768., 32768., 4);
 }
 
 /* Index precision */
@@ -610,8 +598,7 @@ static void cgmt_cvextent_p(cgm_context *ctx, int minRed, int maxRed, int minGre
 }
 static void cgmt_cvextent(void)
 {
-    const int maxColor = max_colors - 1;
-    cgmt_cvextent_p(g_p, 0, maxColor, 0, maxColor, 0, maxColor);
+    cgmt_cvextent_p(g_p, 0, max_colors - 1, 0, max_colors - 1, 0, max_colors - 1);
 }
 
 /* Maximum colour index */
@@ -652,18 +639,6 @@ static void cgmt_mfellist_p(cgm_context *ctx)
 static void cgmt_mfellist(void)
 {
     cgmt_mfellist_p(g_p);
-}
-
-/* Metafile Defaults Replacement */
-// TODO: finish this off?
-void cgmt_defaultsReplacement(cgm_context *ctx)
-{
-    cgmt_out_string(ctx, "Beg");
-    cgmt_start_cmd(ctx, 1, (int) MfDefRep);
-    cgmt_flush_cmd(ctx, int_flush);
-    cgmt_out_string(ctx, "End");
-    cgmt_start_cmd(ctx, 1, (int) MfDefRep);
-    cgmt_flush_cmd(ctx, final_flush);
 }
 
 /* Font List */
@@ -780,7 +755,7 @@ static void cgmt_msmode(void)
 }
 
 /* VDC extent */
-static void cgmt_vdcectent_p(cgm_context *ctx, int llx, int lly, int urx, int ury)
+static void cgmt_vdcextent_p(cgm_context *ctx, int llx, int lly, int urx, int ury)
 {
     cgmt_start_cmd(ctx, 2, (int) vdcExtent);
 
@@ -791,7 +766,7 @@ static void cgmt_vdcectent_p(cgm_context *ctx, int llx, int lly, int urx, int ur
 }
 static void cgmt_vdcextent(void)
 {
-    cgmt_vdcectent_p(g_p, 0, 0, g_p->xext, g_p->yext);
+    cgmt_vdcextent_p(g_p, 0, 0, g_p->xext, g_p->yext);
 }
 
 /* Background colour */
@@ -1650,13 +1625,12 @@ static void cgmb_string(const char *cptr, int slen)
 
 static void cgmb_gint(cgm_context *ctx, int xin, int precision)
 {
-    int i, no_out, xshifted;
-    char buffer[4];
+    char buffer[4]{};
 
-    no_out = precision / byte_size;
+    int no_out = precision / byte_size;
 
-    xshifted = xin;
-    for (i = no_out - 1; i >= 0; --i)
+    int xshifted = xin;
+    for (int i = no_out - 1; i >= 0; --i)
     {
         buffer[i] = xshifted & byte_mask;
         xshifted >>= byte_size;
@@ -2267,7 +2241,7 @@ static void cgmb_colselmode_p(cgm_context *ctx, int value)
 }
 static void cgmb_colselmode(void)
 {
-    cgmb_colselmode_p(g_p, (int) i_c_mode);
+    cgmb_colselmode_p(g_p, (int) indexed_color_mode);
 }
 
 /* line width specification mode */
@@ -2926,10 +2900,16 @@ static void init_color_table(void)
 
 static void setup_colors(void)
 {
-    int i;
+    cgm::Color colorTable[MAX_COLOR];
 
-    for (i = 0; i < MAX_COLOR; i++)
-        g_p->cgm[coltab](i, 1, &g_p->color_t[3 * i]);
+    for (int i = 0; i < MAX_COLOR; ++i)
+    {
+        colorTable[i].red = g_p->color_t[3*i + 0];
+        colorTable[i].green = g_p->color_t[3*i + 1];
+        colorTable[i].blue = g_p->color_t[3*i + 2];
+    }
+
+    g_p->colorTable(g_p, 0, MAX_COLOR, &colorTable[0]);
 }
 
 static void set_xform(bool init)
@@ -2983,12 +2963,12 @@ static void set_xform(bool init)
                 clip_rect[2] = (int) (vp_new[1] * max_coord);
                 clip_rect[3] = (int) (vp_new[3] * max_coord);
 
-                g_p->cgm[cliprect](clip_rect);
-                g_p->cgm[clipindic](true);
+                g_p->clipRectangle(g_p, clip_rect[0], clip_rect[1], clip_rect[2], clip_rect[3]);
+                g_p->clipIndicator(g_p, true);
             }
             else
             {
-                g_p->cgm[clipindic](false);
+                g_p->clipIndicator(g_p, false);
             }
             clip_old = clip_new;
         }
@@ -3003,12 +2983,12 @@ static void set_xform(bool init)
                     clip_rect[2] = (int) (vp_new[1] * max_coord);
                     clip_rect[3] = (int) (vp_new[3] * max_coord);
 
-                    g_p->cgm[cliprect](clip_rect);
-                    g_p->cgm[clipindic](true);
+                    g_p->clipRectangle(g_p, clip_rect[0], clip_rect[1], clip_rect[2], clip_rect[3]);
+                    g_p->clipIndicator(g_p, true);
                 }
                 else
                 {
-                    g_p->cgm[clipindic](false);
+                    g_p->clipIndicator(g_p, false);
                 }
                 clip_old = clip_new;
             }
@@ -3076,17 +3056,17 @@ static void setup_polyline_attributes(bool init)
 
         if (newpline.type != g_p->pline.type)
         {
-            g_p->cgm[ltype](newpline.type);
+            g_p->lineType(g_p, newpline.type);
             g_p->pline.type = newpline.type;
         }
         if (newpline.width != g_p->pline.width)
         {
-            g_p->cgm[lwidth](newpline.width);
+            g_p->lineWidth(g_p, newpline.width);
             g_p->pline.width = newpline.width;
         }
         if (newpline.color != g_p->pline.color)
         {
-            g_p->cgm[lcolour](newpline.color);
+            g_p->lineColor(g_p, newpline.color);
             g_p->pline.color = newpline.color;
         }
     }
@@ -3119,17 +3099,17 @@ static void setup_polymarker_attributes(bool init)
 
         if (newpmark.type != g_p->pmark.type)
         {
-            g_p->cgm[mtype](newpmark.type);
+            g_p->markerType(g_p, newpmark.type);
             g_p->pmark.type = newpmark.type;
         }
         if (newpmark.width != g_p->pmark.width)
         {
-            g_p->cgm[msize](newpmark.width);
+            g_p->markerSize(g_p, newpmark.width);
             g_p->pmark.width = newpmark.width;
         }
         if (newpmark.color != g_p->pmark.color)
         {
-            g_p->cgm[mcolour](newpmark.color);
+            g_p->markerColor(g_p, newpmark.color);
             g_p->pmark.color = newpmark.color;
         }
     }
@@ -3182,49 +3162,48 @@ static void setup_text_attributes(bool init)
 
         if (newtext.font != g_p->text.font)
         {
-            g_p->cgm[tfindex](newtext.font);
+            g_p->textFontIndex(g_p, newtext.font);
             g_p->text.font = newtext.font;
         }
         if (newtext.prec != g_p->text.prec)
         {
-            g_p->cgm[tprec](newtext.prec);
+            g_p->textPrecision(g_p, newtext.prec);
             g_p->text.prec = newtext.prec;
         }
         if (newtext.expfac != g_p->text.expfac)
         {
-            g_p->cgm[cexpfac](newtext.expfac);
+            g_p->charExpansion(g_p, newtext.expfac);
             g_p->text.expfac = newtext.expfac;
         }
         if (newtext.spacing != g_p->text.spacing)
         {
-            g_p->cgm[cspace](newtext.spacing);
+            g_p->charSpacing(g_p, newtext.spacing);
             g_p->text.spacing = newtext.spacing;
         }
         if (newtext.color != g_p->text.color)
         {
-            g_p->cgm[tcolour](newtext.color);
+            g_p->textColor(g_p, newtext.color);
             g_p->text.color = newtext.color;
         }
         if (newtext.height != g_p->text.height)
         {
-            g_p->cgm[cheight]((int) (newtext.height * max_coord));
+            g_p->charHeight(g_p, (int) (newtext.height * max_coord));
             g_p->text.height = newtext.height;
         }
         if ((newtext.upx != g_p->text.upx) || (newtext.upy != g_p->text.upy))
         {
-            g_p->cgm[corient](newtext.upx, newtext.upy, newtext.upy,
-                -newtext.upx);
+            g_p->charOrientation(g_p, newtext.upx, newtext.upy, newtext.upy, -newtext.upx);
             g_p->text.upx = newtext.upx;
             g_p->text.upy = newtext.upy;
         }
         if (newtext.path != g_p->text.path)
         {
-            g_p->cgm[tpath](newtext.path);
+            g_p->textPath(g_p, newtext.path);
             g_p->text.path = newtext.path;
         }
         if ((newtext.halign != g_p->text.halign) || (newtext.valign != g_p->text.valign))
         {
-            g_p->cgm[talign](newtext.halign, newtext.valign);
+            g_p->textAlignment(g_p, newtext.halign, newtext.valign, 0.0, 0.0);
             g_p->text.halign = newtext.halign;
             g_p->text.valign = newtext.valign;
         }
@@ -3252,30 +3231,29 @@ static void setup_fill_attributes(bool init)
 
         if (newfill.intstyle != g_p->fill.intstyle)
         {
-            g_p->cgm[intstyle](newfill.intstyle);
+            g_p->interiorStyle(g_p, newfill.intstyle);
             g_p->fill.intstyle = newfill.intstyle;
         }
         if (newfill.color != g_p->fill.color)
         {
-            g_p->cgm[fillcolour](newfill.color);
+            g_p->fillColor(g_p, newfill.color);
             g_p->fill.color = newfill.color;
         }
         if (newfill.pattern_index != g_p->fill.pattern_index)
         {
-            g_p->cgm[pindex](newfill.pattern_index);
+            g_p->patternIndex(g_p, newfill.pattern_index);
             g_p->fill.pattern_index = newfill.pattern_index;
         }
         if (newfill.hatch_index != g_p->fill.hatch_index)
         {
-            g_p->cgm[hindex](newfill.hatch_index);
+            g_p->hatchIndex(g_p, newfill.hatch_index);
             g_p->fill.hatch_index = newfill.hatch_index;
         }
     }
 }
 
-static char *local_time(void)
+static const char *local_time()
 {
-    struct tm *time_structure;
     time_t time_val;
     static const char *weekday[7] = {
         "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday",
@@ -3288,7 +3266,7 @@ static char *local_time(void)
     static char time_string[81];
 
     time(&time_val);
-    time_structure = localtime(&time_val);
+    struct tm* time_structure = localtime(&time_val);
 
     sprintf(time_string, "%s, %s %d, 19%d %d:%02d:%02d",
         weekday[time_structure->tm_wday], month[time_structure->tm_mon],
@@ -3296,115 +3274,114 @@ static char *local_time(void)
         time_structure->tm_hour, time_structure->tm_min,
         time_structure->tm_sec);
 
-    return (time_string);
+    return time_string;
 }
 
 static void setup_clear_text_context(cgm_context *ctx)
 {
-    ctx->funcs.beginMetafile = cgmt_begin_p;
-    ctx->funcs.endMetafile = cgmt_end_p;
-    ctx->funcs.beginPicture = cgmt_bp_p;
-    ctx->funcs.beginPictureBody = cgmt_bpage_p;
-    ctx->funcs.endPicture = cgmt_epage_p;
-    ctx->funcs.metafileVersion = cgmt_mfversion_p;
-    ctx->funcs.metafileDescription = cgmt_mfdescrip_p;
-    ctx->funcs.vdcType = cgmt_vdctype_p;
-    ctx->funcs.intPrecisionClearText = cgmt_intprec_p;
-    ctx->funcs.realPrecisionClearText = cgmt_realprec_p;
-    ctx->funcs.indexPrecisionClearText = cgmt_indexprec_p;
-    ctx->funcs.colorPrecisionClearText = cgmt_colprec_p;
-    ctx->funcs.colorIndexPrecisionClearText = cgmt_cindprec_p;
-    ctx->funcs.maximumColorIndex = cgmt_maxcind_p;
-    ctx->funcs.colorValueExtent = cgmt_cvextent_p;
-    ctx->funcs.metafileElementList = cgmt_mfellist_p;
-    ctx->funcs.metafileDefaultsReplacement = cgmt_defaultsReplacement;
-    ctx->funcs.fontList = cgmt_fontlist_p;
-    ctx->funcs.characterCodingAnnouncer = cgmt_cannounce_p;
-    ctx->funcs.scalingMode = cgmt_scalmode_p;
-    ctx->funcs.colorMode = cgmt_colselmode_p;
-    ctx->funcs.lineWidthMode = cgmt_lwsmode_p;
-    ctx->funcs.markerSizeMode = cgmt_msmode_p;
-    ctx->funcs.vdcExtentInt = cgmt_vdcectent_p;
-    ctx->funcs.backgroundColor = cgmt_backcol_p;
-    ctx->funcs.vdcIntegerPrecisionClearText = cgmt_vdcintprec_p;
-    ctx->funcs.clipRectangle = cgmt_cliprect_p;
-    ctx->funcs.clipIndicator = cgmt_clipindic_p;
-    ctx->funcs.polylineInt = cgmt_pline_pt;
-    ctx->funcs.polymarkerInt = cgmt_pmarker_pt;
-    ctx->funcs.textInt = cgmt_text_p;
-    ctx->funcs.polygonInt = cgmt_pgon_pt;
-    ctx->funcs.cellArray = cgmt_carray_p;
-    ctx->funcs.lineType = cgmt_ltype_p;
-    ctx->funcs.lineWidth = cgmt_lwidth_p;
-    ctx->funcs.lineColor = cgmt_lcolor_p;
-    ctx->funcs.markerType = cgmt_mtype_p;
-    ctx->funcs.markerSize = cgmt_msize_p;
-    ctx->funcs.markerColor = cgmt_mcolor_p;
-    ctx->funcs.textFontIndex = cgmt_tfindex_p;
-    ctx->funcs.textPrecision = cgmt_tprec_p;
-    ctx->funcs.charExpansion = cgmt_cexpfac_p;
-    ctx->funcs.charSpacing = cgmt_cspace_p;
-    ctx->funcs.textColor = cgmt_tcolor_p;
-    ctx->funcs.charHeight = cgmt_cheight_p;
-    ctx->funcs.charOrientation = cgmt_corient_p;
-    ctx->funcs.textPath = cgmt_tpath_p;
-    ctx->funcs.textAlignment = cgmt_talign_p;
-    ctx->funcs.interiorStyle = cgmt_intstyle_p;
-    ctx->funcs.fillColor = cgmt_fillcolor_p;
-    ctx->funcs.hatchIndex = cgmt_hindex_p;
-    ctx->funcs.patternIndex = cgmt_pindex_p;
-    ctx->funcs.colorTable = cgmt_coltab_c;
-    ctx->cgm[begin] = CGM_FUNC cgmt_begin;
-    ctx->cgm[end] = CGM_FUNC cgmt_end;
-    ctx->cgm[bp] = CGM_FUNC cgmt_bp;
-    ctx->cgm[bpage] = CGM_FUNC cgmt_bpage;
-    ctx->cgm[epage] = CGM_FUNC cgmt_epage;
-    ctx->cgm[mfversion] = CGM_FUNC cgmt_mfversion;
-    ctx->cgm[mfdescrip] = CGM_FUNC cgmt_mfdescrip;
-    ctx->cgm[vdctype] = CGM_FUNC cgmt_vdctype;
-    ctx->cgm[intprec] = CGM_FUNC cgmt_intprec;
-    ctx->cgm[realprec] = CGM_FUNC cgmt_realprec;
-    ctx->cgm[indexprec] = CGM_FUNC cgmt_indexprec;
-    ctx->cgm[colprec] = CGM_FUNC cgmt_colprec;
-    ctx->cgm[cindprec] = CGM_FUNC cgmt_cindprec;
-    ctx->cgm[cvextent] = CGM_FUNC cgmt_cvextent;
-    ctx->cgm[maxcind] = CGM_FUNC cgmt_maxcind;
-    ctx->cgm[mfellist] = CGM_FUNC cgmt_mfellist;
-    ctx->cgm[fontlist] = CGM_FUNC cgmt_fontlist;
-    ctx->cgm[cannounce] = CGM_FUNC cgmt_cannounce;
-    ctx->cgm[scalmode] = CGM_FUNC cgmt_scalmode;
-    ctx->cgm[colselmode] = CGM_FUNC cgmt_colselmode;
-    ctx->cgm[lwsmode] = CGM_FUNC cgmt_lwsmode;
-    ctx->cgm[msmode] = CGM_FUNC cgmt_msmode;
-    ctx->cgm[vdcextent] = CGM_FUNC cgmt_vdcextent;
-    ctx->cgm[backcol] = CGM_FUNC cgmt_backcol;
-    ctx->cgm[vdcintprec] = CGM_FUNC cgmt_vdcintprec;
-    ctx->cgm[cliprect] = CGM_FUNC cgmt_cliprect;
-    ctx->cgm[clipindic] = CGM_FUNC cgmt_clipindic;
+    ctx->beginMetafile = cgmt_begin_p;
+    ctx->endMetafile = cgmt_end_p;
+    ctx->beginPicture = cgmt_bp_p;
+    ctx->beginPictureBody = cgmt_bpage_p;
+    ctx->endPicture = cgmt_epage_p;
+    ctx->metafileVersion = cgmt_mfversion_p;
+    ctx->metafileDescription = cgmt_mfdescrip_p;
+    ctx->vdcType = cgmt_vdctype_p;
+    ctx->intPrecisionClearText = cgmt_intprec_p;
+    ctx->realPrecisionClearText = cgmt_realprec_p;
+    ctx->indexPrecisionClearText = cgmt_indexprec_p;
+    ctx->colorPrecisionClearText = cgmt_colprec_p;
+    ctx->colorIndexPrecisionClearText = cgmt_cindprec_p;
+    ctx->maximumColorIndex = cgmt_maxcind_p;
+    ctx->colorValueExtent = cgmt_cvextent_p;
+    ctx->metafileElementList = cgmt_mfellist_p;
+    ctx->fontList = cgmt_fontlist_p;
+    ctx->characterCodingAnnouncer = cgmt_cannounce_p;
+    ctx->scalingMode = cgmt_scalmode_p;
+    ctx->colorSelectionMode = cgmt_colselmode_p;
+    ctx->lineWidthSpecificationMode = cgmt_lwsmode_p;
+    ctx->markerSizeSpecificationMode = cgmt_msmode_p;
+    ctx->vdcExtentInt = cgmt_vdcextent_p;
+    ctx->backgroundColor = cgmt_backcol_p;
+    ctx->vdcIntegerPrecisionClearText = cgmt_vdcintprec_p;
+    ctx->clipRectangle = cgmt_cliprect_p;
+    ctx->clipIndicator = cgmt_clipindic_p;
+    ctx->polylineInt = cgmt_pline_pt;
+    ctx->polymarkerInt = cgmt_pmarker_pt;
+    ctx->textInt = cgmt_text_p;
+    ctx->polygonInt = cgmt_pgon_pt;
+    ctx->cellArray = cgmt_carray_p;
+    ctx->lineType = cgmt_ltype_p;
+    ctx->lineWidth = cgmt_lwidth_p;
+    ctx->lineColor = cgmt_lcolor_p;
+    ctx->markerType = cgmt_mtype_p;
+    ctx->markerSize = cgmt_msize_p;
+    ctx->markerColor = cgmt_mcolor_p;
+    ctx->textFontIndex = cgmt_tfindex_p;
+    ctx->textPrecision = cgmt_tprec_p;
+    ctx->charExpansion = cgmt_cexpfac_p;
+    ctx->charSpacing = cgmt_cspace_p;
+    ctx->textColor = cgmt_tcolor_p;
+    ctx->charHeight = cgmt_cheight_p;
+    ctx->charOrientation = cgmt_corient_p;
+    ctx->textPath = cgmt_tpath_p;
+    ctx->textAlignment = cgmt_talign_p;
+    ctx->interiorStyle = cgmt_intstyle_p;
+    ctx->fillColor = cgmt_fillcolor_p;
+    ctx->hatchIndex = cgmt_hindex_p;
+    ctx->patternIndex = cgmt_pindex_p;
+    ctx->colorTable = cgmt_coltab_c;
+    ctx->cgm[begin] = nullptr;
+    ctx->cgm[end] = nullptr;
+    ctx->cgm[bp] = nullptr;
+    ctx->cgm[bpage] = nullptr;
+    ctx->cgm[epage] = nullptr;
+    ctx->cgm[mfversion] = nullptr;
+    ctx->cgm[mfdescrip] = nullptr;
+    ctx->cgm[vdctype] = nullptr;
+    ctx->cgm[intprec] = nullptr;
+    ctx->cgm[realprec] = nullptr;
+    ctx->cgm[indexprec] = nullptr;
+    ctx->cgm[colprec] = nullptr;
+    ctx->cgm[cindprec] = nullptr;
+    ctx->cgm[cvextent] = nullptr;
+    ctx->cgm[maxcind] = nullptr;
+    ctx->cgm[mfellist] = nullptr;
+    ctx->cgm[fontlist] = nullptr;
+    ctx->cgm[cannounce] = nullptr;
+    ctx->cgm[scalmode] = nullptr;
+    ctx->cgm[colselmode] = nullptr;
+    ctx->cgm[lwsmode] = nullptr;
+    ctx->cgm[msmode] = nullptr;
+    ctx->cgm[vdcextent] = nullptr;
+    ctx->cgm[backcol] = nullptr;
+    ctx->cgm[vdcintprec] = nullptr;
+    ctx->cgm[cliprect] = nullptr;
+    ctx->cgm[clipindic] = nullptr;
     ctx->cgm[pline] = CGM_FUNC cgmt_pline;
     ctx->cgm[pmarker] = CGM_FUNC cgmt_pmarker;
-    ctx->cgm[text] = CGM_FUNC cgmt_text;
+    ctx->cgm[text] = nullptr;
     ctx->cgm[pgon] = CGM_FUNC cgmt_pgon;
-    ctx->cgm[ltype] = CGM_FUNC cgmt_ltype;
-    ctx->cgm[lwidth] = CGM_FUNC cgmt_lwidth;
-    ctx->cgm[lcolour] = CGM_FUNC cgmt_lcolour;
-    ctx->cgm[mtype] = CGM_FUNC cgmt_mtype;
-    ctx->cgm[msize] = CGM_FUNC cgmt_msize;
-    ctx->cgm[mcolour] = CGM_FUNC cgmt_mcolour;
-    ctx->cgm[tfindex] = CGM_FUNC cgmt_tfindex;
-    ctx->cgm[tprec] = CGM_FUNC cgmt_tprec;
-    ctx->cgm[cexpfac] = CGM_FUNC cgmt_cexpfac;
-    ctx->cgm[cspace] = CGM_FUNC cgmt_cspace;
-    ctx->cgm[tcolour] = CGM_FUNC cgmt_tcolour;
-    ctx->cgm[cheight] = CGM_FUNC cgmt_cheight;
-    ctx->cgm[corient] = CGM_FUNC cgmt_corient;
-    ctx->cgm[tpath] = CGM_FUNC cgmt_tpath;
-    ctx->cgm[talign] = CGM_FUNC cgmt_talign;
-    ctx->cgm[intstyle] = CGM_FUNC cgmt_intstyle;
-    ctx->cgm[fillcolour] = CGM_FUNC cgmt_fillcolour;
-    ctx->cgm[hindex] = CGM_FUNC cgmt_hindex;
-    ctx->cgm[pindex] = CGM_FUNC cgmt_pindex;
-    ctx->cgm[coltab] = CGM_FUNC cgmt_coltab;
+    ctx->cgm[ltype] = nullptr;
+    ctx->cgm[lwidth] = nullptr;
+    ctx->cgm[lcolour] = nullptr;
+    ctx->cgm[mtype] = nullptr;
+    ctx->cgm[msize] = nullptr;
+    ctx->cgm[mcolour] = nullptr;
+    ctx->cgm[tfindex] = nullptr;
+    ctx->cgm[tprec] = nullptr;
+    ctx->cgm[cexpfac] = nullptr;
+    ctx->cgm[cspace] = nullptr;
+    ctx->cgm[tcolour] = nullptr;
+    ctx->cgm[cheight] = nullptr;
+    ctx->cgm[corient] = nullptr;
+    ctx->cgm[tpath] = nullptr;
+    ctx->cgm[talign] = nullptr;
+    ctx->cgm[intstyle] = nullptr;
+    ctx->cgm[fillcolour] = nullptr;
+    ctx->cgm[hindex] = nullptr;
+    ctx->cgm[pindex] = nullptr;
+    ctx->cgm[coltab] = nullptr;
     ctx->cgm[carray] = CGM_FUNC cgmt_carray;
 
     ctx->buffer_ind = 0;
@@ -3418,109 +3395,109 @@ static void setup_clear_text_context()
 
 static void setup_binary_context(cgm_context *ctx)
 {
-    ctx->funcs.beginMetafile = cgmb_begin_p;
-    ctx->funcs.endMetafile = cgmb_end_p;
-    ctx->funcs.beginPicture = cgmb_bp_p;
-    ctx->funcs.beginPictureBody = cgmb_bpage_p;
-    ctx->funcs.endPicture = cgmb_epage_p;
-    ctx->funcs.metafileVersion = cgmb_mfversion_p;
-    ctx->funcs.metafileDescription = cgmb_mfdescrip_p;
-    ctx->funcs.vdcType = cgmb_vdctype_p;
-    ctx->funcs.intPrecisionBinary = cgmb_intprec_p;
-    ctx->funcs.realPrecisionBinary = cgmb_realprec_p;
-    ctx->funcs.indexPrecisionBinary = cgmb_indexprec_p;
-    ctx->funcs.colorPrecisionBinary = cgmb_colprec_p;
-    ctx->funcs.colorIndexPrecisionBinary = cgmb_cindprec_p;
-    ctx->funcs.maximumColorIndex = cgmb_maxcind_p;
-    ctx->funcs.colorValueExtent = cgmb_cvextent_p;
-    ctx->funcs.metafileElementList = cgmb_mfellist_p;
-    ctx->funcs.fontList = cgmb_fontlist_p;
-    ctx->funcs.characterCodingAnnouncer = cgmb_cannounce_p;
-    ctx->funcs.scalingMode = cgmb_scalmode_p;
-    ctx->funcs.colorMode = cgmb_colselmode_p;
-    ctx->funcs.lineWidthMode = cgmb_lwsmode_p;
-    ctx->funcs.markerSizeMode = cgmb_msmode_p;
-    ctx->funcs.vdcExtentInt = cgmb_vdcextent_p;
-    ctx->funcs.backgroundColor = cgmb_backcol_p;
-    ctx->funcs.vdcIntegerPrecisionBinary = cgmb_vdcintprec_p;
-    ctx->funcs.clipRectangle = cgmb_cliprect_p;
-    ctx->funcs.clipIndicator = cgmb_clipindic_p;
-    ctx->funcs.polylineInt = cgmb_pline_pt;
-    ctx->funcs.polymarkerInt = cgmb_pmarker_pt;
-    ctx->funcs.textInt = cgmb_text_p;
-    ctx->funcs.polygonInt = cgmb_pgon_pt;
-    ctx->funcs.cellArray = cgmb_carray_p;
-    ctx->funcs.lineType = cgmb_ltype_p;
-    ctx->funcs.lineWidth = cgmb_lwidth_p;
-    ctx->funcs.lineColor = cgmb_lcolor_p;
-    ctx->funcs.markerType = cgmb_mtype_p;
-    ctx->funcs.markerSize = cgmb_msize_p;
-    ctx->funcs.markerColor = cgmb_mcolor_p;
-    ctx->funcs.textFontIndex = cgmb_tfindex_p;
-    ctx->funcs.textPrecision = cgmb_tprec_p;
-    ctx->funcs.charExpansion = cgmb_cexpfac_p;
-    ctx->funcs.charSpacing = cgmb_cspace_p;
-    ctx->funcs.textColor = cgmb_tcolor_p;
-    ctx->funcs.charHeight = cgmb_cheight_p;
-    ctx->funcs.charOrientation = cgmb_corient_p;
-    ctx->funcs.textPath = cgmb_tpath_p;
-    ctx->funcs.textAlignment = cgmb_talign_p;
-    ctx->funcs.interiorStyle = cgmb_intstyle_p;
-    ctx->funcs.fillColor = cgmb_fillcolor_p;
-    ctx->funcs.hatchIndex = cgmb_hindex_p;
-    ctx->funcs.patternIndex = cgmb_pindex_p;
-    ctx->funcs.colorTable = cgmb_coltab_c;
-    ctx->cgm[begin] = CGM_FUNC cgmb_begin;
-    ctx->cgm[end] = CGM_FUNC cgmb_end;
-    ctx->cgm[bp] = CGM_FUNC cgmb_bp;
-    ctx->cgm[bpage] = CGM_FUNC cgmb_bpage;
-    ctx->cgm[epage] = CGM_FUNC cgmb_epage;
-    ctx->cgm[mfversion] = CGM_FUNC cgmb_mfversion;
-    ctx->cgm[mfdescrip] = CGM_FUNC cgmb_mfdescrip;
-    ctx->cgm[vdctype] = CGM_FUNC cgmb_vdctype;
-    ctx->cgm[intprec] = CGM_FUNC cgmb_intprec;
-    ctx->cgm[realprec] = CGM_FUNC cgmb_realprec;
-    ctx->cgm[indexprec] = CGM_FUNC cgmb_indexprec;
-    ctx->cgm[colprec] = CGM_FUNC cgmb_colprec;
-    ctx->cgm[cindprec] = CGM_FUNC cgmb_cindprec;
-    ctx->cgm[cvextent] = CGM_FUNC cgmb_cvextent;
-    ctx->cgm[maxcind] = CGM_FUNC cgmb_maxcind;
-    ctx->cgm[mfellist] = CGM_FUNC cgmb_mfellist;
-    ctx->cgm[fontlist] = CGM_FUNC cgmb_fontlist;
-    ctx->cgm[cannounce] = CGM_FUNC cgmb_cannounce;
-    ctx->cgm[scalmode] = CGM_FUNC cgmb_scalmode;
-    ctx->cgm[colselmode] = CGM_FUNC cgmb_colselmode;
-    ctx->cgm[lwsmode] = CGM_FUNC cgmb_lwsmode;
-    ctx->cgm[msmode] = CGM_FUNC cgmb_msmode;
-    ctx->cgm[vdcextent] = CGM_FUNC cgmb_vdcextent;
-    ctx->cgm[backcol] = CGM_FUNC cgmb_backcol;
-    ctx->cgm[vdcintprec] = CGM_FUNC cgmb_vdcintprec;
-    ctx->cgm[cliprect] = CGM_FUNC cgmb_cliprect;
-    ctx->cgm[clipindic] = CGM_FUNC cgmb_clipindic;
+    ctx->beginMetafile = cgmb_begin_p;
+    ctx->endMetafile = cgmb_end_p;
+    ctx->beginPicture = cgmb_bp_p;
+    ctx->beginPictureBody = cgmb_bpage_p;
+    ctx->endPicture = cgmb_epage_p;
+    ctx->metafileVersion = cgmb_mfversion_p;
+    ctx->metafileDescription = cgmb_mfdescrip_p;
+    ctx->vdcType = cgmb_vdctype_p;
+    ctx->intPrecisionBinary = cgmb_intprec_p;
+    ctx->realPrecisionBinary = cgmb_realprec_p;
+    ctx->indexPrecisionBinary = cgmb_indexprec_p;
+    ctx->colorPrecisionBinary = cgmb_colprec_p;
+    ctx->colorIndexPrecisionBinary = cgmb_cindprec_p;
+    ctx->maximumColorIndex = cgmb_maxcind_p;
+    ctx->colorValueExtent = cgmb_cvextent_p;
+    ctx->metafileElementList = cgmb_mfellist_p;
+    ctx->fontList = cgmb_fontlist_p;
+    ctx->characterCodingAnnouncer = cgmb_cannounce_p;
+    ctx->scalingMode = cgmb_scalmode_p;
+    ctx->colorSelectionMode = cgmb_colselmode_p;
+    ctx->lineWidthSpecificationMode = cgmb_lwsmode_p;
+    ctx->markerSizeSpecificationMode = cgmb_msmode_p;
+    ctx->vdcExtentInt = cgmb_vdcextent_p;
+    ctx->backgroundColor = cgmb_backcol_p;
+    ctx->vdcIntegerPrecisionBinary = cgmb_vdcintprec_p;
+    ctx->clipRectangle = cgmb_cliprect_p;
+    ctx->clipIndicator = cgmb_clipindic_p;
+    ctx->polylineInt = cgmb_pline_pt;
+    ctx->polymarkerInt = cgmb_pmarker_pt;
+    ctx->textInt = cgmb_text_p;
+    ctx->polygonInt = cgmb_pgon_pt;
+    ctx->cellArray = cgmb_carray_p;
+    ctx->lineType = cgmb_ltype_p;
+    ctx->lineWidth = cgmb_lwidth_p;
+    ctx->lineColor = cgmb_lcolor_p;
+    ctx->markerType = cgmb_mtype_p;
+    ctx->markerSize = cgmb_msize_p;
+    ctx->markerColor = cgmb_mcolor_p;
+    ctx->textFontIndex = cgmb_tfindex_p;
+    ctx->textPrecision = cgmb_tprec_p;
+    ctx->charExpansion = cgmb_cexpfac_p;
+    ctx->charSpacing = cgmb_cspace_p;
+    ctx->textColor = cgmb_tcolor_p;
+    ctx->charHeight = cgmb_cheight_p;
+    ctx->charOrientation = cgmb_corient_p;
+    ctx->textPath = cgmb_tpath_p;
+    ctx->textAlignment = cgmb_talign_p;
+    ctx->interiorStyle = cgmb_intstyle_p;
+    ctx->fillColor = cgmb_fillcolor_p;
+    ctx->hatchIndex = cgmb_hindex_p;
+    ctx->patternIndex = cgmb_pindex_p;
+    ctx->colorTable = cgmb_coltab_c;
+    ctx->cgm[begin] = nullptr;
+    ctx->cgm[end] = nullptr;
+    ctx->cgm[bp] = nullptr;
+    ctx->cgm[bpage] = nullptr;
+    ctx->cgm[epage] = nullptr;
+    ctx->cgm[mfversion] = nullptr;
+    ctx->cgm[mfdescrip] = nullptr;
+    ctx->cgm[vdctype] = nullptr;
+    ctx->cgm[intprec] = nullptr;
+    ctx->cgm[realprec] = nullptr;
+    ctx->cgm[indexprec] = nullptr;
+    ctx->cgm[colprec] = nullptr;
+    ctx->cgm[cindprec] = nullptr;
+    ctx->cgm[cvextent] = nullptr;
+    ctx->cgm[maxcind] = nullptr;
+    ctx->cgm[mfellist] = nullptr;
+    ctx->cgm[fontlist] = nullptr;
+    ctx->cgm[cannounce] = nullptr;
+    ctx->cgm[scalmode] = nullptr;
+    ctx->cgm[colselmode] = nullptr;
+    ctx->cgm[lwsmode] = nullptr;
+    ctx->cgm[msmode] = nullptr;
+    ctx->cgm[vdcextent] = nullptr;
+    ctx->cgm[backcol] = nullptr;
+    ctx->cgm[vdcintprec] = nullptr;
+    ctx->cgm[cliprect] = nullptr;
+    ctx->cgm[clipindic] = nullptr;
     ctx->cgm[pline] = CGM_FUNC cgmb_pline;
     ctx->cgm[pmarker] = CGM_FUNC cgmb_pmarker;
-    ctx->cgm[text] = CGM_FUNC cgmb_text;
+    ctx->cgm[text] = nullptr;
     ctx->cgm[pgon] = CGM_FUNC cgmb_pgon;
-    ctx->cgm[ltype] = CGM_FUNC cgmb_ltype;
-    ctx->cgm[lwidth] = CGM_FUNC cgmb_lwidth;
-    ctx->cgm[lcolour] = CGM_FUNC cgmb_lcolour;
-    ctx->cgm[mtype] = CGM_FUNC cgmb_mtype;
-    ctx->cgm[msize] = CGM_FUNC cgmb_msize;
-    ctx->cgm[mcolour] = CGM_FUNC cgmb_mcolour;
-    ctx->cgm[tfindex] = CGM_FUNC cgmb_tfindex;
-    ctx->cgm[tprec] = CGM_FUNC cgmb_tprec;
-    ctx->cgm[cexpfac] = CGM_FUNC cgmb_cexpfac;
-    ctx->cgm[cspace] = CGM_FUNC cgmb_cspace;
-    ctx->cgm[tcolour] = CGM_FUNC cgmb_tcolour;
-    ctx->cgm[cheight] = CGM_FUNC cgmb_cheight;
-    ctx->cgm[corient] = CGM_FUNC cgmb_corient;
-    ctx->cgm[tpath] = CGM_FUNC cgmb_tpath;
-    ctx->cgm[talign] = CGM_FUNC cgmb_talign;
-    ctx->cgm[intstyle] = CGM_FUNC cgmb_intstyle;
-    ctx->cgm[fillcolour] = CGM_FUNC cgmb_fillcolour;
-    ctx->cgm[hindex] = CGM_FUNC cgmb_hindex;
-    ctx->cgm[pindex] = CGM_FUNC cgmb_pindex;
-    ctx->cgm[coltab] = CGM_FUNC cgmb_coltab;
+    ctx->cgm[ltype] = nullptr;
+    ctx->cgm[lwidth] = nullptr;
+    ctx->cgm[lcolour] = nullptr;
+    ctx->cgm[mtype] = nullptr;
+    ctx->cgm[msize] = nullptr;
+    ctx->cgm[mcolour] = nullptr;
+    ctx->cgm[tfindex] = nullptr;
+    ctx->cgm[tprec] = nullptr;
+    ctx->cgm[cexpfac] = nullptr;
+    ctx->cgm[cspace] = nullptr;
+    ctx->cgm[tcolour] = nullptr;
+    ctx->cgm[cheight] = nullptr;
+    ctx->cgm[corient] = nullptr;
+    ctx->cgm[tpath] = nullptr;
+    ctx->cgm[talign] = nullptr;
+    ctx->cgm[intstyle] = nullptr;
+    ctx->cgm[fillcolour] = nullptr;
+    ctx->cgm[hindex] = nullptr;
+    ctx->cgm[pindex] = nullptr;
+    ctx->cgm[coltab] = nullptr;
     ctx->cgm[carray] = CGM_FUNC cgmb_carray;
 
     ctx->buffer_ind = 0;
@@ -3533,26 +3510,42 @@ static void setup_binary_context()
     setup_binary_context(g_p);
 }
 
-static void cgm_begin_page(void)
+static void cgm_begin_page()
 {
-    g_p->cgm[bp](local_time());
-
-    if (g_p->encode != cgm_grafkit)
-        g_p->cgm[scalmode]();
-
-    g_p->cgm[colselmode]();
+    g_p->beginPicture(g_p, local_time());
 
     if (g_p->encode != cgm_grafkit)
     {
-        g_p->cgm[lwsmode]();
-        g_p->cgm[msmode]();
+        if (g_p->mm > 0)
+        {
+            g_p->scalingMode(g_p, 1, g_p->mm);
+        }
+        else
+        {
+            g_p->scalingMode(g_p, 0, 0.0);
+        }
     }
 
-    g_p->cgm[vdcextent]();
-    g_p->cgm[backcol]();
+    g_p->colorSelectionMode(g_p, 1);
 
-    g_p->cgm[bpage]();
-    g_p->cgm[vdcintprec]();
+    if (g_p->encode != cgm_grafkit)
+    {
+        g_p->lineWidthSpecificationMode(g_p, 1);
+        g_p->markerSizeSpecificationMode(g_p, 1);
+    }
+
+    g_p->vdcExtentInt(g_p, 0, 0, g_p->xext, g_p->yext);
+    g_p->backgroundColor(g_p, 255, 255, 255);
+
+    g_p->beginPictureBody(g_p);
+    if (g_p->encode != cgm_clear_text)
+    {
+        g_p->vdcIntegerPrecisionBinary(g_p, 16);
+    }
+    else
+    {
+        g_p->vdcIntegerPrecisionClearText(g_p, -32768, 32767);
+    }
 
     setup_colors();
 
@@ -3583,7 +3576,7 @@ enum class Function
     SetWorkstationViewport = 55,
 };
 
-static void gks_flush_buffer(cgm_context *ctx, void *data)
+static void gks_flush_buffer(cgm_context *ctx, void *cbData)
 {
     gks_write_file(ctx->conid, ctx->buffer, ctx->buffer_ind);
 }
@@ -3592,8 +3585,6 @@ static void gks_drv_cgm(Function fctid, int dx, int dy, int dimx, int *ia,
     int lr1, double *r1, int lr2, double *r2, int lc, char *chars,
     void **context)
 {
-    char *buffer;
-
     g_p = (cgm_context *) *context;
 
     switch (fctid)
@@ -3631,36 +3622,50 @@ static void gks_drv_cgm(Function fctid, int dx, int dy, int dimx, int *ia,
             return;
         }
 
-        buffer = "GKS, Copyright @ 2001, Josef Heinen";
-
         if (getenv("CGM_SCALE_MODE_METRIC") != nullptr)
             g_p->mm = 0.19685 / max_coord * 1000;
         else
             g_p->mm = 0;
 
-        g_p->cgm[begin](buffer);
-        g_p->cgm[mfversion]();
-        g_p->cgm[mfdescrip]();
+        g_p->beginMetafile(g_p, "GKS, Copyright @ 2001, Josef Heinen");
+        g_p->metafileVersion(g_p, 1);
+        g_p->metafileDescription(g_p, g_p->encode == cgm_clear_text ? "GKS 5 CGM Clear Text" : "GKS 5 CGM Binary");
 
         if (g_p->encode != cgm_grafkit)
         {
-            g_p->cgm[vdctype]();
-            g_p->cgm[intprec]();
-#if 0
-	  p->cgm[realprec] ();	/* causes problems with RALCGM */
-#endif
-            g_p->cgm[indexprec]();
-            g_p->cgm[colprec]();
-            g_p->cgm[cindprec]();
-            g_p->cgm[maxcind]();
-            g_p->cgm[cvextent]();
+            g_p->vdcType(g_p, cgm::VdcType::Integer);
+            if (g_p->encode == cgm_binary)
+            {
+                g_p->intPrecisionBinary(g_p, 16);
+                g_p->realPrecisionBinary(g_p, 1, 16, 16);
+                g_p->indexPrecisionBinary(g_p, 16);
+                g_p->colorPrecisionBinary(g_p, cprec);
+                g_p->colorIndexPrecisionBinary(g_p, cxprec);
+            }
+            else
+            {
+                g_p->intPrecisionClearText(g_p, -32768, 32767);
+                g_p->realPrecisionClearText(g_p, -32768., 32768., 4);
+                g_p->indexPrecisionClearText(g_p, -32768, 32767);
+                g_p->colorPrecisionClearText(g_p, (1 << cprec) - 1);
+                g_p->colorIndexPrecisionClearText(g_p, (1 << cxprec) - 1);
+            }
+            g_p->maximumColorIndex(g_p, MAX_COLOR - 1);
+            g_p->colorValueExtent(g_p, 0, max_colors - 1, 0, max_colors - 1, 0, max_colors - 1);
         }
 
-        g_p->cgm[mfellist]();
-        g_p->cgm[fontlist]();
+        g_p->metafileElementList(g_p);
+        {
+            const char *fontNames[max_std_textfont];
+            for (int i = 0; i < max_std_textfont; ++i)
+            {
+                fontNames[i] = fonts[map[i]];
+            }
+            g_p->fontList(g_p, max_std_textfont, fontNames);
+        }
 
         if (g_p->encode != cgm_grafkit)
-            g_p->cgm[cannounce]();
+            g_p->characterCodingAnnouncer(g_p, 3);
 
         init_color_table();
 
@@ -3673,8 +3678,8 @@ static void gks_drv_cgm(Function fctid, int dx, int dy, int dimx, int *ia,
         break;
 
     case Function::CloseWorkstation:
-        g_p->cgm[epage]();
-        g_p->cgm[end]();
+        g_p->endPicture(g_p);
+        g_p->endMetafile(g_p);
 
         free(g_p);
         break;
@@ -3690,7 +3695,7 @@ static void gks_drv_cgm(Function fctid, int dx, int dy, int dimx, int *ia,
     case Function::ClearWorkstation:
         if (!g_p->begin_page)
         {
-            g_p->cgm[epage]();
+            g_p->endPicture(g_p);
             g_p->begin_page = true;
         }
         break;
@@ -3731,7 +3736,7 @@ static void gks_drv_cgm(Function fctid, int dx, int dy, int dimx, int *ia,
             setup_text_attributes(false);
 
             WC_to_VDC(r1[0], r2[0], &x, &y);
-            g_p->cgm[text](x, y, true, chars);
+            g_p->textInt(g_p, x, y, true, chars);
         }
         break;
 
@@ -3811,6 +3816,37 @@ public:
             m_context.mm = 0;
     }
 
+protected:
+    std::ostream &m_stream;
+    cgm_context m_context;
+
+private:
+    void flushBuffer();
+    static void flushBufferCb(cgm_context *ctx, void *data);
+};
+
+void MetafileStreamWriter::flushBuffer()
+{
+    m_stream.write(m_context.buffer, m_context.buffer_ind);
+    m_context.buffer_ind = 0;
+    m_context.buffer[0] = 0;
+}
+
+void MetafileStreamWriter::flushBufferCb(cgm_context *ctx, void *data)
+{
+    static_cast<MetafileStreamWriter *>(data)->flushBuffer();
+}
+
+class BinaryMetafileWriter : public MetafileStreamWriter
+{
+public:
+    BinaryMetafileWriter(std::ostream &stream)
+        : MetafileStreamWriter(stream)
+    {
+        m_context.encode = cgm_binary;
+        setup_binary_context(&m_context);
+    }
+
     void beginMetafile(const char *identifier) override;
     void endMetafile() override;
     void beginPicture(char const *identifier) override;
@@ -3830,26 +3866,24 @@ public:
     void colorIndexPrecisionClearText(int max) override;
     void colorIndexPrecisionBinary(int value) override;
     void maximumColorIndex(int max) override;
-    void colorValueExtent(int redMin, int redMax, int greenMin, int greenMax, int blueMin,
-        int blueMax) override;
+    void colorValueExtent(int redMin, int redMax, int greenMin, int greenMax, int blueMin, int blueMax) override;
     void metafileElementList() override;
-    void metafileDefaultsReplacement() override;
     void fontList(std::vector<std::string> const &fonts) override;
     void characterCodingAnnouncer(CharCodeAnnouncer value) override;
     void scaleMode(ScaleMode mode, float value) override;
-    void colorMode(ColorMode mode) override;
-    void lineWidthMode(LineWidthMode mode) override;
-    void markerSizeMode(MarkerSizeMode mode) override;
+    void colorSelectionMode(ColorMode mode) override;
+    void lineWidthSpecificationMode(SpecificationMode mode) override;
+    void markerSizeSpecificationMode(SpecificationMode mode) override;
     void vdcExtent(int llx, int lly, int urx, int ury) override;
     void backgroundColor(int red, int green, int blue) override;
     void vdcIntegerPrecisionClearText(int min, int max) override;
     void vdcIntegerPrecisionBinary(int value) override;
     void clipRectangle(int llx, int lly, int urx, int ury) override;
     void clipIndicator(bool enabled) override;
-    void polyline(const std::vector<Point<int> > &points) override;
-    void polymarker(const std::vector<Point<int> > &points) override;
+    void polyline(const std::vector<Point<int>> &points) override;
+    void polymarker(const std::vector<Point<int>> &points) override;
     void text(Point<int> point, TextFlag flag, const char *text) override;
-    void polygon(const std::vector<Point<int> > &points) override;
+    void polygon(const std::vector<Point<int>> &points) override;
     void cellArray(Point<int> c1, Point<int> c2, Point<int> c3, int colorPrecision, int nx, int ny, int *colors) override;
     void lineType(int value) override;
     void lineWidth(float value) override;
@@ -3871,26 +3905,303 @@ public:
     void hatchIndex(int value) override;
     void patternIndex(int value) override;
     void colorTable(int startIndex, std::vector<Color> const &colors) override;
-
-protected:
-    std::ostream &m_stream;
-    cgm_context m_context;
-
-private:
-    void flushBuffer();
-    static void flushBufferCb(cgm_context *ctx, void *data);
 };
 
-class BinaryMetafileWriter : public MetafileStreamWriter
+void BinaryMetafileWriter::beginMetafile(const char *identifier)
 {
-public:
-    BinaryMetafileWriter(std::ostream &stream)
-        : MetafileStreamWriter(stream)
+    cgmb_begin_p(&m_context, identifier);
+}
+
+void BinaryMetafileWriter::endMetafile()
+{
+    cgmb_end_p(&m_context);
+}
+
+void BinaryMetafileWriter::beginPicture(char const *identifier)
+{
+    cgmb_bp_p(&m_context, identifier);
+}
+
+void BinaryMetafileWriter::beginPictureBody()
+{
+    cgmb_bpage_p(&m_context);
+}
+
+void BinaryMetafileWriter::endPicture()
+{
+    cgmb_epage_p(&m_context);
+}
+
+void BinaryMetafileWriter::metafileVersion(int value)
+{
+    cgmb_mfversion_p(&m_context, value);
+}
+
+void BinaryMetafileWriter::metafileDescription(char const *value)
+{
+    cgmb_mfdescrip_p(&m_context, value);
+}
+
+void BinaryMetafileWriter::vdcType(VdcType type)
+{
+    cgmb_vdctype_p(&m_context, type);
+}
+
+void BinaryMetafileWriter::intPrecisionClearText(int min, int max)
+{
+    throw std::runtime_error("Unsupported method");
+}
+
+void BinaryMetafileWriter::intPrecisionBinary(int value)
+{
+    cgmb_intprec_p(&m_context, value);
+}
+
+void BinaryMetafileWriter::realPrecisionClearText(float minReal, float maxReal, int digits)
+{
+    throw std::runtime_error("Unsupported method");
+}
+
+void BinaryMetafileWriter::realPrecisionBinary(RealPrecision prec, int expWidth, int mantWidth)
+{
+    cgmb_realprec_p(&m_context, static_cast<int>(prec), expWidth, mantWidth);
+}
+
+void BinaryMetafileWriter::indexPrecisionClearText(int min, int max)
+{
+    throw std::runtime_error("Unsupported method");
+}
+
+void BinaryMetafileWriter::indexPrecisionBinary(int value)
+{
+    cgmb_indexprec_p(&m_context, value);
+}
+
+void BinaryMetafileWriter::colorPrecisionClearText(int max)
+{
+    throw std::runtime_error("Unsupported method");
+}
+
+void BinaryMetafileWriter::colorPrecisionBinary(int value)
+{
+    cgmb_colprec_p(&m_context, value);
+}
+
+void BinaryMetafileWriter::colorIndexPrecisionClearText(int max)
+{
+    throw std::runtime_error("Unsupported method");
+}
+
+void BinaryMetafileWriter::colorIndexPrecisionBinary(int value)
+{
+    cgmb_cindprec_p(&m_context, value);
+}
+
+void BinaryMetafileWriter::maximumColorIndex(int max)
+{
+    cgmb_maxcind_p(&m_context, max);
+}
+
+void BinaryMetafileWriter::colorValueExtent(int redMin, int redMax, int greenMin, int greenMax, int blueMin, int blueMax)
+{
+    cgmb_cvextent_p(&m_context, redMin, redMax, greenMin, greenMax, blueMin, blueMax);
+}
+
+void BinaryMetafileWriter::metafileElementList()
+{
+    cgmb_mfellist_p(&m_context);
+}
+
+void BinaryMetafileWriter::fontList(std::vector<std::string> const &fonts)
+{
+    std::vector<const char *> fontNames;
+    fontNames.reserve(fonts.size());
+    for (const std::string &font : fonts)
     {
-        m_context.encode = cgm_binary;
-        setup_binary_context(&m_context);
+        fontNames.push_back(font.c_str());
     }
-};
+    cgmb_fontlist_p(&m_context, static_cast<int>(fonts.size()), fontNames.data());
+}
+
+void BinaryMetafileWriter::characterCodingAnnouncer(CharCodeAnnouncer value)
+{
+    cgmb_cannounce_p(&m_context, static_cast<int>(value));
+}
+
+void BinaryMetafileWriter::scaleMode(ScaleMode mode, float value)
+{
+    cgmb_scalmode_p(&m_context, static_cast<int>(mode), static_cast<double>(value));
+}
+
+void BinaryMetafileWriter::colorSelectionMode(ColorMode mode)
+{
+    cgmb_colselmode_p(&m_context, static_cast<int>(mode));
+}
+
+void BinaryMetafileWriter::lineWidthSpecificationMode(SpecificationMode mode)
+{
+    cgmb_lwsmode_p(&m_context, static_cast<int>(mode));
+}
+
+void BinaryMetafileWriter::markerSizeSpecificationMode( SpecificationMode mode )
+{
+    cgmb_msmode_p(&m_context, static_cast<int>(mode));
+}
+
+void BinaryMetafileWriter::vdcExtent(int llx, int lly, int urx, int ury)
+{
+    cgmb_vdcextent_p(&m_context, llx, lly, urx, ury);
+}
+
+void BinaryMetafileWriter::backgroundColor(int red, int green, int blue)
+{
+    cgmb_backcol_p(&m_context, red, green, blue);
+}
+
+void BinaryMetafileWriter::vdcIntegerPrecisionClearText(int min, int max)
+{
+    throw std::runtime_error("Unsupported");
+}
+
+void BinaryMetafileWriter::vdcIntegerPrecisionBinary(int value)
+{
+    cgmb_vdcintprec_p(&m_context, value);
+}
+
+void BinaryMetafileWriter::clipRectangle(int llx, int lly, int urx, int ury)
+{
+    cgmb_cliprect_p(&m_context, llx, lly, urx, ury);
+}
+
+void BinaryMetafileWriter::clipIndicator(bool enabled)
+{
+    cgmb_clipindic_p(&m_context, enabled);
+}
+
+void BinaryMetafileWriter::polyline(const std::vector<Point<int>> &points)
+{
+    cgmb_pline_pt(&m_context, static_cast<int>(points.size()), points.data());
+}
+
+void BinaryMetafileWriter::polymarker(const std::vector<Point<int>> &points)
+{
+    cgmb_pmarker_pt(&m_context, static_cast<int>(points.size()), points.data());
+}
+
+void BinaryMetafileWriter::text(Point<int> point, TextFlag flag, const char *text)
+{
+    cgmb_text_p(&m_context, point.x, point.y, static_cast<int>(flag), text);
+}
+
+void BinaryMetafileWriter::polygon(const std::vector<Point<int>> &points)
+{
+    cgmb_pgon_pt(&m_context, static_cast<int>(points.size()), points.data());
+}
+
+void BinaryMetafileWriter::cellArray(Point<int> c1, Point<int> c2, Point<int> c3, int colorPrecision, int nx, int ny, int *colors)
+{
+    cgmb_carray_p(&m_context, c1.x, c1.y, c2.x, c2.y, c3.x, c3.y, colorPrecision, nx, ny, nx, colors);
+}
+
+void BinaryMetafileWriter::lineType(int value)
+{
+    cgmb_ltype_p(&m_context, value);
+}
+
+void BinaryMetafileWriter::lineWidth(float value)
+{
+    cgmb_lwidth_p(&m_context, static_cast<double>(value));
+}
+
+void BinaryMetafileWriter::lineColor(int value)
+{
+    cgmb_lcolor_p(&m_context, value);
+}
+
+void BinaryMetafileWriter::markerType(int value)
+{
+    cgmb_mtype_p(&m_context, value);
+}
+
+void BinaryMetafileWriter::markerSize(float value)
+{
+    cgmb_msize_p(&m_context, static_cast<double>(value));
+}
+
+void BinaryMetafileWriter::markerColor(int value)
+{
+    cgmb_mcolor_p(&m_context, value);
+}
+
+void BinaryMetafileWriter::textFontIndex(int value)
+{
+    cgmb_tfindex_p(&m_context, value);
+}
+
+void BinaryMetafileWriter::textPrecision(TextPrecision value)
+{
+    cgmb_tprec_p(&m_context, static_cast<int>(value));
+}
+
+void BinaryMetafileWriter::charExpansion(float value)
+{
+    cgmb_cexpfac_p(&m_context, static_cast<double>(value));
+}
+
+void BinaryMetafileWriter::charSpacing(float value)
+{
+    cgmb_cspace_p(&m_context, static_cast<double>(value));
+}
+
+void BinaryMetafileWriter::textColor(int index)
+{
+    cgmb_tcolor_p(&m_context, index);
+}
+
+void BinaryMetafileWriter::charHeight(int value)
+{
+    cgmb_cheight_p(&m_context, value);
+}
+
+void BinaryMetafileWriter::charOrientation(int upX, int upY, int baseX, int baseY)
+{
+    cgmb_corient_p(&m_context, upX, upY, baseX, baseY);
+}
+
+void BinaryMetafileWriter::textPath(TextPath value)
+{
+    cgmb_tpath_p(&m_context, static_cast<int>(value));
+}
+
+void BinaryMetafileWriter::textAlignment(HorizAlign horiz, VertAlign vert, float contHoriz, float contVert)
+{
+    cgmb_talign_p(&m_context, static_cast<int>(horiz), static_cast<int>(vert), static_cast<double>(contHoriz), static_cast<double>(contVert));
+}
+
+void BinaryMetafileWriter::interiorStyle(InteriorStyle value)
+{
+    cgmb_intstyle_p(&m_context, static_cast<int>(value));
+}
+
+void BinaryMetafileWriter::fillColor(int value)
+{
+    cgmb_fillcolor_p(&m_context, value);
+}
+
+void BinaryMetafileWriter::hatchIndex(int value)
+{
+    cgmb_hindex_p(&m_context, value);
+}
+
+void BinaryMetafileWriter::patternIndex(int value)
+{
+    cgmb_pindex_p(&m_context, value);
+}
+
+void BinaryMetafileWriter::colorTable(int startIndex, std::vector<Color> const &colors)
+{
+    cgmb_coltab_c(&m_context, startIndex, static_cast<int>(colors.size()), colors.data());
+}
 
 class ClearTextMetafileWriter : public MetafileStreamWriter
 {
@@ -3901,321 +4212,362 @@ public:
         m_context.encode = cgm_clear_text;
         setup_clear_text_context(&m_context);
     }
+
+    void beginMetafile(const char *identifier) override;
+    void endMetafile() override;
+    void beginPicture(char const *identifier) override;
+    void beginPictureBody() override;
+    void endPicture() override;
+    void metafileVersion(int value) override;
+    void metafileDescription(char const *value) override;
+    void vdcType(VdcType type) override;
+    void intPrecisionClearText(int min, int max) override;
+    void intPrecisionBinary(int value) override;
+    void realPrecisionClearText(float minReal, float maxReal, int digits) override;
+    void realPrecisionBinary(RealPrecision prec, int expWidth, int mantWidth) override;
+    void indexPrecisionClearText(int min, int max) override;
+    void indexPrecisionBinary(int value) override;
+    void colorPrecisionClearText(int max) override;
+    void colorPrecisionBinary(int value) override;
+    void colorIndexPrecisionClearText(int max) override;
+    void colorIndexPrecisionBinary(int value) override;
+    void maximumColorIndex(int max) override;
+    void colorValueExtent(int redMin, int redMax, int greenMin, int greenMax, int blueMin, int blueMax) override;
+    void metafileElementList() override;
+    void fontList(std::vector<std::string> const &fonts) override;
+    void characterCodingAnnouncer(CharCodeAnnouncer value) override;
+    void scaleMode(ScaleMode mode, float value) override;
+    void colorSelectionMode(ColorMode mode) override;
+    void lineWidthSpecificationMode(SpecificationMode mode) override;
+    void markerSizeSpecificationMode(SpecificationMode mode) override;
+    void vdcExtent(int llx, int lly, int urx, int ury) override;
+    void backgroundColor(int red, int green, int blue) override;
+    void vdcIntegerPrecisionClearText(int min, int max) override;
+    void vdcIntegerPrecisionBinary(int value) override;
+    void clipRectangle(int llx, int lly, int urx, int ury) override;
+    void clipIndicator(bool enabled) override;
+    void polyline(const std::vector<Point<int>> &points) override;
+    void polymarker(const std::vector<Point<int>> &points) override;
+    void text(Point<int> point, TextFlag flag, const char *text) override;
+    void polygon(const std::vector<Point<int>> &points) override;
+    void cellArray(Point<int> c1, Point<int> c2, Point<int> c3, int colorPrecision, int nx, int ny, int *colors) override;
+    void lineType(int value) override;
+    void lineWidth(float value) override;
+    void lineColor(int value) override;
+    void markerType(int value) override;
+    void markerSize(float value) override;
+    void markerColor(int value) override;
+    void textFontIndex(int value) override;
+    void textPrecision(TextPrecision value) override;
+    void charExpansion(float value) override;
+    void charSpacing(float value) override;
+    void textColor(int index) override;
+    void charHeight(int value) override;
+    void charOrientation(int upX, int upY, int baseX, int baseY) override;
+    void textPath(TextPath value) override;
+    void textAlignment(HorizAlign horiz, VertAlign vert, float contHoriz, float contVert) override;
+    void interiorStyle(InteriorStyle value) override;
+    void fillColor(int value) override;
+    void hatchIndex(int value) override;
+    void patternIndex(int value) override;
+    void colorTable(int startIndex, std::vector<Color> const &colors) override;
 };
 
-void MetafileStreamWriter::beginMetafile(const char *identifier)
+void ClearTextMetafileWriter::beginMetafile(const char *identifier)
 {
-    m_context.funcs.beginMetafile(&m_context, identifier);
+    cgmt_begin_p(&m_context, identifier);
 }
 
-void MetafileStreamWriter::endMetafile()
+void ClearTextMetafileWriter::endMetafile()
 {
-    m_context.funcs.endMetafile(&m_context);
+    cgmt_end_p(&m_context);
 }
 
-void MetafileStreamWriter::beginPicture(char const *identifier)
+void ClearTextMetafileWriter::beginPicture(char const *identifier)
 {
-    m_context.funcs.beginPicture(&m_context, identifier);
+    cgmt_bp_p(&m_context, identifier);
 }
 
-void MetafileStreamWriter::beginPictureBody()
+void ClearTextMetafileWriter::beginPictureBody()
 {
-    m_context.funcs.beginPictureBody(&m_context);
+    cgmt_bpage_p(&m_context);
 }
 
-void MetafileStreamWriter::endPicture()
+void ClearTextMetafileWriter::endPicture()
 {
-    m_context.funcs.endPicture(&m_context);
+    cgmt_epage_p(&m_context);
 }
 
-void MetafileStreamWriter::metafileVersion(int value)
+void ClearTextMetafileWriter::metafileVersion(int value)
 {
-    m_context.funcs.metafileVersion(&m_context, value);
+    cgmt_mfversion_p(&m_context, value);
 }
 
-void MetafileStreamWriter::metafileDescription(char const *value)
+void ClearTextMetafileWriter::metafileDescription(char const *value)
 {
-    m_context.funcs.metafileDescription(&m_context, value);
+    cgmt_mfdescrip_p(&m_context, value);
 }
 
-void MetafileStreamWriter::vdcType(VdcType type)
+void ClearTextMetafileWriter::vdcType(VdcType type)
 {
-    m_context.funcs.vdcType(&m_context, type);
+    cgmt_vdctype_p(&m_context, type);
 }
 
-void MetafileStreamWriter::intPrecisionClearText(int min, int max)
+void ClearTextMetafileWriter::intPrecisionClearText(int min, int max)
 {
-    m_context.funcs.intPrecisionClearText(&m_context, min, max);
+    cgmt_intprec_p(&m_context, min, max);
 }
 
-void MetafileStreamWriter::intPrecisionBinary(int value)
+void ClearTextMetafileWriter::intPrecisionBinary(int value)
 {
-    m_context.funcs.intPrecisionBinary(&m_context, value);
+    throw std::runtime_error("Unsupported method");
 }
 
-void MetafileStreamWriter::realPrecisionClearText(float minReal, float maxReal, int digits)
+void ClearTextMetafileWriter::realPrecisionClearText(float minReal, float maxReal, int digits)
 {
-    m_context.funcs.realPrecisionClearText(&m_context, static_cast<double>(minReal), static_cast<double>(maxReal), digits);
+    cgmt_realprec_p(&m_context, static_cast<double>(minReal), static_cast<double>(maxReal), digits);
 }
 
-void MetafileStreamWriter::realPrecisionBinary(RealPrecision prec, int expWidth, int mantWidth)
+void ClearTextMetafileWriter::realPrecisionBinary(RealPrecision prec, int expWidth, int mantWidth)
 {
-    m_context.funcs.realPrecisionBinary(&m_context, static_cast<int>(prec), expWidth, mantWidth);
+    throw std::runtime_error("Unsupported method");
 }
 
-void MetafileStreamWriter::indexPrecisionClearText(int min, int max)
+void ClearTextMetafileWriter::indexPrecisionClearText(int min, int max)
 {
-    m_context.funcs.indexPrecisionClearText(&m_context, min, max);
+    cgmt_indexprec_p(&m_context, min, max);
 }
 
-void MetafileStreamWriter::indexPrecisionBinary(int value)
+void ClearTextMetafileWriter::indexPrecisionBinary(int value)
 {
-    m_context.funcs.indexPrecisionBinary(&m_context, value);
+    throw std::runtime_error("Unsupported method");
 }
 
-void MetafileStreamWriter::colorPrecisionClearText(int max)
+void ClearTextMetafileWriter::colorPrecisionClearText(int max)
 {
-    m_context.funcs.colorPrecisionClearText(&m_context, max);
+    cgmt_colprec_p(&m_context, max);
 }
 
-void MetafileStreamWriter::colorPrecisionBinary(int value)
+void ClearTextMetafileWriter::colorPrecisionBinary(int value)
 {
-    m_context.funcs.colorPrecisionBinary(&m_context, value);
+    throw std::runtime_error("Unsupported method");
 }
 
-void MetafileStreamWriter::colorIndexPrecisionClearText(int max)
+void ClearTextMetafileWriter::colorIndexPrecisionClearText(int max)
 {
-    m_context.funcs.colorIndexPrecisionClearText(&m_context, max);
+    cgmt_cindprec_p(&m_context, max);
 }
 
-void MetafileStreamWriter::colorIndexPrecisionBinary(int value)
+void ClearTextMetafileWriter::colorIndexPrecisionBinary(int value)
 {
-    m_context.funcs.colorIndexPrecisionBinary(&m_context, value);
+    throw std::runtime_error("Unsupported method");
 }
 
-void MetafileStreamWriter::maximumColorIndex(int max)
+void ClearTextMetafileWriter::maximumColorIndex(int max)
 {
-    m_context.funcs.maximumColorIndex(&m_context, max);
+    cgmt_maxcind_p(&m_context, max);
 }
 
-void MetafileStreamWriter::colorValueExtent(int redMin, int redMax, int greenMin, int greenMax, int blueMin,
-    int blueMax)
+void ClearTextMetafileWriter::colorValueExtent(int redMin, int redMax, int greenMin, int greenMax, int blueMin, int blueMax)
 {
-    m_context.funcs.colorValueExtent(&m_context, redMin, redMax, greenMin, greenMax, blueMin, blueMax);
+    cgmt_cvextent_p(&m_context, redMin, redMax, greenMin, greenMax, blueMin, blueMax);
 }
 
-void MetafileStreamWriter::metafileElementList()
+void ClearTextMetafileWriter::metafileElementList()
 {
-    m_context.funcs.metafileElementList(&m_context);
+    cgmt_mfellist_p(&m_context);
 }
 
-void MetafileStreamWriter::metafileDefaultsReplacement()
-{
-    m_context.funcs.metafileDefaultsReplacement(&m_context);
-}
-
-void MetafileStreamWriter::fontList(std::vector<std::string> const &fonts)
+void ClearTextMetafileWriter::fontList(std::vector<std::string> const &fonts)
 {
     std::vector<const char *> fontNames;
+    fontNames.reserve(fonts.size());
     for (const std::string &font : fonts)
     {
         fontNames.push_back(font.c_str());
     }
-    m_context.funcs.fontList(&m_context, static_cast<int>(fonts.size()), fontNames.data());
+    cgmt_fontlist_p(&m_context, static_cast<int>(fonts.size()), fontNames.data());
 }
 
-void MetafileStreamWriter::characterCodingAnnouncer(CharCodeAnnouncer value)
+void ClearTextMetafileWriter::characterCodingAnnouncer(CharCodeAnnouncer value)
 {
-    m_context.funcs.characterCodingAnnouncer(&m_context, static_cast<int>(value));
+    cgmt_cannounce_p(&m_context, static_cast<int>(value));
 }
 
-void MetafileStreamWriter::scaleMode(ScaleMode mode, float value)
+void ClearTextMetafileWriter::scaleMode(ScaleMode mode, float value)
 {
-    m_context.funcs.scalingMode(&m_context, static_cast<int>(mode), static_cast<double>(value));
+    cgmt_scalmode_p(&m_context, static_cast<int>(mode), static_cast<double>(value));
 }
 
-void MetafileStreamWriter::colorMode(ColorMode mode)
+void ClearTextMetafileWriter::colorSelectionMode(ColorMode mode)
 {
-    m_context.funcs.colorMode(&m_context, static_cast<int>(mode));
+    cgmt_colselmode_p(&m_context, static_cast<int>(mode));
 }
 
-void MetafileStreamWriter::lineWidthMode(LineWidthMode mode)
+void ClearTextMetafileWriter::lineWidthSpecificationMode(SpecificationMode mode)
 {
-    m_context.funcs.lineWidthMode(&m_context, static_cast<int>(mode));
+    cgmt_lwsmode_p(&m_context, static_cast<int>(mode));
 }
 
-void MetafileStreamWriter::markerSizeMode(MarkerSizeMode mode)
+void ClearTextMetafileWriter::markerSizeSpecificationMode(SpecificationMode mode)
 {
-    m_context.funcs.markerSizeMode(&m_context, static_cast<int>(mode));
+    cgmt_msmode_p(&m_context, static_cast<int>(mode));
 }
 
-void MetafileStreamWriter::vdcExtent(int llx, int lly, int urx, int ury)
+void ClearTextMetafileWriter::vdcExtent(int llx, int lly, int urx, int ury)
 {
-    m_context.funcs.vdcExtentInt(&m_context, llx, lly, urx, ury);
+    cgmt_vdcextent_p(&m_context, llx, lly, urx, ury);
 }
 
-void MetafileStreamWriter::backgroundColor(int red, int green, int blue)
+void ClearTextMetafileWriter::backgroundColor(int red, int green, int blue)
 {
-    m_context.funcs.backgroundColor(&m_context, red, green, blue);
+    cgmt_backcol_p(&m_context, red, green, blue);
 }
 
-void MetafileStreamWriter::vdcIntegerPrecisionClearText(int min, int max)
+void ClearTextMetafileWriter::vdcIntegerPrecisionClearText(int min, int max)
 {
-    m_context.funcs.vdcIntegerPrecisionClearText(&m_context, min, max);
+    cgmt_vdcintprec_p(&m_context, min, max);
 }
 
-void MetafileStreamWriter::vdcIntegerPrecisionBinary(int value)
+void ClearTextMetafileWriter::vdcIntegerPrecisionBinary(int value)
 {
-    m_context.funcs.vdcIntegerPrecisionBinary(&m_context, value);
+    throw std::runtime_error("Unsupported method");
 }
 
-void MetafileStreamWriter::clipRectangle(int llx, int lly, int urx, int ury)
+void ClearTextMetafileWriter::clipRectangle(int llx, int lly, int urx, int ury)
 {
-    m_context.funcs.clipRectangle(&m_context, llx, lly, urx, ury);
+    cgmt_cliprect_p(&m_context, llx, lly, urx, ury);
 }
 
-void MetafileStreamWriter::clipIndicator(bool enabled)
+void ClearTextMetafileWriter::clipIndicator(bool enabled)
 {
-    m_context.funcs.clipIndicator(&m_context, enabled);
+    cgmt_clipindic_p(&m_context, enabled);
 }
 
-void MetafileStreamWriter::polyline(const std::vector<Point<int> > &points)
+void ClearTextMetafileWriter::polyline(const std::vector<Point<int>> &points)
 {
-    m_context.funcs.polylineInt(&m_context, static_cast<int>(points.size()), points.data());
+    cgmt_pline_pt(&m_context, static_cast<int>(points.size()), points.data());
 }
 
-void MetafileStreamWriter::polymarker(const std::vector<Point<int> > &points)
+void ClearTextMetafileWriter::polymarker(const std::vector<Point<int>> &points)
 {
-    m_context.funcs.polymarkerInt(&m_context, static_cast<int>(points.size()), points.data());
+    cgmt_pmarker_pt(&m_context, static_cast<int>(points.size()), points.data());
 }
 
-void MetafileStreamWriter::text(Point<int> point, TextFlag flag, const char *text)
+void ClearTextMetafileWriter::text(Point<int> point, TextFlag flag, const char *text)
 {
-    m_context.funcs.textInt(&m_context, point.x, point.y, flag == TextFlag::Final, text);
+    cgmt_text_p(&m_context, point.x, point.y, static_cast<int>(flag), text);
 }
 
-void MetafileStreamWriter::polygon(const std::vector<Point<int> > &points)
+void ClearTextMetafileWriter::polygon(const std::vector<Point<int>> &points)
 {
-    m_context.funcs.polygonInt(&m_context, static_cast<int>(points.size()), points.data());
+    cgmt_pgon_pt(&m_context, static_cast<int>(points.size()), points.data());
 }
 
-void MetafileStreamWriter::cellArray(Point<int> c1, Point<int> c2, Point<int> c3, int colorPrecision, int nx, int ny, int *colors)
+void ClearTextMetafileWriter::cellArray(Point<int> c1, Point<int> c2, Point<int> c3, int colorPrecision, int nx, int ny, int *colors)
 {
-    m_context.funcs.cellArray(&m_context, c1.x, c1.y, c2.x, c2.y, c3.x, c3.y, colorPrecision, nx, ny, nx, colors);
+    cgmt_carray_p(&m_context, c1.x, c1.y, c2.x, c2.y, c3.x, c3.y, colorPrecision, nx, ny, nx, colors);
 }
 
-void MetafileStreamWriter::lineType(int value)
+void ClearTextMetafileWriter::lineType(int value)
 {
-    m_context.funcs.lineType(&m_context, value);
+    cgmt_ltype_p(&m_context, value);
 }
 
-void MetafileStreamWriter::lineWidth(float value)
+void ClearTextMetafileWriter::lineWidth(float value)
 {
-    m_context.funcs.lineWidth(&m_context, static_cast<double>(value));
+    cgmt_lwidth_p(&m_context, static_cast<double>(value));
 }
 
-void MetafileStreamWriter::lineColor(int value)
+void ClearTextMetafileWriter::lineColor(int value)
 {
-    m_context.funcs.lineColor(&m_context, value);
+    cgmt_lcolor_p(&m_context, value);
 }
 
-void MetafileStreamWriter::markerType(int value)
+void ClearTextMetafileWriter::markerType(int value)
 {
-    m_context.funcs.markerType(&m_context, value);
+    cgmt_mtype_p(&m_context, value);
 }
 
-void MetafileStreamWriter::markerSize(float value)
+void ClearTextMetafileWriter::markerSize(float value)
 {
-    m_context.funcs.markerSize(&m_context, static_cast<double>(value));
+    cgmt_msize_p(&m_context, static_cast<double>(value));
 }
 
-void MetafileStreamWriter::markerColor(int value)
+void ClearTextMetafileWriter::markerColor(int value)
 {
-    m_context.funcs.markerColor(&m_context, value);
+    cgmt_mcolor_p(&m_context, value);
 }
 
-void MetafileStreamWriter::textFontIndex(int value)
+void ClearTextMetafileWriter::textFontIndex(int value)
 {
-    m_context.funcs.textFontIndex(&m_context, value);
+    cgmt_tfindex_p(&m_context, value);
 }
 
-void MetafileStreamWriter::textPrecision(TextPrecision value)
+void ClearTextMetafileWriter::textPrecision(TextPrecision value)
 {
-    m_context.funcs.textPrecision(&m_context, static_cast<int>(value));
+    cgmt_tprec_p(&m_context, static_cast<int>(value));
 }
 
-void MetafileStreamWriter::charExpansion(float value)
+void ClearTextMetafileWriter::charExpansion(float value)
 {
-    m_context.funcs.charExpansion(&m_context, static_cast<double>(value));
+    cgmt_cexpfac_p(&m_context, static_cast<double>(value));
 }
 
-void MetafileStreamWriter::charSpacing(float value)
+void ClearTextMetafileWriter::charSpacing(float value)
 {
-    m_context.funcs.charSpacing(&m_context, static_cast<double>(value));
+    cgmt_cspace_p(&m_context, static_cast<double>(value));
 }
 
-void MetafileStreamWriter::textColor(int index)
+void ClearTextMetafileWriter::textColor(int index)
 {
-    m_context.funcs.textColor(&m_context, index);
+    cgmt_tcolor_p(&m_context, index);
 }
 
-void MetafileStreamWriter::charHeight(int value)
+void ClearTextMetafileWriter::charHeight(int value)
 {
-    m_context.funcs.charHeight(&m_context, value);
+    cgmt_cheight_p(&m_context, value);
 }
 
-void MetafileStreamWriter::charOrientation(int upX, int upY, int baseX, int baseY)
+void ClearTextMetafileWriter::charOrientation(int upX, int upY, int baseX, int baseY)
 {
-    m_context.funcs.charOrientation(&m_context, upX, upY, baseX, baseY);
+    cgmt_corient_p(&m_context, upX, upY, baseX, baseY);
 }
 
-void MetafileStreamWriter::textPath(TextPath value)
+void ClearTextMetafileWriter::textPath(TextPath value)
 {
-    m_context.funcs.textPath(&m_context, static_cast<int>(value));
+    cgmt_tpath_p(&m_context, static_cast<int>(value));
 }
 
-void MetafileStreamWriter::textAlignment(HorizAlign horiz, VertAlign vert, float contHoriz, float contVert)
+void ClearTextMetafileWriter::textAlignment(HorizAlign horiz, VertAlign vert, float contHoriz, float contVert)
 {
-    m_context.funcs.textAlignment(&m_context, static_cast<int>(horiz), static_cast<int>(vert), static_cast<double>(contHoriz), static_cast<double>(contVert));
+    cgmt_talign_p(&m_context, static_cast<int>(horiz), static_cast<int>(vert), static_cast<double>(contHoriz), static_cast<double>(contVert));
 }
 
-void MetafileStreamWriter::interiorStyle(InteriorStyle value)
+void ClearTextMetafileWriter::interiorStyle(InteriorStyle value)
 {
-    m_context.funcs.interiorStyle(&m_context, static_cast<int>(value));
+    cgmt_intstyle_p(&m_context, static_cast<int>(value));
 }
 
-void MetafileStreamWriter::fillColor(int value)
+void ClearTextMetafileWriter::fillColor(int value)
 {
-    m_context.funcs.fillColor(&m_context, value);
+    cgmt_fillcolor_p(&m_context, value);
 }
 
-void MetafileStreamWriter::hatchIndex(int value)
+void ClearTextMetafileWriter::hatchIndex(int value)
 {
-    m_context.funcs.hatchIndex(&m_context, value);
+    cgmt_hindex_p(&m_context, value);
 }
 
-void MetafileStreamWriter::patternIndex(int value)
+void ClearTextMetafileWriter::patternIndex(int value)
 {
-    m_context.funcs.patternIndex(&m_context, value);
+    cgmt_pindex_p(&m_context, value);
 }
 
-void MetafileStreamWriter::colorTable(int startIndex, std::vector<Color> const &colors)
+void ClearTextMetafileWriter::colorTable(int startIndex, std::vector<Color> const &colors)
 {
-    m_context.funcs.colorTable(&m_context, startIndex, static_cast<int>(colors.size()), colors.data());
+    cgmt_coltab_c(&m_context, startIndex, static_cast<int>(colors.size()), colors.data());
 }
-
-void MetafileStreamWriter::flushBuffer()
-{
-    m_stream.write(m_context.buffer, m_context.buffer_ind);
-    m_context.buffer_ind = 0;
-    m_context.buffer[0] = 0;
-}
-
-void MetafileStreamWriter::flushBufferCb(cgm_context *ctx, void *data)
-{
-    static_cast<MetafileStreamWriter *>(data)->flushBuffer();
-}
-
 }        // namespace
 
 std::unique_ptr<MetafileWriter> create(std::ostream &stream, Encoding enc)

@@ -43,7 +43,7 @@
 /* attributes */
 
 enum 	vdc_enum    {vdc_int, vdc_real};
-enum	cs_enum	    {i_c_mode, d_c_mode};
+enum	cs_enum	    {indexed_color_mode, direct_color_mode};
 enum 	spec_enum   {absolute, scaled}; 
 enum 	bool_enum   {off, on};
 enum 	line_enum   {solid_l = 1, dash, dot_l, dash_dot, dash_d_d};
