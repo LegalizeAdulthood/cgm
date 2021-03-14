@@ -3795,426 +3795,426 @@ namespace cgm
 {
 namespace
 {
-    class MetafileStreamWriter : public MetafileWriter
+class MetafileStreamWriter : public MetafileWriter
+{
+public:
+    MetafileStreamWriter(std::ostream &stream)
+        : m_stream(stream)
+        , m_context{}
     {
-    public:
-        MetafileStreamWriter(std::ostream &stream)
-            : m_stream(stream)
-            , m_context{}
-        {
-            m_context.flush_buffer_context = this;
-            m_context.flush_buffer = flushBufferCb;
+        m_context.flush_buffer_context = this;
+        m_context.flush_buffer = flushBufferCb;
 
-            if (getenv("CGM_SCALE_MODE_METRIC") != nullptr)
-                m_context.mm = 0.19685 / max_coord * 1000;
-            else
-                m_context.mm = 0;
-        }
-
-        void beginMetafile(const char *identifier) override;
-        void endMetafile() override;
-        void beginPicture(char const *identifier) override;
-        void beginPictureBody() override;
-        void endPicture() override;
-        void metafileVersion(int value) override;
-        void metafileDescription(char const *value) override;
-        void vdcType(VdcType type) override;
-        void intPrecisionClearText(int min, int max) override;
-        void intPrecisionBinary(int value) override;
-        void realPrecisionClearText(float minReal, float maxReal, int digits) override;
-        void realPrecisionBinary(RealPrecision prec, int expWidth, int mantWidth) override;
-        void indexPrecisionClearText(int min, int max) override;
-        void indexPrecisionBinary(int value) override;
-        void colorPrecisionClearText(int max) override;
-        void colorPrecisionBinary(int value) override;
-        void colorIndexPrecisionClearText(int max) override;
-        void colorIndexPrecisionBinary(int value) override;
-        void maximumColorIndex(int max) override;
-        void colorValueExtent(int redMin, int redMax, int greenMin, int greenMax, int blueMin,
-            int blueMax) override;
-        void metafileElementList() override;
-        void metafileDefaultsReplacement() override;
-        void fontList(std::vector<std::string> const &fonts) override;
-        void characterCodingAnnouncer(CharCodeAnnouncer value) override;
-        void scaleMode(ScaleMode mode, float value) override;
-        void colorMode(ColorMode mode) override;
-        void lineWidthMode(LineWidthMode mode) override;
-        void markerSizeMode(MarkerSizeMode mode) override;
-        void vdcExtent(int llx, int lly, int urx, int ury) override;
-        void backgroundColor(int red, int green, int blue) override;
-        void vdcIntegerPrecisionClearText(int min, int max) override;
-        void vdcIntegerPrecisionBinary(int value) override;
-        void clipRectangle(int llx, int lly, int urx, int ury) override;
-        void clipIndicator(bool enabled) override;
-        void polyline(const std::vector<Point<int> > &points) override;
-        void polymarker(const std::vector<Point<int> > &points) override;
-        void text(Point<int> point, TextFlag flag, const char *text) override;
-        void polygon(const std::vector<Point<int> > &points) override;
-        void cellArray(Point<int> c1, Point<int> c2, Point<int> c3, int colorPrecision, int nx, int ny, int *colors) override;
-        void lineType(int value) override;
-        void lineWidth(float value) override;
-        void lineColor(int value) override;
-        void markerType(int value) override;
-        void markerSize(float value) override;
-        void markerColor(int value) override;
-        void textFontIndex(int value) override;
-        void textPrecision(TextPrecision value) override;
-        void charExpansion(float value) override;
-        void charSpacing(float value) override;
-        void textColor(int index) override;
-        void charHeight(int value) override;
-        void charOrientation(int upX, int upY, int baseX, int baseY) override;
-        void textPath(TextPath value) override;
-        void textAlignment(HorizAlign horiz, VertAlign vert, float contHoriz, float contVert) override;
-        void interiorStyle(InteriorStyle value) override;
-        void fillColor(int value) override;
-        void hatchIndex(int value) override;
-        void patternIndex(int value) override;
-        void colorTable(int startIndex, std::vector<Color> const &colors) override;
-
-    protected:
-        std::ostream &m_stream;
-        cgm_context m_context;
-
-    private:
-        void flushBuffer();
-        static void flushBufferCb(cgm_context *ctx, void *data);
-    };
-
-    class BinaryMetafileWriter : public MetafileStreamWriter
-    {
-    public:
-        BinaryMetafileWriter(std::ostream &stream)
-            : MetafileStreamWriter(stream)
-        {
-            m_context.encode = cgm_binary;
-            setup_binary_context(&m_context);
-        }
-    };
-
-    class ClearTextMetafileWriter : public MetafileStreamWriter
-    {
-    public:
-        ClearTextMetafileWriter(std::ostream &stream)
-            : MetafileStreamWriter(stream)
-        {
-            m_context.encode = cgm_clear_text;
-            setup_clear_text_context(&m_context);
-        }
-    };
-
-    void MetafileStreamWriter::beginMetafile(const char *identifier)
-    {
-        m_context.funcs.beginMetafile(&m_context, identifier);
+        if (getenv("CGM_SCALE_MODE_METRIC") != nullptr)
+            m_context.mm = 0.19685 / max_coord * 1000;
+        else
+            m_context.mm = 0;
     }
 
-    void MetafileStreamWriter::endMetafile()
-    {
-        m_context.funcs.endMetafile(&m_context);
-    }
+    void beginMetafile(const char *identifier) override;
+    void endMetafile() override;
+    void beginPicture(char const *identifier) override;
+    void beginPictureBody() override;
+    void endPicture() override;
+    void metafileVersion(int value) override;
+    void metafileDescription(char const *value) override;
+    void vdcType(VdcType type) override;
+    void intPrecisionClearText(int min, int max) override;
+    void intPrecisionBinary(int value) override;
+    void realPrecisionClearText(float minReal, float maxReal, int digits) override;
+    void realPrecisionBinary(RealPrecision prec, int expWidth, int mantWidth) override;
+    void indexPrecisionClearText(int min, int max) override;
+    void indexPrecisionBinary(int value) override;
+    void colorPrecisionClearText(int max) override;
+    void colorPrecisionBinary(int value) override;
+    void colorIndexPrecisionClearText(int max) override;
+    void colorIndexPrecisionBinary(int value) override;
+    void maximumColorIndex(int max) override;
+    void colorValueExtent(int redMin, int redMax, int greenMin, int greenMax, int blueMin,
+        int blueMax) override;
+    void metafileElementList() override;
+    void metafileDefaultsReplacement() override;
+    void fontList(std::vector<std::string> const &fonts) override;
+    void characterCodingAnnouncer(CharCodeAnnouncer value) override;
+    void scaleMode(ScaleMode mode, float value) override;
+    void colorMode(ColorMode mode) override;
+    void lineWidthMode(LineWidthMode mode) override;
+    void markerSizeMode(MarkerSizeMode mode) override;
+    void vdcExtent(int llx, int lly, int urx, int ury) override;
+    void backgroundColor(int red, int green, int blue) override;
+    void vdcIntegerPrecisionClearText(int min, int max) override;
+    void vdcIntegerPrecisionBinary(int value) override;
+    void clipRectangle(int llx, int lly, int urx, int ury) override;
+    void clipIndicator(bool enabled) override;
+    void polyline(const std::vector<Point<int> > &points) override;
+    void polymarker(const std::vector<Point<int> > &points) override;
+    void text(Point<int> point, TextFlag flag, const char *text) override;
+    void polygon(const std::vector<Point<int> > &points) override;
+    void cellArray(Point<int> c1, Point<int> c2, Point<int> c3, int colorPrecision, int nx, int ny, int *colors) override;
+    void lineType(int value) override;
+    void lineWidth(float value) override;
+    void lineColor(int value) override;
+    void markerType(int value) override;
+    void markerSize(float value) override;
+    void markerColor(int value) override;
+    void textFontIndex(int value) override;
+    void textPrecision(TextPrecision value) override;
+    void charExpansion(float value) override;
+    void charSpacing(float value) override;
+    void textColor(int index) override;
+    void charHeight(int value) override;
+    void charOrientation(int upX, int upY, int baseX, int baseY) override;
+    void textPath(TextPath value) override;
+    void textAlignment(HorizAlign horiz, VertAlign vert, float contHoriz, float contVert) override;
+    void interiorStyle(InteriorStyle value) override;
+    void fillColor(int value) override;
+    void hatchIndex(int value) override;
+    void patternIndex(int value) override;
+    void colorTable(int startIndex, std::vector<Color> const &colors) override;
 
-    void MetafileStreamWriter::beginPicture(char const *identifier)
-    {
-        m_context.funcs.beginPicture(&m_context, identifier);
-    }
+protected:
+    std::ostream &m_stream;
+    cgm_context m_context;
 
-    void MetafileStreamWriter::beginPictureBody()
-    {
-        m_context.funcs.beginPictureBody(&m_context);
-    }
+private:
+    void flushBuffer();
+    static void flushBufferCb(cgm_context *ctx, void *data);
+};
 
-    void MetafileStreamWriter::endPicture()
+class BinaryMetafileWriter : public MetafileStreamWriter
+{
+public:
+    BinaryMetafileWriter(std::ostream &stream)
+        : MetafileStreamWriter(stream)
     {
-        m_context.funcs.endPicture(&m_context);
+        m_context.encode = cgm_binary;
+        setup_binary_context(&m_context);
     }
+};
 
-    void MetafileStreamWriter::metafileVersion(int value)
+class ClearTextMetafileWriter : public MetafileStreamWriter
+{
+public:
+    ClearTextMetafileWriter(std::ostream &stream)
+        : MetafileStreamWriter(stream)
     {
-        m_context.funcs.metafileVersion(&m_context, value);
+        m_context.encode = cgm_clear_text;
+        setup_clear_text_context(&m_context);
     }
+};
 
-    void MetafileStreamWriter::metafileDescription(char const *value)
-    {
-        m_context.funcs.metafileDescription(&m_context, value);
-    }
+void MetafileStreamWriter::beginMetafile(const char *identifier)
+{
+    m_context.funcs.beginMetafile(&m_context, identifier);
+}
 
-    void MetafileStreamWriter::vdcType(VdcType type)
-    {
-        m_context.funcs.vdcType(&m_context, type);
-    }
+void MetafileStreamWriter::endMetafile()
+{
+    m_context.funcs.endMetafile(&m_context);
+}
 
-    void MetafileStreamWriter::intPrecisionClearText(int min, int max)
-    {
-        m_context.funcs.intPrecisionClearText(&m_context, min, max);
-    }
+void MetafileStreamWriter::beginPicture(char const *identifier)
+{
+    m_context.funcs.beginPicture(&m_context, identifier);
+}
 
-    void MetafileStreamWriter::intPrecisionBinary(int value)
-    {
-        m_context.funcs.intPrecisionBinary(&m_context, value);
-    }
+void MetafileStreamWriter::beginPictureBody()
+{
+    m_context.funcs.beginPictureBody(&m_context);
+}
 
-    void MetafileStreamWriter::realPrecisionClearText(float minReal, float maxReal, int digits)
-    {
-        m_context.funcs.realPrecisionClearText(&m_context, static_cast<double>(minReal), static_cast<double>(maxReal), digits);
-    }
+void MetafileStreamWriter::endPicture()
+{
+    m_context.funcs.endPicture(&m_context);
+}
 
-    void MetafileStreamWriter::realPrecisionBinary(RealPrecision prec, int expWidth, int mantWidth)
-    {
-        m_context.funcs.realPrecisionBinary(&m_context, static_cast<int>(prec), expWidth, mantWidth);
-    }
+void MetafileStreamWriter::metafileVersion(int value)
+{
+    m_context.funcs.metafileVersion(&m_context, value);
+}
 
-    void MetafileStreamWriter::indexPrecisionClearText(int min, int max)
-    {
-        m_context.funcs.indexPrecisionClearText(&m_context, min, max);
-    }
+void MetafileStreamWriter::metafileDescription(char const *value)
+{
+    m_context.funcs.metafileDescription(&m_context, value);
+}
 
-    void MetafileStreamWriter::indexPrecisionBinary(int value)
-    {
-        m_context.funcs.indexPrecisionBinary(&m_context, value);
-    }
+void MetafileStreamWriter::vdcType(VdcType type)
+{
+    m_context.funcs.vdcType(&m_context, type);
+}
 
-    void MetafileStreamWriter::colorPrecisionClearText(int max)
-    {
-        m_context.funcs.colorPrecisionClearText(&m_context, max);
-    }
+void MetafileStreamWriter::intPrecisionClearText(int min, int max)
+{
+    m_context.funcs.intPrecisionClearText(&m_context, min, max);
+}
 
-    void MetafileStreamWriter::colorPrecisionBinary(int value)
-    {
-        m_context.funcs.colorPrecisionBinary(&m_context, value);
-    }
+void MetafileStreamWriter::intPrecisionBinary(int value)
+{
+    m_context.funcs.intPrecisionBinary(&m_context, value);
+}
 
-    void MetafileStreamWriter::colorIndexPrecisionClearText(int max)
-    {
-        m_context.funcs.colorIndexPrecisionClearText(&m_context, max);
-    }
+void MetafileStreamWriter::realPrecisionClearText(float minReal, float maxReal, int digits)
+{
+    m_context.funcs.realPrecisionClearText(&m_context, static_cast<double>(minReal), static_cast<double>(maxReal), digits);
+}
 
-    void MetafileStreamWriter::colorIndexPrecisionBinary(int value)
-    {
-        m_context.funcs.colorIndexPrecisionBinary(&m_context, value);
-    }
+void MetafileStreamWriter::realPrecisionBinary(RealPrecision prec, int expWidth, int mantWidth)
+{
+    m_context.funcs.realPrecisionBinary(&m_context, static_cast<int>(prec), expWidth, mantWidth);
+}
 
-    void MetafileStreamWriter::maximumColorIndex(int max)
-    {
-        m_context.funcs.maximumColorIndex(&m_context, max);
-    }
+void MetafileStreamWriter::indexPrecisionClearText(int min, int max)
+{
+    m_context.funcs.indexPrecisionClearText(&m_context, min, max);
+}
 
-    void MetafileStreamWriter::colorValueExtent(int redMin, int redMax, int greenMin, int greenMax, int blueMin,
-        int blueMax)
-    {
-        m_context.funcs.colorValueExtent(&m_context, redMin, redMax, greenMin, greenMax, blueMin, blueMax);
-    }
+void MetafileStreamWriter::indexPrecisionBinary(int value)
+{
+    m_context.funcs.indexPrecisionBinary(&m_context, value);
+}
 
-    void MetafileStreamWriter::metafileElementList()
-    {
-        m_context.funcs.metafileElementList(&m_context);
-    }
+void MetafileStreamWriter::colorPrecisionClearText(int max)
+{
+    m_context.funcs.colorPrecisionClearText(&m_context, max);
+}
 
-    void MetafileStreamWriter::metafileDefaultsReplacement()
-    {
-        m_context.funcs.metafileDefaultsReplacement(&m_context);
-    }
+void MetafileStreamWriter::colorPrecisionBinary(int value)
+{
+    m_context.funcs.colorPrecisionBinary(&m_context, value);
+}
 
-    void MetafileStreamWriter::fontList(std::vector<std::string> const &fonts)
-    {
-        std::vector<const char *> fontNames;
-        for (const std::string &font : fonts)
-        {
-            fontNames.push_back(font.c_str());
-        }
-        m_context.funcs.fontList(&m_context, static_cast<int>(fonts.size()), fontNames.data());
-    }
+void MetafileStreamWriter::colorIndexPrecisionClearText(int max)
+{
+    m_context.funcs.colorIndexPrecisionClearText(&m_context, max);
+}
 
-    void MetafileStreamWriter::characterCodingAnnouncer(CharCodeAnnouncer value)
-    {
-        m_context.funcs.characterCodingAnnouncer(&m_context, static_cast<int>(value));
-    }
+void MetafileStreamWriter::colorIndexPrecisionBinary(int value)
+{
+    m_context.funcs.colorIndexPrecisionBinary(&m_context, value);
+}
 
-    void MetafileStreamWriter::scaleMode(ScaleMode mode, float value)
-    {
-        m_context.funcs.scalingMode(&m_context, static_cast<int>(mode), static_cast<double>(value));
-    }
+void MetafileStreamWriter::maximumColorIndex(int max)
+{
+    m_context.funcs.maximumColorIndex(&m_context, max);
+}
 
-    void MetafileStreamWriter::colorMode(ColorMode mode)
-    {
-        m_context.funcs.colorMode(&m_context, static_cast<int>(mode));
-    }
+void MetafileStreamWriter::colorValueExtent(int redMin, int redMax, int greenMin, int greenMax, int blueMin,
+    int blueMax)
+{
+    m_context.funcs.colorValueExtent(&m_context, redMin, redMax, greenMin, greenMax, blueMin, blueMax);
+}
 
-    void MetafileStreamWriter::lineWidthMode(LineWidthMode mode)
-    {
-        m_context.funcs.lineWidthMode(&m_context, static_cast<int>(mode));
-    }
+void MetafileStreamWriter::metafileElementList()
+{
+    m_context.funcs.metafileElementList(&m_context);
+}
 
-    void MetafileStreamWriter::markerSizeMode(MarkerSizeMode mode)
-    {
-        m_context.funcs.markerSizeMode(&m_context, static_cast<int>(mode));
-    }
+void MetafileStreamWriter::metafileDefaultsReplacement()
+{
+    m_context.funcs.metafileDefaultsReplacement(&m_context);
+}
 
-    void MetafileStreamWriter::vdcExtent(int llx, int lly, int urx, int ury)
+void MetafileStreamWriter::fontList(std::vector<std::string> const &fonts)
+{
+    std::vector<const char *> fontNames;
+    for (const std::string &font : fonts)
     {
-        m_context.funcs.vdcExtentInt(&m_context, llx, lly, urx, ury);
+        fontNames.push_back(font.c_str());
     }
+    m_context.funcs.fontList(&m_context, static_cast<int>(fonts.size()), fontNames.data());
+}
 
-    void MetafileStreamWriter::backgroundColor(int red, int green, int blue)
-    {
-        m_context.funcs.backgroundColor(&m_context, red, green, blue);
-    }
+void MetafileStreamWriter::characterCodingAnnouncer(CharCodeAnnouncer value)
+{
+    m_context.funcs.characterCodingAnnouncer(&m_context, static_cast<int>(value));
+}
 
-    void MetafileStreamWriter::vdcIntegerPrecisionClearText(int min, int max)
-    {
-        m_context.funcs.vdcIntegerPrecisionClearText(&m_context, min, max);
-    }
+void MetafileStreamWriter::scaleMode(ScaleMode mode, float value)
+{
+    m_context.funcs.scalingMode(&m_context, static_cast<int>(mode), static_cast<double>(value));
+}
 
-    void MetafileStreamWriter::vdcIntegerPrecisionBinary(int value)
-    {
-        m_context.funcs.vdcIntegerPrecisionBinary(&m_context, value);
-    }
+void MetafileStreamWriter::colorMode(ColorMode mode)
+{
+    m_context.funcs.colorMode(&m_context, static_cast<int>(mode));
+}
 
-    void MetafileStreamWriter::clipRectangle(int llx, int lly, int urx, int ury)
-    {
-        m_context.funcs.clipRectangle(&m_context, llx, lly, urx, ury);
-    }
+void MetafileStreamWriter::lineWidthMode(LineWidthMode mode)
+{
+    m_context.funcs.lineWidthMode(&m_context, static_cast<int>(mode));
+}
 
-    void MetafileStreamWriter::clipIndicator(bool enabled)
-    {
-        m_context.funcs.clipIndicator(&m_context, enabled);
-    }
+void MetafileStreamWriter::markerSizeMode(MarkerSizeMode mode)
+{
+    m_context.funcs.markerSizeMode(&m_context, static_cast<int>(mode));
+}
 
-    void MetafileStreamWriter::polyline(const std::vector<Point<int> > &points)
-    {
-        m_context.funcs.polylineInt(&m_context, static_cast<int>(points.size()), points.data());
-    }
+void MetafileStreamWriter::vdcExtent(int llx, int lly, int urx, int ury)
+{
+    m_context.funcs.vdcExtentInt(&m_context, llx, lly, urx, ury);
+}
 
-    void MetafileStreamWriter::polymarker(const std::vector<Point<int> > &points)
-    {
-        m_context.funcs.polymarkerInt(&m_context, static_cast<int>(points.size()), points.data());
-    }
+void MetafileStreamWriter::backgroundColor(int red, int green, int blue)
+{
+    m_context.funcs.backgroundColor(&m_context, red, green, blue);
+}
 
-    void MetafileStreamWriter::text(Point<int> point, TextFlag flag, const char *text)
-    {
-        m_context.funcs.textInt(&m_context, point.x, point.y, flag == TextFlag::Final, text);
-    }
+void MetafileStreamWriter::vdcIntegerPrecisionClearText(int min, int max)
+{
+    m_context.funcs.vdcIntegerPrecisionClearText(&m_context, min, max);
+}
 
-    void MetafileStreamWriter::polygon(const std::vector<Point<int> > &points)
-    {
-        m_context.funcs.polygonInt(&m_context, static_cast<int>(points.size()), points.data());
-    }
+void MetafileStreamWriter::vdcIntegerPrecisionBinary(int value)
+{
+    m_context.funcs.vdcIntegerPrecisionBinary(&m_context, value);
+}
 
-    void MetafileStreamWriter::cellArray(Point<int> c1, Point<int> c2, Point<int> c3, int colorPrecision, int nx, int ny, int *colors)
-    {
-        m_context.funcs.cellArray(&m_context, c1.x, c1.y, c2.x, c2.y, c3.x, c3.y, colorPrecision, nx, ny, nx, colors);
-    }
+void MetafileStreamWriter::clipRectangle(int llx, int lly, int urx, int ury)
+{
+    m_context.funcs.clipRectangle(&m_context, llx, lly, urx, ury);
+}
 
-    void MetafileStreamWriter::lineType(int value)
-    {
-        m_context.funcs.lineType(&m_context, value);
-    }
+void MetafileStreamWriter::clipIndicator(bool enabled)
+{
+    m_context.funcs.clipIndicator(&m_context, enabled);
+}
 
-    void MetafileStreamWriter::lineWidth(float value)
-    {
-        m_context.funcs.lineWidth(&m_context, static_cast<double>(value));
-    }
+void MetafileStreamWriter::polyline(const std::vector<Point<int> > &points)
+{
+    m_context.funcs.polylineInt(&m_context, static_cast<int>(points.size()), points.data());
+}
 
-    void MetafileStreamWriter::lineColor(int value)
-    {
-        m_context.funcs.lineColor(&m_context, value);
-    }
+void MetafileStreamWriter::polymarker(const std::vector<Point<int> > &points)
+{
+    m_context.funcs.polymarkerInt(&m_context, static_cast<int>(points.size()), points.data());
+}
 
-    void MetafileStreamWriter::markerType(int value)
-    {
-        m_context.funcs.markerType(&m_context, value);
-    }
+void MetafileStreamWriter::text(Point<int> point, TextFlag flag, const char *text)
+{
+    m_context.funcs.textInt(&m_context, point.x, point.y, flag == TextFlag::Final, text);
+}
 
-    void MetafileStreamWriter::markerSize(float value)
-    {
-        m_context.funcs.markerSize(&m_context, static_cast<double>(value));
-    }
+void MetafileStreamWriter::polygon(const std::vector<Point<int> > &points)
+{
+    m_context.funcs.polygonInt(&m_context, static_cast<int>(points.size()), points.data());
+}
 
-    void MetafileStreamWriter::markerColor(int value)
-    {
-        m_context.funcs.markerColor(&m_context, value);
-    }
+void MetafileStreamWriter::cellArray(Point<int> c1, Point<int> c2, Point<int> c3, int colorPrecision, int nx, int ny, int *colors)
+{
+    m_context.funcs.cellArray(&m_context, c1.x, c1.y, c2.x, c2.y, c3.x, c3.y, colorPrecision, nx, ny, nx, colors);
+}
 
-    void MetafileStreamWriter::textFontIndex(int value)
-    {
-        m_context.funcs.textFontIndex(&m_context, value);
-    }
+void MetafileStreamWriter::lineType(int value)
+{
+    m_context.funcs.lineType(&m_context, value);
+}
 
-    void MetafileStreamWriter::textPrecision(TextPrecision value)
-    {
-        m_context.funcs.textPrecision(&m_context, static_cast<int>(value));
-    }
+void MetafileStreamWriter::lineWidth(float value)
+{
+    m_context.funcs.lineWidth(&m_context, static_cast<double>(value));
+}
 
-    void MetafileStreamWriter::charExpansion(float value)
-    {
-        m_context.funcs.charExpansion(&m_context, static_cast<double>(value));
-    }
+void MetafileStreamWriter::lineColor(int value)
+{
+    m_context.funcs.lineColor(&m_context, value);
+}
 
-    void MetafileStreamWriter::charSpacing(float value)
-    {
-        m_context.funcs.charSpacing(&m_context, static_cast<double>(value));
-    }
+void MetafileStreamWriter::markerType(int value)
+{
+    m_context.funcs.markerType(&m_context, value);
+}
 
-    void MetafileStreamWriter::textColor(int index)
-    {
-        m_context.funcs.textColor(&m_context, index);
-    }
+void MetafileStreamWriter::markerSize(float value)
+{
+    m_context.funcs.markerSize(&m_context, static_cast<double>(value));
+}
 
-    void MetafileStreamWriter::charHeight(int value)
-    {
-        m_context.funcs.charHeight(&m_context, value);
-    }
+void MetafileStreamWriter::markerColor(int value)
+{
+    m_context.funcs.markerColor(&m_context, value);
+}
 
-    void MetafileStreamWriter::charOrientation(int upX, int upY, int baseX, int baseY)
-    {
-        m_context.funcs.charOrientation(&m_context, upX, upY, baseX, baseY);
-    }
+void MetafileStreamWriter::textFontIndex(int value)
+{
+    m_context.funcs.textFontIndex(&m_context, value);
+}
 
-    void MetafileStreamWriter::textPath(TextPath value)
-    {
-        m_context.funcs.textPath(&m_context, static_cast<int>(value));
-    }
+void MetafileStreamWriter::textPrecision(TextPrecision value)
+{
+    m_context.funcs.textPrecision(&m_context, static_cast<int>(value));
+}
 
-    void MetafileStreamWriter::textAlignment(HorizAlign horiz, VertAlign vert, float contHoriz, float contVert)
-    {
-        m_context.funcs.textAlignment(&m_context, static_cast<int>(horiz), static_cast<int>(vert), static_cast<double>(contHoriz), static_cast<double>(contVert));
-    }
+void MetafileStreamWriter::charExpansion(float value)
+{
+    m_context.funcs.charExpansion(&m_context, static_cast<double>(value));
+}
 
-    void MetafileStreamWriter::interiorStyle(InteriorStyle value)
-    {
-        m_context.funcs.interiorStyle(&m_context, static_cast<int>(value));
-    }
+void MetafileStreamWriter::charSpacing(float value)
+{
+    m_context.funcs.charSpacing(&m_context, static_cast<double>(value));
+}
 
-    void MetafileStreamWriter::fillColor(int value)
-    {
-        m_context.funcs.fillColor(&m_context, value);
-    }
+void MetafileStreamWriter::textColor(int index)
+{
+    m_context.funcs.textColor(&m_context, index);
+}
 
-    void MetafileStreamWriter::hatchIndex(int value)
-    {
-        m_context.funcs.hatchIndex(&m_context, value);
-    }
+void MetafileStreamWriter::charHeight(int value)
+{
+    m_context.funcs.charHeight(&m_context, value);
+}
 
-    void MetafileStreamWriter::patternIndex(int value)
-    {
-        m_context.funcs.patternIndex(&m_context, value);
-    }
+void MetafileStreamWriter::charOrientation(int upX, int upY, int baseX, int baseY)
+{
+    m_context.funcs.charOrientation(&m_context, upX, upY, baseX, baseY);
+}
 
-    void MetafileStreamWriter::colorTable(int startIndex, std::vector<Color> const &colors)
-    {
-        m_context.funcs.colorTable(&m_context, startIndex, static_cast<int>(colors.size()), colors.data());
-    }
+void MetafileStreamWriter::textPath(TextPath value)
+{
+    m_context.funcs.textPath(&m_context, static_cast<int>(value));
+}
 
-    void MetafileStreamWriter::flushBuffer()
-    {
-        m_stream.write(m_context.buffer, m_context.buffer_ind);
-        m_context.buffer_ind = 0;
-        m_context.buffer[0] = 0;
-    }
+void MetafileStreamWriter::textAlignment(HorizAlign horiz, VertAlign vert, float contHoriz, float contVert)
+{
+    m_context.funcs.textAlignment(&m_context, static_cast<int>(horiz), static_cast<int>(vert), static_cast<double>(contHoriz), static_cast<double>(contVert));
+}
 
-    void MetafileStreamWriter::flushBufferCb(cgm_context *ctx, void *data)
-    {
-        static_cast<MetafileStreamWriter *>(data)->flushBuffer();
-    }
+void MetafileStreamWriter::interiorStyle(InteriorStyle value)
+{
+    m_context.funcs.interiorStyle(&m_context, static_cast<int>(value));
+}
+
+void MetafileStreamWriter::fillColor(int value)
+{
+    m_context.funcs.fillColor(&m_context, value);
+}
+
+void MetafileStreamWriter::hatchIndex(int value)
+{
+    m_context.funcs.hatchIndex(&m_context, value);
+}
+
+void MetafileStreamWriter::patternIndex(int value)
+{
+    m_context.funcs.patternIndex(&m_context, value);
+}
+
+void MetafileStreamWriter::colorTable(int startIndex, std::vector<Color> const &colors)
+{
+    m_context.funcs.colorTable(&m_context, startIndex, static_cast<int>(colors.size()), colors.data());
+}
+
+void MetafileStreamWriter::flushBuffer()
+{
+    m_stream.write(m_context.buffer, m_context.buffer_ind);
+    m_context.buffer_ind = 0;
+    m_context.buffer[0] = 0;
+}
+
+void MetafileStreamWriter::flushBufferCb(cgm_context *ctx, void *data)
+{
+    static_cast<MetafileStreamWriter *>(data)->flushBuffer();
+}
 
 }        // namespace
 
