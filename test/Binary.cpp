@@ -15,6 +15,12 @@ int numOf(T (&ary)[N])
     return N;
 }
 
+template <typename T, size_t N>
+size_t arraySize(T (&ary)[N])
+{
+    return N;
+}
+
 enum ElementClass
 {
     Delimiter = 0,
@@ -314,6 +320,8 @@ TEST_CASE("binary encoding")
 {
     std::ostringstream stream;
     std::unique_ptr<cgm::MetafileWriter> writer{create(stream, cgm::Encoding::Binary)};
+    const int pad1 = 1;
+    const int headerLen = 2;
 
     SECTION("begin metafile")
     {
@@ -333,6 +341,7 @@ TEST_CASE("binary encoding")
         writer->endMetafile();
 
         const std::string str = stream.str();
+        REQUIRE(str.size() == 2);
         REQUIRE(header(str) == OpCode{Delimiter, EndMetafile, 0});
     }
     SECTION("begin picture")
@@ -353,6 +362,7 @@ TEST_CASE("binary encoding")
         writer->beginPictureBody();
 
         const std::string str = stream.str();
+        REQUIRE(str.size() == 2);
         REQUIRE(header(str) == OpCode{Delimiter, BeginPictureBody, 0});
     }
     SECTION("end picture")
@@ -360,6 +370,7 @@ TEST_CASE("binary encoding")
         writer->endPicture();
 
         const std::string str = stream.str();
+        REQUIRE(str.size() == 2);
         REQUIRE(header(str) == OpCode{Delimiter, EndPicture, 0});
     }
     SECTION("metafile version")
@@ -367,6 +378,7 @@ TEST_CASE("binary encoding")
         writer->metafileVersion(2);
 
         const std::string str = stream.str();
+        REQUIRE(str.size() == headerLen + 2);
         REQUIRE(header(str) == OpCode{MetafileDescriptor, MetafileVersion, 2});
         REQUIRE(i16(str, 2) == 2);
     }
@@ -376,6 +388,7 @@ TEST_CASE("binary encoding")
         writer->metafileDescription(ident);
 
         const std::string str = stream.str();
+        REQUIRE(str.size() == headerLen + arraySize(ident) + pad1);
         REQUIRE(header(str) == OpCode{MetafileDescriptor, MetafileDescription, numOf(ident)});
         REQUIRE(unpack(str, 2) == ident);
     }
@@ -384,6 +397,7 @@ TEST_CASE("binary encoding")
         writer->vdcType(cgm::VdcType::Integer);
 
         const std::string str = stream.str();
+        REQUIRE(str.size() == headerLen + 2);
         REQUIRE(header(str) == OpCode{MetafileDescriptor, VdcType, 2});
         REQUIRE(i16(str, 2) == 0);
     }
@@ -392,6 +406,7 @@ TEST_CASE("binary encoding")
         writer->vdcType(cgm::VdcType::Real);
 
         const std::string str = stream.str();
+        REQUIRE(str.size() == headerLen + 2);
         REQUIRE(header(str) == OpCode{MetafileDescriptor, VdcType, 2});
         REQUIRE(i16(str, 2) == 1);
     }
@@ -400,6 +415,7 @@ TEST_CASE("binary encoding")
         writer->intPrecisionBinary(32);
 
         const std::string str = stream.str();
+        REQUIRE(str.size() == headerLen + 2);
         REQUIRE(header(str) == OpCode{MetafileDescriptor, IntegerPrecision, 2});
         REQUIRE(i16(str, 2) == 32);
     }
@@ -408,6 +424,7 @@ TEST_CASE("binary encoding")
         writer->realPrecisionBinary(cgm::RealPrecision::Floating, 9, 23);
 
         const std::string str = stream.str();
+        REQUIRE(str.size() == headerLen + 6);
         REQUIRE(header(str) == OpCode{MetafileDescriptor, RealPrecision, 6});
         REQUIRE(i16(str, 2) == 0);
         REQUIRE(i16(str, 4) == 9);
@@ -418,6 +435,7 @@ TEST_CASE("binary encoding")
         writer->indexPrecisionBinary(16);
 
         const std::string str = stream.str();
+        REQUIRE(str.size() == headerLen + 2);
         REQUIRE(header(str) == OpCode{MetafileDescriptor, IndexPrecision, 2});
         REQUIRE(i16(str, 2) == 16);
     }
@@ -426,6 +444,7 @@ TEST_CASE("binary encoding")
         writer->colorPrecisionBinary(16);
 
         const std::string str = stream.str();
+        REQUIRE(str.size() == headerLen + 2);
         REQUIRE(header(str) == OpCode{MetafileDescriptor, ColorPrecision, 2});
         REQUIRE(i16(str, 2) == 16);
     }
@@ -434,6 +453,7 @@ TEST_CASE("binary encoding")
         writer->colorIndexPrecisionBinary(8);
 
         const std::string str = stream.str();
+        REQUIRE(str.size() == headerLen + 2);
         REQUIRE(header(str) == OpCode{MetafileDescriptor, ColorIndexPrecision, 2});
         REQUIRE(i16(str, 2) == 8);
     }
@@ -442,6 +462,7 @@ TEST_CASE("binary encoding")
         writer->maximumColorIndex(63);
 
         const std::string str = stream.str();
+        REQUIRE(str.size() == headerLen + 2);
         REQUIRE(header(str) == OpCode{MetafileDescriptor, MaximumColorIndex, 2});
         REQUIRE(i16(str, 2) == 63);
     }
@@ -450,6 +471,7 @@ TEST_CASE("binary encoding")
         writer->colorValueExtent(0, 63, 2, 31, 4, 15);
 
         const std::string str = stream.str();
+        REQUIRE(str.size() == headerLen + 6);
         REQUIRE(header(str) == OpCode{MetafileDescriptor, ColorValueExtent, 6});
         REQUIRE(i8(str, 2) == 0);
         REQUIRE(i8(str, 3) == 2);
@@ -465,6 +487,7 @@ TEST_CASE("binary encoding")
         const std::string str = stream.str();
         // 31 bytes?  Seems wrong....
         const int paramLength = 31;
+        REQUIRE(str.size() == headerLen + 2 + i16(str, 2));
         REQUIRE(header(str) == OpCode{MetafileDescriptor, MetafileElementList, paramLength});
         int offset = 4;
         for (int value : expectedMetafileElementList)
@@ -488,6 +511,7 @@ TEST_CASE("binary encoding")
 
         const std::string str = stream.str();
         const int paramLength = 30;
+        REQUIRE(str.size() == headerLen + paramLength);
         REQUIRE(header(str) == OpCode{MetafileDescriptor, FontList, paramLength});
         // TODO: is this right?  Shouldn't it be 2 length encoded strings?
         REQUIRE(unpack(str, 2) == "Hershey Simplex Hershey Roman");
@@ -498,6 +522,7 @@ TEST_CASE("binary encoding")
         writer->characterCodingAnnouncer(cgm::CharCodeAnnouncer::Basic8Bit);
 
         const std::string str = stream.str();
+        REQUIRE(str.size() == headerLen + 2);
         REQUIRE(header(str) == OpCode{MetafileDescriptor, CharacterCodingAnnouncer, 2});
         REQUIRE(i16(str, 2) == static_cast<int>(cgm::CharCodeAnnouncer::Basic8Bit));
     }
@@ -508,6 +533,7 @@ TEST_CASE("binary encoding")
             writer->scaleMode(cgm::ScaleMode::Abstract, 1.0f);
 
             const std::string str = stream.str();
+            REQUIRE(str.size() == headerLen + 6);
             REQUIRE(header(str) == OpCode{PictureDescriptor, ScalingMode, 6});
             REQUIRE(i16(str, 2) == static_cast<int>(cgm::ScaleMode::Abstract));
             // TODO: decode 16.16 fixed-point as float
@@ -518,6 +544,7 @@ TEST_CASE("binary encoding")
             writer->scaleMode(cgm::ScaleMode::Metric, 1.0f);
 
             const std::string str = stream.str();
+            REQUIRE(str.size() == headerLen + 6);
             REQUIRE(header(str) == OpCode{PictureDescriptor, ScalingMode, 6});
             REQUIRE(i16(str, 2) == static_cast<int>(cgm::ScaleMode::Metric));
             // TODO: decode 16.16 fixed-point as float
@@ -531,6 +558,7 @@ TEST_CASE("binary encoding")
             writer->colorMode(cgm::ColorMode::Indexed);
 
             const std::string str = stream.str();
+            REQUIRE(str.size() == headerLen + 2);
             REQUIRE(header(str) == OpCode{PictureDescriptor, ColorMode, 2});
             REQUIRE(i16(str, 2) == static_cast<int>(cgm::ColorMode::Indexed));
         }
@@ -539,6 +567,7 @@ TEST_CASE("binary encoding")
             writer->colorMode(cgm::ColorMode::Direct);
 
             const std::string str = stream.str();
+            REQUIRE(str.size() == headerLen + 2);
             REQUIRE(header(str) == OpCode{PictureDescriptor, ColorMode, 2});
             REQUIRE(i16(str, 2) == static_cast<int>(cgm::ColorMode::Direct));
         }
@@ -550,6 +579,7 @@ TEST_CASE("binary encoding")
             writer->lineWidthMode(cgm::LineWidthMode::Absolute);
 
             const std::string str = stream.str();
+            REQUIRE(str.size() == headerLen + 2);
             REQUIRE(header(str) == OpCode{PictureDescriptor, LineWidthMode, 2});
             REQUIRE(i16(str, 2) == static_cast<int>(cgm::LineWidthMode::Absolute));
         }
@@ -558,6 +588,7 @@ TEST_CASE("binary encoding")
             writer->lineWidthMode(cgm::LineWidthMode::Scaled);
 
             const std::string str = stream.str();
+            REQUIRE(str.size() == headerLen + 2);
             REQUIRE(header(str) == OpCode{PictureDescriptor, LineWidthMode, 2});
             REQUIRE(i16(str, 2) == static_cast<int>(cgm::LineWidthMode::Scaled));
         }
@@ -569,6 +600,7 @@ TEST_CASE("binary encoding")
             writer->markerSizeMode(cgm::MarkerSizeMode::Absolute);
 
             const std::string str = stream.str();
+            REQUIRE(str.size() == headerLen + 2);
             REQUIRE(header(str) == OpCode{PictureDescriptor, MarkerSizeMode, 2});
             REQUIRE(i16(str, 2) == static_cast<int>(cgm::MarkerSizeMode::Absolute));
         }
@@ -577,6 +609,7 @@ TEST_CASE("binary encoding")
             writer->markerSizeMode(cgm::MarkerSizeMode::Scaled);
 
             const std::string str = stream.str();
+            REQUIRE(str.size() == headerLen + 2);
             REQUIRE(header(str) == OpCode{PictureDescriptor, MarkerSizeMode, 2});
             REQUIRE(i16(str, 2) == static_cast<int>(cgm::MarkerSizeMode::Scaled));
         }
@@ -587,6 +620,7 @@ TEST_CASE("binary encoding")
         writer->vdcExtent(32, 64, 640, 480);
 
         const std::string str = stream.str();
+        REQUIRE(str.size() == headerLen + 4*2);
         REQUIRE(header(str) == OpCode{PictureDescriptor, VdcExtent, 4*2});
         REQUIRE(i16(str, 2) == 32);
         REQUIRE(i16(str, 4) == 64);
@@ -598,6 +632,7 @@ TEST_CASE("binary encoding")
         writer->backgroundColor(128, 64, 32);
 
         const std::string str = stream.str();
+        REQUIRE(str.size() == headerLen + 3 + pad1);
         REQUIRE(header(str) == OpCode{PictureDescriptor, BackgroundColor, 3});
         REQUIRE(u8(str, 2) == 128);
         REQUIRE(u8(str, 3) == 64);
@@ -608,6 +643,7 @@ TEST_CASE("binary encoding")
         writer->vdcIntegerPrecisionBinary(16);
 
         const std::string str = stream.str();
+        REQUIRE(str.size() == headerLen + 2);
         REQUIRE(header(str) == OpCode{Control, VdcIntegerPrecision, 2});
         REQUIRE(i16(str, 2) == 16);
     }
@@ -619,6 +655,7 @@ TEST_CASE("binary encoding")
         writer->clipRectangle(10, 20, 32, 64);
 
         const std::string str = stream.str();
+        REQUIRE(str.size() == headerLen + 4*2);
         REQUIRE(header(str) == OpCode{Control, ClipRect, 4*2});
         REQUIRE(i16(str, 2) == 10);
         REQUIRE(i16(str, 4) == 20);
@@ -630,6 +667,7 @@ TEST_CASE("binary encoding")
         writer->clipIndicator(true);
 
         const std::string str = stream.str();
+        REQUIRE(str.size() == headerLen + 2);
         REQUIRE(header(str) == OpCode{Control, ClipIndicator, 2});
         REQUIRE(i16(str, 2) == 1);
     }
@@ -640,6 +678,7 @@ TEST_CASE("binary encoding")
         writer->polyline(points);
 
         const std::string str = stream.str();
+        REQUIRE(str.size() == headerLen + 4*2);
         REQUIRE(header(str) == OpCode{Primitive, Polyline, 4*2});
         REQUIRE(i16(str, 2) == 11);
         REQUIRE(i16(str, 4) == 12);
@@ -654,6 +693,7 @@ TEST_CASE("binary encoding")
         writer->polymarker(points);
 
         const std::string str = stream.str();
+        REQUIRE(str.size() == headerLen + 4*2);
         REQUIRE(header(str) == OpCode{Primitive, Polymarker, 4*2});
         REQUIRE(i16(str, 2) == 11);
         REQUIRE(i16(str, 4) == 12);
@@ -666,6 +706,7 @@ TEST_CASE("binary encoding")
         writer->text({10, 11}, cgm::TextFlag::Final, text);
 
         const std::string str = stream.str();
+        REQUIRE(str.size() == headerLen + 3*2 + arraySize(text));
         REQUIRE(header(str) == OpCode{Primitive, Text, 3*2 + numOf(text)});
         REQUIRE(i16(str, 2) == 10);
         REQUIRE(i16(str, 4) == 11);
@@ -681,6 +722,7 @@ TEST_CASE("binary encoding")
         writer->polygon(points);
 
         const std::string str = stream.str();
+        REQUIRE(str.size() == headerLen + 4*2*2);
         REQUIRE(header(str) == OpCode{Primitive, Polygon, 4*2*2});
     }
     // polygon set
@@ -695,6 +737,7 @@ TEST_CASE("binary encoding")
         writer->cellArray({0, 1}, {10, 11}, {20, 21}, 8, 7, 2, cellArray.data());
 
         const std::string str = stream.str();
+        REQUIRE(str.size() == headerLen + 2 + 11*2 + 14);
         REQUIRE(header(str) == OpCode{Primitive, CellArray, 31});
         REQUIRE(i16(str, 2) == 11*2 + 14);
         REQUIRE(i16(str, 4) == 0);
@@ -724,6 +767,7 @@ TEST_CASE("binary encoding")
         writer->lineType(1);
 
         const std::string str = stream.str();
+        REQUIRE(str.size() == headerLen + 2);
         REQUIRE(header(str) == OpCode{Attribute, LineType, 2});
         REQUIRE(i16(str, 2) == 1);
     }
@@ -732,6 +776,7 @@ TEST_CASE("binary encoding")
         writer->lineWidth(1.0f);
 
         const std::string str = stream.str();
+        REQUIRE(str.size() == headerLen + 4);
         REQUIRE(header(str) == OpCode{Attribute, LineWidth, 4});
         // TODO: validate 16p16 width
     }
@@ -740,6 +785,7 @@ TEST_CASE("binary encoding")
         writer->lineColor(6);
 
         const std::string str = stream.str();
+        REQUIRE(str.size() == headerLen + 2);
         REQUIRE(header(str) == OpCode{Attribute, LineColor, 2});
         REQUIRE(i16(str, 2) == 6);
     }
@@ -749,6 +795,7 @@ TEST_CASE("binary encoding")
         writer->markerType(6);
 
         const std::string str = stream.str();
+        REQUIRE(str.size() == headerLen + 2);
         REQUIRE(header(str) == OpCode{Attribute, MarkerType, 2});
         REQUIRE(i16(str, 2) == 6);
     }
@@ -757,6 +804,7 @@ TEST_CASE("binary encoding")
         writer->markerSize(0.1f);
 
         const std::string str = stream.str();
+        REQUIRE(str.size() == headerLen + 4);
         REQUIRE(header(str) == OpCode{Attribute, MarkerSize, 4});
         // TODO validate 16p16 marker size
     }
@@ -765,6 +813,7 @@ TEST_CASE("binary encoding")
         writer->markerColor(6);
 
         const std::string str = stream.str();
+        REQUIRE(str.size() == headerLen + 2);
         REQUIRE(header(str) == OpCode{Attribute, MarkerColor, 2});
         REQUIRE(i16(str, 2) == 6);
     }
@@ -774,6 +823,7 @@ TEST_CASE("binary encoding")
         writer->textFontIndex(6);
 
         const std::string str = stream.str();
+        REQUIRE(str.size() == headerLen + 2);
         REQUIRE(header(str) == OpCode{Attribute, TextFontIndex, 2});
         REQUIRE(i16(str, 2) == 6);
     }
@@ -784,6 +834,7 @@ TEST_CASE("binary encoding")
             writer->textPrecision(cgm::TextPrecision::String);
 
             const std::string str = stream.str();
+            REQUIRE(str.size() == headerLen + 2);
             REQUIRE(header(str) == OpCode{Attribute, TextPrecision, 2});
             REQUIRE(i16(str, 2) == static_cast<int>(cgm::TextPrecision::String));
         }
@@ -792,6 +843,7 @@ TEST_CASE("binary encoding")
             writer->textPrecision(cgm::TextPrecision::Character);
 
             const std::string str = stream.str();
+            REQUIRE(str.size() == headerLen + 2);
             REQUIRE(header(str) == OpCode{Attribute, TextPrecision, 2});
             REQUIRE(i16(str, 2) == static_cast<int>(cgm::TextPrecision::Character));
         }
@@ -800,6 +852,7 @@ TEST_CASE("binary encoding")
             writer->textPrecision(cgm::TextPrecision::Stroke);
 
             const std::string str = stream.str();
+            REQUIRE(str.size() == headerLen + 2);
             REQUIRE(header(str) == OpCode{Attribute, TextPrecision, 2});
             REQUIRE(i16(str, 2) == static_cast<int>(cgm::TextPrecision::Stroke));
         }
@@ -809,6 +862,7 @@ TEST_CASE("binary encoding")
         writer->charExpansion(0.1f);
 
         const std::string str = stream.str();
+        REQUIRE(str.size() == headerLen + 4);
         REQUIRE(header(str) == OpCode{Attribute, CharExpansion, 4});
         // TODO: validate 16p16 char expansion factor
     }
@@ -817,6 +871,7 @@ TEST_CASE("binary encoding")
         writer->charSpacing(0.1f);
 
         const std::string str = stream.str();
+        REQUIRE(str.size() == headerLen + 4);
         REQUIRE(header(str) == OpCode{Attribute, CharSpacing, 4});
         // TODO: validate 16p16 char spacing
     }
@@ -825,6 +880,7 @@ TEST_CASE("binary encoding")
         writer->textColor(6);
 
         const std::string str = stream.str();
+        REQUIRE(str.size() == headerLen + 2);
         REQUIRE(header(str) == OpCode{Attribute, TextColor, 2});
         REQUIRE(i16(str, 2) == 6);
     }
@@ -833,6 +889,7 @@ TEST_CASE("binary encoding")
         writer->charHeight(12);
 
         const std::string str = stream.str();
+        REQUIRE(str.size() == headerLen + 2);
         REQUIRE(header(str) == OpCode{Attribute, CharHeight, 2});
         REQUIRE(i16(str, 2) == 12);
     }
@@ -841,6 +898,7 @@ TEST_CASE("binary encoding")
         writer->charOrientation(0, 1, 2, 3);
 
         const std::string str = stream.str();
+        REQUIRE(str.size() == headerLen + 4*2);
         REQUIRE(header(str) == OpCode{Attribute, CharOrientation, 4*2});
         REQUIRE(i16(str, 2) == 0);
         REQUIRE(i16(str, 4) == 1);
@@ -854,6 +912,7 @@ TEST_CASE("binary encoding")
             writer->textPath(cgm::TextPath::Right);
 
             const std::string str = stream.str();
+            REQUIRE(str.size() == headerLen + 2);
             REQUIRE(header(str) == OpCode{Attribute, TextPath, 2});
             REQUIRE(i16(str, 2) == static_cast<int>(cgm::TextPath::Right));
         }
@@ -862,6 +921,7 @@ TEST_CASE("binary encoding")
             writer->textPath(cgm::TextPath::Left);
 
             const std::string str = stream.str();
+            REQUIRE(str.size() == headerLen + 2);
             REQUIRE(header(str) == OpCode{Attribute, TextPath, 2});
             REQUIRE(i16(str, 2) == static_cast<int>(cgm::TextPath::Left));
         }
@@ -870,6 +930,7 @@ TEST_CASE("binary encoding")
             writer->textPath(cgm::TextPath::Up);
 
             const std::string str = stream.str();
+            REQUIRE(str.size() == headerLen + 2);
             REQUIRE(header(str) == OpCode{Attribute, TextPath, 2});
             REQUIRE(i16(str, 2) == static_cast<int>(cgm::TextPath::Up));
         }
@@ -878,6 +939,7 @@ TEST_CASE("binary encoding")
             writer->textPath(cgm::TextPath::Down);
 
             const std::string str = stream.str();
+            REQUIRE(str.size() == headerLen + 2);
             REQUIRE(header(str) == OpCode{Attribute, TextPath, 2});
             REQUIRE(i16(str, 2) == static_cast<int>(cgm::TextPath::Down));
         }
@@ -889,6 +951,7 @@ TEST_CASE("binary encoding")
             writer->textAlignment(cgm::HorizAlign::Normal, cgm::VertAlign::Normal, 0.1f, 0.2f);
 
             const std::string str = stream.str();
+            REQUIRE(str.size() == headerLen + 2*2 + 2*4);
             REQUIRE(header(str) == OpCode{Attribute, TextAlignment, 2*2 + 2*4});
             REQUIRE(i16(str, 2) == static_cast<int>(cgm::HorizAlign::Normal));
             REQUIRE(i16(str, 4) == static_cast<int>(cgm::VertAlign::Normal));
@@ -899,6 +962,7 @@ TEST_CASE("binary encoding")
             writer->textAlignment(cgm::HorizAlign::Left, cgm::VertAlign::Top, 0.0f, 0.0f);
 
             const std::string str = stream.str();
+            REQUIRE(str.size() == headerLen + 2*2 + 2*4);
             REQUIRE(header(str) == OpCode{Attribute, TextAlignment, 2*2 + 2*4});
             REQUIRE(i16(str, 2) == static_cast<int>(cgm::HorizAlign::Left));
             REQUIRE(i16(str, 4) == static_cast<int>(cgm::VertAlign::Top));
@@ -909,6 +973,7 @@ TEST_CASE("binary encoding")
             writer->textAlignment(cgm::HorizAlign::Center, cgm::VertAlign::Cap, 0.0f, 0.0f);
 
             const std::string str = stream.str();
+            REQUIRE(str.size() == headerLen + 2*2 + 2*4);
             REQUIRE(header(str) == OpCode{Attribute, TextAlignment, 2*2 + 2*4});
             REQUIRE(i16(str, 2) == static_cast<int>(cgm::HorizAlign::Center));
             REQUIRE(i16(str, 4) == static_cast<int>(cgm::VertAlign::Cap));
@@ -919,6 +984,7 @@ TEST_CASE("binary encoding")
             writer->textAlignment(cgm::HorizAlign::Right, cgm::VertAlign::Half, 0.0f, 0.0f);
 
             const std::string str = stream.str();
+            REQUIRE(str.size() == headerLen + 2*2 + 2*4);
             REQUIRE(header(str) == OpCode{Attribute, TextAlignment, 2*2 + 2*4});
             REQUIRE(i16(str, 2) == static_cast<int>(cgm::HorizAlign::Right));
             REQUIRE(i16(str, 4) == static_cast<int>(cgm::VertAlign::Half));
@@ -929,6 +995,7 @@ TEST_CASE("binary encoding")
             writer->textAlignment(cgm::HorizAlign::Continuous, cgm::VertAlign::Base, 0.0f, 0.0f);
 
             const std::string str = stream.str();
+            REQUIRE(str.size() == headerLen + 2*2 + 2*4);
             REQUIRE(header(str) == OpCode{Attribute, TextAlignment, 2*2 + 2*4});
             REQUIRE(i16(str, 2) == static_cast<int>(cgm::HorizAlign::Continuous));
             REQUIRE(i16(str, 4) == static_cast<int>(cgm::VertAlign::Base));
@@ -939,6 +1006,7 @@ TEST_CASE("binary encoding")
             writer->textAlignment(cgm::HorizAlign::Normal, cgm::VertAlign::Bottom, 0.0f, 0.0f);
 
             const std::string str = stream.str();
+            REQUIRE(str.size() == headerLen + 2*2 + 2*4);
             REQUIRE(header(str) == OpCode{Attribute, TextAlignment, 2*2 + 2*4});
             REQUIRE(i16(str, 2) == static_cast<int>(cgm::HorizAlign::Normal));
             REQUIRE(i16(str, 4) == static_cast<int>(cgm::VertAlign::Bottom));
@@ -949,6 +1017,7 @@ TEST_CASE("binary encoding")
             writer->textAlignment(cgm::HorizAlign::Normal, cgm::VertAlign::Continuous, 0.0f, 0.0f);
 
             const std::string str = stream.str();
+            REQUIRE(str.size() == headerLen + 2*2 + 2*4);
             REQUIRE(header(str) == OpCode{Attribute, TextAlignment, 2*2 + 2*4});
             REQUIRE(i16(str, 2) == static_cast<int>(cgm::HorizAlign::Normal));
             REQUIRE(i16(str, 4) == static_cast<int>(cgm::VertAlign::Continuous));
@@ -965,6 +1034,7 @@ TEST_CASE("binary encoding")
             writer->interiorStyle(cgm::InteriorStyle::Hollow);
 
             const std::string str = stream.str();
+            REQUIRE(str.size() == headerLen + 2);
             REQUIRE(header(str) == OpCode{Attribute, InteriorStyle, 2});
             REQUIRE(i16(str, 2) == static_cast<int>(cgm::InteriorStyle::Hollow));
         }
@@ -973,6 +1043,7 @@ TEST_CASE("binary encoding")
             writer->interiorStyle(cgm::InteriorStyle::Solid);
 
             const std::string str = stream.str();
+            REQUIRE(str.size() == headerLen + 2);
             REQUIRE(header(str) == OpCode{Attribute, InteriorStyle, 2});
             REQUIRE(i16(str, 2) == static_cast<int>(cgm::InteriorStyle::Solid));
         }
@@ -981,6 +1052,7 @@ TEST_CASE("binary encoding")
             writer->interiorStyle(cgm::InteriorStyle::Pattern);
 
             const std::string str = stream.str();
+            REQUIRE(str.size() == headerLen + 2);
             REQUIRE(header(str) == OpCode{Attribute, InteriorStyle, 2});
             REQUIRE(i16(str, 2) == static_cast<int>(cgm::InteriorStyle::Pattern));
         }
@@ -989,6 +1061,7 @@ TEST_CASE("binary encoding")
             writer->interiorStyle(cgm::InteriorStyle::Hatch);
 
             const std::string str = stream.str();
+            REQUIRE(str.size() == headerLen + 2);
             REQUIRE(header(str) == OpCode{Attribute, InteriorStyle, 2});
             REQUIRE(i16(str, 2) == static_cast<int>(cgm::InteriorStyle::Hatch));
         }
@@ -1040,6 +1113,7 @@ TEST_CASE("binary encoding")
         writer->colorTable(6, colors);
 
         const std::string str = stream.str();
+        REQUIRE(str.size() == headerLen + 2 + 3*5 + pad1);
         REQUIRE(header(str) == OpCode{Attribute, ColorTable, 2 + 3*5});
         REQUIRE(i16(str, 2) == 6);
         REQUIRE(u8(str, 4) == 0); REQUIRE(u8(str, 5) == 0); REQUIRE(u8(str, 6) == 0);
