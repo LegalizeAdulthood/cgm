@@ -225,7 +225,6 @@ static void cgmb_string(cgm_context *ctx, const char *cptr, int slen)
 }
 
 /* Write a signed integer variable */
-
 static void cgmb_gint(cgm_context *ctx, int xin, int precision)
 {
     char buffer[4]{};
@@ -248,7 +247,6 @@ static void cgmb_gint(cgm_context *ctx, int xin, int precision)
 }
 
 /* Write an unsigned integer variable */
-
 static void cgmb_uint(cgm_context *ctx, unsigned int xin, int precision)
 {
     int i, no_out;
@@ -266,7 +264,6 @@ static void cgmb_uint(cgm_context *ctx, unsigned int xin, int precision)
 }
 
 /* Write fixed point variable */
-
 static void cgmb_fixed(cgm_context *ctx, double xin)
 {
     int exp_part, fract_part;
@@ -286,7 +283,6 @@ static void cgmb_fixed(cgm_context *ctx, double xin)
 }
 
 /* Write IEEE floating point variable */
-
 static void cgmb_float(cgm_context *ctx, double xin)
 {
     unsigned char arry[8];
@@ -492,7 +488,6 @@ static void cgmb_bpage_p(cgm_context *ctx)
 }
 
 /* End picture */
-
 static void cgmb_epage_p(cgm_context *ctx)
 {
     cgmb_start_cmd(ctx, 0, (int) E_Pic);
@@ -502,7 +497,6 @@ static void cgmb_epage_p(cgm_context *ctx)
 }
 
 /* Metafile version */
-
 static void cgmb_mfversion_p(cgm_context *ctx, int version)
 {
     cgmb_start_cmd(ctx, 1, (int) MfVersion);
@@ -514,7 +508,6 @@ static void cgmb_mfversion_p(cgm_context *ctx, int version)
 }
 
 /* Metafile description */
-
 static void cgmb_mfdescrip_p(cgm_context *ctx, const char *descrip)
 {
     cgmb_start_cmd(ctx, 1, MfDescrip);
@@ -526,7 +519,6 @@ static void cgmb_mfdescrip_p(cgm_context *ctx, const char *descrip)
 }
 
 /* VDC type */
-
 static void cgmb_vdctype_p(cgm_context *ctx, cgm::VdcType value)
 {
     cgmb_start_cmd(ctx, 1, (int) vdcType);
@@ -573,7 +565,6 @@ static void cgmb_indexprec_p(cgm_context *ctx, int value)
 }
 
 /* Colour precision */
-
 static void cgmb_colprec_p(cgm_context *ctx, int value)
 {
     cgmb_start_cmd(ctx, 1, (int) ColPrec);
@@ -585,7 +576,6 @@ static void cgmb_colprec_p(cgm_context *ctx, int value)
 }
 
 /* Colour index precision */
-
 static void cgmb_cindprec_p(cgm_context *ctx, int value)
 {
     cgmb_start_cmd(ctx, 1, (int) CIndPrec);
@@ -597,7 +587,6 @@ static void cgmb_cindprec_p(cgm_context *ctx, int value)
 }
 
 /* Colour value extent */
-
 static void cgmb_cvextent_p(cgm_context *ctx, int minRed, int maxRed, int minGreen, int maxGreen, int minBlue, int maxBlue)
 {
     cgmb_start_cmd(ctx, 1, (int) CVExtent);
@@ -614,7 +603,6 @@ static void cgmb_cvextent_p(cgm_context *ctx, int minRed, int maxRed, int minGre
 }
 
 /* Maximum colour index */
-
 static void cgmb_maxcind_p(cgm_context *ctx, int value)
 {
     cgmb_start_cmd(ctx, 1, (int) MaxCInd);
@@ -626,7 +614,6 @@ static void cgmb_maxcind_p(cgm_context *ctx, int value)
 }
 
 /* Metafile element list */
-
 static void cgmb_mfellist_p(cgm_context *ctx)
 {
     int i;
@@ -644,7 +631,6 @@ static void cgmb_mfellist_p(cgm_context *ctx)
 }
 
 /* Font List */
-
 static void cgmb_fontlist_p(cgm_context *ctx, int numFonts, const char *fontNames[])
 {
     register int i, slen;
@@ -674,7 +660,6 @@ static void cgmb_fontlist_p(cgm_context *ctx, int numFonts, const char *fontName
 }
 
 /* Character announcer */
-
 static void cgmb_cannounce_p(cgm_context *ctx, int value)
 {
     cgmb_start_cmd(ctx, 1, (int) CharAnnounce);
@@ -686,7 +671,6 @@ static void cgmb_cannounce_p(cgm_context *ctx, int value)
 }
 
 /* Scaling mode */
-
 static void cgmb_scalmode_p(cgm_context *ctx, int mode, double value)
 {
     cgmb_start_cmd(ctx, 2, (int) ScalMode);
@@ -699,7 +683,6 @@ static void cgmb_scalmode_p(cgm_context *ctx, int mode, double value)
 }
 
 /* Colour selection mode */
-
 static void cgmb_colselmode_p(cgm_context *ctx, int value)
 {
     cgmb_start_cmd(ctx, 2, (int) ColSelMode);
@@ -711,7 +694,6 @@ static void cgmb_colselmode_p(cgm_context *ctx, int value)
 }
 
 /* line width specification mode */
-
 static void cgmb_lwsmode_p(cgm_context *ctx, int value)
 {
     cgmb_start_cmd(ctx, 2, (int) LWidSpecMode);
@@ -723,7 +705,6 @@ static void cgmb_lwsmode_p(cgm_context *ctx, int value)
 }
 
 /* marker size specification mode */
-
 static void cgmb_msmode_p(cgm_context *ctx, int value)
 {
     cgmb_start_cmd(ctx, 2, (int) MarkSizSpecMode);
@@ -735,7 +716,6 @@ static void cgmb_msmode_p(cgm_context *ctx, int value)
 }
 
 /* VDC extent */
-
 static void cgmb_vdcextent_p(cgm_context *ctx, int xmin, int ymin, int xmax, int ymax)
 {
     cgmb_start_cmd(ctx, 2, (int) vdcExtent);
@@ -750,7 +730,6 @@ static void cgmb_vdcextent_p(cgm_context *ctx, int xmin, int ymin, int xmax, int
 }
 
 /* Background colour */
-
 static void cgmb_backcol_p(cgm_context *ctx, int r, int g, int b)
 {
     cgmb_start_cmd(ctx, 2, (int) BackCol);
@@ -764,7 +743,6 @@ static void cgmb_backcol_p(cgm_context *ctx, int r, int g, int b)
 }
 
 /* VDC integer precision */
-
 static void cgmb_vdcintprec_p(cgm_context *ctx, int value)
 {
     cgmb_start_cmd(ctx, 3, (int) vdcIntPrec);
@@ -790,7 +768,6 @@ static void cgmb_cliprect_p(cgm_context *ctx, int llx, int lly, int urx, int ury
 }
 
 /* Clip indicator */
-
 static void cgmb_clipindic_p(cgm_context *ctx, bool clip_ind)
 {
     cgmb_start_cmd(ctx, 3, (int) ClipIndic);
@@ -1205,7 +1182,10 @@ static void cgmb_coltab_c(cgm_context *ctx, int startIndex, int numColors, const
     cgmb_fb(ctx);
 }
 
-static void setup_binary_context(cgm_context *ctx)
+namespace cgm
+{
+
+void setup_binary_context(cgm_context *ctx)
 {
     ctx->beginMetafile = cgmb_begin_p;
     ctx->endMetafile = cgmb_end_p;
@@ -1268,9 +1248,6 @@ static void setup_binary_context(cgm_context *ctx)
 
     ctx->bfr_index = 0;
 }
-
-namespace cgm
-{
 
 BinaryMetafileWriter::BinaryMetafileWriter(std::ostream &stream)
     : MetafileStreamWriter(stream)

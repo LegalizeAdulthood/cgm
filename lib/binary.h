@@ -1,9 +1,13 @@
 #pragma once
 
+#include "context.h"
 #include "stream.h"
 
 namespace cgm
 {
+
+void setup_binary_context(cgm_context *ctx);
+
 class BinaryMetafileWriter : public MetafileStreamWriter
 {
 public:

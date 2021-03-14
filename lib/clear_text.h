@@ -1,9 +1,12 @@
 #pragma once
 
+#include "context.h"
 #include "stream.h"
 
 namespace cgm
 {
+
+void setup_clear_text_context(cgm_context *ctx);
 
 class ClearTextMetafileWriter : public MetafileStreamWriter
 {
