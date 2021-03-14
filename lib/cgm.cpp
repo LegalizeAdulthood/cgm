@@ -3277,13 +3277,13 @@ static char *local_time(void)
 {
     struct tm *time_structure;
     time_t time_val;
-    static char *weekday[7] = {
+    static const char *weekday[7] = {
         "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday",
         "Saturday"
     };
-    static char *month[12] = {
+    static const char *month[12] = {
         "January", "February", "March", "April", "May", "June", "July",
-        "August", "September", "October", "November", "Dezember"
+        "August", "September", "October", "November", "December"
     };
     static char time_string[81];
 
