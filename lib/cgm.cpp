@@ -218,10 +218,6 @@ static void cgmt_fb(cgm_context *ctx)
         ctx->buffer[0] = '\0';
     }
 }
-static void cgmt_fb()
-{
-    cgmt_fb(g_p);
-}
 
 /* Write a character to CGM clear text */
 
@@ -232,10 +228,6 @@ static void cgmt_outc(cgm_context *ctx, char chr)
 
     ctx->buffer[ctx->buffer_ind++] = chr;
     ctx->buffer[ctx->buffer_ind] = '\0';
-}
-static void cgmt_outc(char chr)
-{
-    cgmt_outc(g_p, chr);
 }
 
 /* Write string to CGM clear text */
@@ -252,20 +244,11 @@ static void cgmt_out_string(cgm_context *ctx, const char *string)
     strcat(ctx->buffer, string);
     ctx->buffer_ind = ctx->buffer_ind + static_cast<int>(strlen(string));
 }
-static void cgmt_out_string(char *string)
-{
-    cgmt_out_string(g_p, string);
-}
 
 /* Start output command */
 static void cgmt_start_cmd(cgm_context *p, int cl, int el)
 {
     cgmt_out_string(p, cgmt_cptr[cl][el]);
-}
-
-static void cgmt_start_cmd(int cl, int el)
-{
-    cgmt_start_cmd(g_p, cl, el);
 }
 
 /* Flush output command */
@@ -274,11 +257,6 @@ static void cgmt_flush_cmd(cgm_context *ctx, int this_flush)
 {
     cgmt_outc(ctx, term_char);
     cgmt_fb(ctx);
-}
-
-static void cgmt_flush_cmd(int this_flush)
-{
-    cgmt_flush_cmd(g_p, this_flush);
 }
 
 /* Write a CGM clear text string */
@@ -300,10 +278,6 @@ static void cgmt_string(cgm_context *ctx, const char *cptr, int slen)
     }
 
     cgmt_outc(ctx, quote_char);
-}
-static void cgmt_string(const char *cptr, int slen)
-{
-    cgmt_string(g_p, cptr, slen);
 }
 
 /* Write a signed integer variable */
@@ -350,10 +324,6 @@ static void cgmt_int(cgm_context *ctx, int xin)
 
     cgmt_out_string(ctx, cptr);
 }
-static void cgmt_int(int xin)
-{
-    cgmt_int(g_p, xin);
-}
 
 /* Write a real variable */
 static void cgmt_real(cgm_context *ctx, double xin)
@@ -363,10 +333,6 @@ static void cgmt_real(cgm_context *ctx, double xin)
     sprintf(buffer, " %.6f", xin);
     cgmt_out_string(ctx, buffer);
 }
-static void cgmt_real(double xin)
-{
-    cgmt_real(g_p, xin);
-}
 
 /* Write an integer point */
 static void cgmt_ipoint(cgm_context *ctx, int x, int y)
@@ -375,10 +341,6 @@ static void cgmt_ipoint(cgm_context *ctx, int x, int y)
 
     sprintf(buffer, " %d,%d", x, y);
     cgmt_out_string(ctx, buffer);
-}
-static void cgmt_ipoint(int x, int y)
-{
-    cgmt_ipoint(g_p, x, y);
 }
 
 /* Begin metafile */
@@ -394,11 +356,6 @@ static void cgmt_begin_p(cgm_context *p, const char *comment)
     cgmt_flush_cmd(p, final_flush);
 }
 
-static void cgmt_begin(const char *comment)
-{
-    cgmt_begin_p(g_p, comment);
-}
-
 /* End metafile */
 
 static void cgmt_end_p(cgm_context *ctx)
@@ -408,10 +365,6 @@ static void cgmt_end_p(cgm_context *ctx)
     cgmt_flush_cmd(ctx, final_flush);
 
     cgmt_fb(ctx);
-}
-static void cgmt_end(void)
-{
-    cgmt_end_p(g_p);
 }
 
 /* Begin picture */
@@ -426,10 +379,6 @@ static void cgmt_bp_p(cgm_context *ctx, const char *pic_name)
 
     cgmt_flush_cmd(ctx, final_flush);
 }
-static void cgmt_bp(const char *pic_name)
-{
-    cgmt_bp_p(g_p, pic_name);
-}
 
 /* Begin picture body */
 static void cgmt_bpage_p(cgm_context *ctx)
@@ -438,10 +387,6 @@ static void cgmt_bpage_p(cgm_context *ctx)
 
     cgmt_flush_cmd(ctx, final_flush);
 }
-static void cgmt_bpage(void)
-{
-    cgmt_bpage_p(g_p);
-}
 
 /* End picture */
 static void cgmt_epage_p(cgm_context *ctx)
@@ -449,10 +394,6 @@ static void cgmt_epage_p(cgm_context *ctx)
     cgmt_start_cmd(ctx, 0, (int) E_Pic);
 
     cgmt_flush_cmd(ctx, final_flush);
-}
-static void cgmt_epage(void)
-{
-    cgmt_epage_p(g_p);
 }
 
 /* Metafile version */
@@ -465,10 +406,6 @@ static void cgmt_mfversion_p(cgm_context *ctx, int version)
 
     cgmt_flush_cmd(ctx, final_flush);
 }
-static void cgmt_mfversion()
-{
-    cgmt_mfversion_p(g_p, (int) MfVersion);
-}
 
 /* Metafile description */
 static void cgmt_mfdescrip_p(cgm_context *ctx, const char *descrip)
@@ -478,10 +415,6 @@ static void cgmt_mfdescrip_p(cgm_context *ctx, const char *descrip)
     cgmt_string(ctx, descrip, strlen(descrip));
 
     cgmt_flush_cmd(ctx, final_flush);
-}
-static void cgmt_mfdescrip(void)
-{
-    cgmt_mfdescrip_p(g_p, "GKS 5 CGM Clear Text");
 }
 
 /* VDC type */
@@ -500,10 +433,6 @@ static void cgmt_vdctype_p(cgm_context *ctx, cgm::VdcType value)
 
     cgmt_flush_cmd(ctx, final_flush);
 }
-static void cgmt_vdctype(void)
-{
-    cgmt_vdctype_p(g_p, cgm::VdcType::Integer);
-}
 
 /* Integer precision */
 static void cgmt_intprec_p(cgm_context *ctx, int min, int max)
@@ -514,10 +443,6 @@ static void cgmt_intprec_p(cgm_context *ctx, int min, int max)
     cgmt_int(ctx, max);
 
     cgmt_flush_cmd(ctx, final_flush);
-}
-static void cgmt_intprec()
-{
-    cgmt_intprec_p(g_p, -32768, 32767);
 }
 
 /* Real precision */
@@ -531,10 +456,6 @@ static void cgmt_realprec_p(cgm_context *ctx, double minReal, double maxReal, in
 
     cgmt_flush_cmd(ctx, final_flush);
 }
-static void cgmt_realprec(void)
-{
-    cgmt_realprec_p(g_p, -32768., 32768., 4);
-}
 
 /* Index precision */
 static void cgmt_indexprec_p(cgm_context *ctx, int min, int max)
@@ -546,10 +467,6 @@ static void cgmt_indexprec_p(cgm_context *ctx, int min, int max)
 
     cgmt_flush_cmd(ctx, final_flush);
 }
-static void cgmt_indexprec(void)
-{
-    cgmt_indexprec_p(g_p, -32768, 32767);
-}
 
 /* Colour precision */
 static void cgmt_colprec_p(cgm_context *ctx, int max)
@@ -560,10 +477,6 @@ static void cgmt_colprec_p(cgm_context *ctx, int max)
 
     cgmt_flush_cmd(ctx, final_flush);
 }
-static void cgmt_colprec(void)
-{
-    cgmt_colprec_p(g_p, (1 << cprec) - 1);
-}
 
 /* Colour index precision */
 static void cgmt_cindprec_p(cgm_context *ctx, int max)
@@ -573,10 +486,6 @@ static void cgmt_cindprec_p(cgm_context *ctx, int max)
     cgmt_int(ctx, max);
 
     cgmt_flush_cmd(ctx, final_flush);
-}
-static void cgmt_cindprec(void)
-{
-    cgmt_cindprec_p(g_p, (1 << cxprec) - 1);
 }
 
 /* Colour value extent */
@@ -593,10 +502,6 @@ static void cgmt_cvextent_p(cgm_context *ctx, int minRed, int maxRed, int minGre
 
     cgmt_flush_cmd(ctx, final_flush);
 }
-static void cgmt_cvextent(void)
-{
-    cgmt_cvextent_p(g_p, 0, max_colors - 1, 0, max_colors - 1, 0, max_colors - 1);
-}
 
 /* Maximum colour index */
 static void cgmt_maxcind_p(cgm_context *ctx, int max)
@@ -606,10 +511,6 @@ static void cgmt_maxcind_p(cgm_context *ctx, int max)
     cgmt_int(ctx, max);
 
     cgmt_flush_cmd(ctx, final_flush);
-}
-static void cgmt_maxcind(void)
-{
-    cgmt_maxcind_p(g_p, MAX_COLOR - 1);
 }
 
 /* Metafile element list */
@@ -633,10 +534,6 @@ static void cgmt_mfellist_p(cgm_context *ctx)
     cgmt_outc(ctx, quote_char);
     cgmt_flush_cmd(ctx, final_flush);
 }
-static void cgmt_mfellist(void)
-{
-    cgmt_mfellist_p(g_p);
-}
 
 /* Font List */
 static void cgmt_fontlist_p(cgm_context *ctx, int numFonts, const char **fonts)
@@ -656,15 +553,6 @@ static void cgmt_fontlist_p(cgm_context *ctx, int numFonts, const char **fonts)
 
     cgmt_flush_cmd(ctx, final_flush);
 }
-static void cgmt_fontlist(void)
-{
-    const char *fontNames[max_std_textfont];
-    for (int i = 0; i < max_std_textfont; ++i)
-    {
-        fontNames[i] = fonts[map[i]];
-    }
-    cgmt_fontlist_p(g_p, max_std_textfont, fontNames);
-}
 
 /* Character announcer */
 static void cgmt_cannounce_p(cgm_context *ctx, int value)
@@ -681,10 +569,6 @@ static void cgmt_cannounce_p(cgm_context *ctx, int value)
     cgmt_out_string(ctx, announcerNames[value]);
 
     cgmt_flush_cmd(ctx, final_flush);
-}
-static void cgmt_cannounce(void)
-{
-    cgmt_cannounce_p(g_p, 3);
 }
 
 /* Scaling mode */
@@ -704,10 +588,6 @@ static void cgmt_scalmode_p(cgm_context *ctx, int mode, double value)
 
     cgmt_flush_cmd(ctx, final_flush);
 }
-static void cgmt_scalmode(void)
-{
-    cgmt_scalmode_p(g_p, g_p->mm > 0 ? 1 : 0, g_p->mm);
-}
 
 /* Colour selection mode */
 static void cgmt_colselmode_p(cgm_context *ctx, int mode)
@@ -717,10 +597,6 @@ static void cgmt_colselmode_p(cgm_context *ctx, int mode)
     cgmt_out_string(ctx, mode == 0 ? " Indexed" : " Direct");
 
     cgmt_flush_cmd(ctx, final_flush);
-}
-static void cgmt_colselmode(void)
-{
-    cgmt_colselmode_p(g_p, 0);
 }
 
 /* Line width specification mode */
@@ -732,10 +608,6 @@ static void cgmt_lwsmode_p(cgm_context *ctx, int mode)
 
     cgmt_flush_cmd(ctx, final_flush);
 }
-static void cgmt_lwsmode(void)
-{
-    cgmt_lwsmode_p(g_p, 1);
-}
 
 /* Marker size specification mode */
 static void cgmt_msmode_p(cgm_context *ctx, int mode)
@@ -745,10 +617,6 @@ static void cgmt_msmode_p(cgm_context *ctx, int mode)
     cgmt_out_string(ctx, mode == 0 ? " Absolute" : " Scaled");
 
     cgmt_flush_cmd(ctx, final_flush);
-}
-static void cgmt_msmode(void)
-{
-    cgmt_msmode_p(g_p, 1);
 }
 
 /* VDC extent */
@@ -760,10 +628,6 @@ static void cgmt_vdcextent_p(cgm_context *ctx, int llx, int lly, int urx, int ur
     cgmt_ipoint(ctx, urx, ury);
 
     cgmt_flush_cmd(ctx, final_flush);
-}
-static void cgmt_vdcextent(void)
-{
-    cgmt_vdcextent_p(g_p, 0, 0, g_p->xext, g_p->yext);
 }
 
 /* Background colour */
@@ -777,10 +641,6 @@ static void cgmt_backcol_p(cgm_context *ctx, int red, int green, int blue)
 
     cgmt_flush_cmd(ctx, final_flush);
 }
-static void cgmt_backcol(void)
-{
-    cgmt_backcol_p(g_p, 255, 255, 255);
-}
 
 /* VDC integer precision */
 static void cgmt_vdcintprec_p(cgm_context *ctx, int min, int max)
@@ -791,10 +651,6 @@ static void cgmt_vdcintprec_p(cgm_context *ctx, int min, int max)
     cgmt_int(ctx, max);
 
     cgmt_flush_cmd(ctx, final_flush);
-}
-static void cgmt_vdcintprec(void)
-{
-    cgmt_vdcintprec_p(g_p, -32768, 32767);
 }
 
 /* Clip rectangle */
@@ -807,10 +663,6 @@ static void cgmt_cliprect_p(cgm_context *ctx, int llx, int lly, int urx, int ury
 
     cgmt_flush_cmd(ctx, final_flush);
 }
-static void cgmt_cliprect(int *int_coords)
-{
-    cgmt_cliprect_p(g_p, int_coords[0], int_coords[1], int_coords[2], int_coords[3]);
-}
 
 /* Clip indicator */
 static void cgmt_clipindic_p(cgm_context *ctx, bool clip_ind)
@@ -820,10 +672,6 @@ static void cgmt_clipindic_p(cgm_context *ctx, bool clip_ind)
     cgmt_out_string(ctx, clip_ind ? " On" : " Off");
 
     cgmt_flush_cmd(ctx, final_flush);
-}
-static void cgmt_clipindic(bool clip_ind)
-{
-    cgmt_clipindic_p(g_p, clip_ind);
 }
 
 /* Polyline */
@@ -853,10 +701,6 @@ static void cgmt_pline_p(cgm_context *ctx, int no_pairs, int *x1_ptr, int *y1_pt
 
     cgmt_flush_cmd(ctx, final_flush);
 }
-static void cgmt_pline(int no_pairs, int *x1_ptr, int *y1_ptr)
-{
-    cgmt_pline_p(g_p, no_pairs, x1_ptr, y1_ptr);
-}
 
 /* Polymarker */
 static void cgmt_pmarker_pt(cgm_context *ctx, int numPoints, const cgm::Point<int> *points)
@@ -885,10 +729,6 @@ static void cgmt_pmarker_p(cgm_context *ctx, int no_pairs, int *x1_ptr, int *y1_
 
     cgmt_flush_cmd(ctx, final_flush);
 }
-static void cgmt_pmarker(int no_pairs, int *x1_ptr, int *y1_ptr)
-{
-    cgmt_pmarker_p(g_p, no_pairs, x1_ptr, y1_ptr);
-}
 
 /* Text */
 static void cgmt_text_p(cgm_context *ctx, int x, int y, bool final, const char *buffer)
@@ -902,10 +742,6 @@ static void cgmt_text_p(cgm_context *ctx, int x, int y, bool final, const char *
     cgmt_string(ctx, buffer, strlen(buffer));
 
     cgmt_flush_cmd(ctx, final_flush);
-}
-static void cgmt_text(int x, int y, int final, const char *buffer)
-{
-    cgmt_text_p(g_p, x, y, final != 0, buffer);
 }
 
 /* Polygon */
@@ -935,10 +771,6 @@ static void cgmt_pgon_p(cgm_context *ctx, int no_pairs, int *x1_ptr, int *y1_ptr
 
     cgmt_flush_cmd(ctx, final_flush);
 }
-static void cgmt_pgon(int no_pairs, int *x1_ptr, int *y1_ptr)
-{
-    cgmt_pgon_p(g_p, no_pairs, x1_ptr, y1_ptr);
-}
 
 /* Line type */
 static void cgmt_ltype_p(cgm_context *ctx, int line_type)
@@ -948,10 +780,6 @@ static void cgmt_ltype_p(cgm_context *ctx, int line_type)
     cgmt_int(ctx, (int) line_type);
 
     cgmt_flush_cmd(ctx, final_flush);
-}
-static void cgmt_ltype(int line_type)
-{
-    cgmt_ltype_p(g_p, line_type);
 }
 
 /* Line width */
@@ -963,10 +791,6 @@ static void cgmt_lwidth_p(cgm_context *ctx, double rmul)
 
     cgmt_flush_cmd(ctx, final_flush);
 }
-static void cgmt_lwidth(double rmul)
-{
-    cgmt_lwidth_p(g_p, rmul);
-}
 
 /* Line colour */
 static void cgmt_lcolor_p(cgm_context *ctx, int index)
@@ -976,10 +800,6 @@ static void cgmt_lcolor_p(cgm_context *ctx, int index)
     cgmt_int(ctx, index);
 
     cgmt_flush_cmd(ctx, final_flush);
-}
-static void cgmt_lcolour(int index)
-{
-    cgmt_lcolor_p(g_p, index);
 }
 
 /* Marker type */
@@ -991,10 +811,6 @@ static void cgmt_mtype_p(cgm_context *ctx, int marker)
 
     cgmt_flush_cmd(ctx, final_flush);
 }
-static void cgmt_mtype(int marker)
-{
-    cgmt_mtype_p(g_p, marker);
-}
 
 /* Marker size */
 static void cgmt_msize_p(cgm_context *ctx, double rmul)
@@ -1004,10 +820,6 @@ static void cgmt_msize_p(cgm_context *ctx, double rmul)
     cgmt_real(ctx, rmul);
 
     cgmt_flush_cmd(ctx, final_flush);
-}
-static void cgmt_msize(double rmul)
-{
-    cgmt_msize_p(g_p, rmul);
 }
 
 /* Marker colour */
@@ -1019,10 +831,6 @@ static void cgmt_mcolor_p(cgm_context *ctx, int index)
 
     cgmt_flush_cmd(ctx, final_flush);
 }
-static void cgmt_mcolour(int index)
-{
-    cgmt_mcolor_p(g_p, index);
-}
 
 /* Text font index */
 static void cgmt_tfindex_p(cgm_context *ctx, int index)
@@ -1032,10 +840,6 @@ static void cgmt_tfindex_p(cgm_context *ctx, int index)
     cgmt_int(ctx, index);
 
     cgmt_flush_cmd(ctx, final_flush);
-}
-static void cgmt_tfindex(int index)
-{
-    cgmt_tfindex_p(g_p, index);
 }
 
 /* Text precision */
@@ -1060,10 +864,6 @@ static void cgmt_tprec_p(cgm_context *ctx, int precision)
 
     cgmt_flush_cmd(ctx, final_flush);
 }
-static void cgmt_tprec(int precision)
-{
-    cgmt_tprec_p(g_p, precision);
-}
 
 /* Character expansion factor */
 static void cgmt_cexpfac_p(cgm_context *ctx, double factor)
@@ -1073,10 +873,6 @@ static void cgmt_cexpfac_p(cgm_context *ctx, double factor)
     cgmt_real(ctx, factor);
 
     cgmt_flush_cmd(ctx, final_flush);
-}
-static void cgmt_cexpfac(double factor)
-{
-    cgmt_cexpfac_p(g_p, factor);
 }
 
 /* Character space */
@@ -1088,10 +884,6 @@ static void cgmt_cspace_p(cgm_context *ctx, double space)
 
     cgmt_flush_cmd(ctx, final_flush);
 }
-static void cgmt_cspace(double space)
-{
-    cgmt_cspace_p(g_p, space);
-}
 
 /* Text colour */
 static void cgmt_tcolor_p(cgm_context *ctx, int index)
@@ -1102,10 +894,6 @@ static void cgmt_tcolor_p(cgm_context *ctx, int index)
 
     cgmt_flush_cmd(ctx, final_flush);
 }
-static void cgmt_tcolour(int index)
-{
-    cgmt_tcolor_p(g_p, index);
-}
 
 /* Character height */
 static void cgmt_cheight_p(cgm_context *ctx, int height)
@@ -1115,10 +903,6 @@ static void cgmt_cheight_p(cgm_context *ctx, int height)
     cgmt_int(ctx, height);
 
     cgmt_flush_cmd(ctx, final_flush);
-}
-static void cgmt_cheight(int height)
-{
-    cgmt_cheight_p(g_p, height);
 }
 
 /* Character orientation */
@@ -1132,10 +916,6 @@ static void cgmt_corient_p(cgm_context *ctx, int x_up, int y_up, int x_base, int
     cgmt_int(ctx, y_base);
 
     cgmt_flush_cmd(ctx, final_flush);
-}
-static void cgmt_corient(int x_up, int y_up, int x_base, int y_base)
-{
-    cgmt_corient_p(g_p, x_up, y_up, x_base, y_base);
 }
 
 /* Text path */
@@ -1163,10 +943,6 @@ static void cgmt_tpath_p(cgm_context *ctx, int new_path)
     }
 
     cgmt_flush_cmd(ctx, final_flush);
-}
-static void cgmt_tpath(int new_path)
-{
-    cgmt_tpath_p(g_p, new_path);
 }
 
 /* Text alignment */
@@ -1233,10 +1009,6 @@ static void cgmt_talign_p(cgm_context *ctx, int hor, int ver, double contHoriz, 
 
     cgmt_flush_cmd(ctx, final_flush);
 }
-static void cgmt_talign(int hor, int ver)
-{
-    cgmt_talign_p(g_p, hor, ver, 0.0, 0.0);
-}
 
 /* Interior style */
 static void cgmt_intstyle_p(cgm_context *ctx, int style)
@@ -1268,10 +1040,6 @@ static void cgmt_intstyle_p(cgm_context *ctx, int style)
 
     cgmt_flush_cmd(ctx, final_flush);
 }
-static void cgmt_intstyle(int style)
-{
-    cgmt_intstyle_p(g_p, style);
-}
 
 /* Fill colour */
 static void cgmt_fillcolor_p(cgm_context *ctx, int index)
@@ -1282,10 +1050,6 @@ static void cgmt_fillcolor_p(cgm_context *ctx, int index)
 
     cgmt_flush_cmd(ctx, final_flush);
 }
-static void cgmt_fillcolour(int index)
-{
-    cgmt_fillcolor_p(g_p, index);
-}
 
 /* Hatch index */
 static void cgmt_hindex_p(cgm_context *ctx, int new_index)
@@ -1294,10 +1058,6 @@ static void cgmt_hindex_p(cgm_context *ctx, int new_index)
     cgmt_int(ctx, new_index);
     cgmt_flush_cmd(ctx, final_flush);
 }
-static void cgmt_hindex(int new_index)
-{
-    cgmt_hindex_p(g_p, new_index);
-}
 
 /* Pattern index */
 static void cgmt_pindex_p(cgm_context *ctx, int new_index)
@@ -1305,10 +1065,6 @@ static void cgmt_pindex_p(cgm_context *ctx, int new_index)
     cgmt_start_cmd(ctx, 5, (int) PatIndex);
     cgmt_int(ctx, new_index);
     cgmt_flush_cmd(ctx, final_flush);
-}
-static void cgmt_pindex(int new_index)
-{
-    cgmt_pindex_p(g_p, new_index);
 }
 
 /* Colour table */
@@ -1345,10 +1101,6 @@ static void cgmt_coltab_p(cgm_context *ctx, int beg_index, int no_entries, doubl
 
     cgmt_flush_cmd(ctx, final_flush);
 }
-static void cgmt_coltab(int beg_index, int no_entries, double *ctab)
-{
-    cgmt_coltab_p(g_p, beg_index, no_entries, ctab);
-}
 
 /* Cell array */
 static void cgmt_carray_p(cgm_context *ctx, int c1x, int c1y, int c2x, int c2y, int c3x, int c3y, int colorPrecision, int nx, int ny, int dimx, const int *array)
@@ -1381,11 +1133,6 @@ static void cgmt_carray_p(cgm_context *ctx, int c1x, int c1y, int c2x, int c2y, 
 
     cgmt_flush_cmd(ctx, final_flush);
 }
-static void cgmt_carray(int xmin, int xmax, int ymin, int ymax, int dx,
-    int dy, int dimx, const int *array)
-{
-    cgmt_carray_p(g_p, xmin, ymin, xmax, ymax, xmax, ymin, max_colors - 1, dx, dy, dimx, array);
-}
 
 /* Flush output buffer */
 
@@ -1400,10 +1147,6 @@ static void cgmb_fb(cgm_context *ctx)
         ctx->buffer[0] = '\0';
     }
 }
-static void cgmb_fb()
-{
-    cgmb_fb(g_p);
-}
 
 /* Write one byte to buffer */
 
@@ -1413,10 +1156,6 @@ static void cgmb_outc(cgm_context *ctx, char chr)
         cgmb_fb(ctx);
 
     ctx->buffer[ctx->buffer_ind++] = chr;
-}
-static void cgmb_outc(char chr)
-{
-    cgmb_outc(g_p, chr);
 }
 
 /* Start output command */
@@ -1436,10 +1175,6 @@ static void cgmb_start_cmd(cgm_context *ctx, int cl, int el)
 
 #undef cl_max
 #undef el_max
-}
-static void cgmb_start_cmd(int cl, int el)
-{
-    cgmb_start_cmd(g_p, cl, el);
 }
 
 /* Flush output command */
@@ -1506,10 +1241,6 @@ static void cgmb_flush_cmd(cgm_context *ctx, int this_flush)
     ctx->bfr_index = 0;
     ++ctx->partition;
 }
-static void cgmb_flush_cmd(int this_flush)
-{
-    cgmb_flush_cmd(g_p, this_flush);
-}
 
 /* Write one byte */
 static void cgmb_out_bc(cgm_context *ctx, int c)
@@ -1520,10 +1251,6 @@ static void cgmb_out_bc(cgm_context *ctx, int c)
     }
 
     ctx->cmd_data[ctx->cmd_index++] = c;
-}
-static void cgmb_out_bc(int c)
-{
-    cgmb_out_bc(g_p, c);
 }
 
 /* Write multiple bytes */
@@ -1550,10 +1277,6 @@ static void cgmb_out_bs(cgm_context *ctx, const char *cptr, int n)
     {
         ctx->cmd_data[ctx->cmd_index++] = *cptr++;
     }
-}
-static void cgmb_out_bs(const char *cptr, int n)
-{
-    cgmb_out_bs(g_p, cptr, n);
 }
 
 /* Write a CGM binary string */
@@ -1613,10 +1336,6 @@ static void cgmb_string(cgm_context *ctx, const char *cptr, int slen)
         }
     }
 }
-static void cgmb_string(const char *cptr, int slen)
-{
-    cgmb_string(g_p, cptr, slen);
-}
 
 /* Write a signed integer variable */
 
@@ -1640,10 +1359,6 @@ static void cgmb_gint(cgm_context *ctx, int xin, int precision)
 
     cgmb_out_bs(ctx, buffer, no_out);
 }
-static void cgmb_gint(int xin, int precision)
-{
-    cgmb_gint(g_p, xin, precision);
-}
 
 /* Write an unsigned integer variable */
 
@@ -1661,10 +1376,6 @@ static void cgmb_uint(cgm_context *ctx, unsigned int xin, int precision)
     }
 
     cgmb_out_bs(ctx, (char *) buffer, no_out);
-}
-static void cgmb_uint(unsigned int xin, int precision)
-{
-    cgmb_uint(g_p, xin, precision);
 }
 
 /* Write fixed point variable */
@@ -1685,10 +1396,6 @@ static void cgmb_fixed(cgm_context *ctx, double xin)
 
     cgmb_gint(ctx, exp_part, real_prec_exp);
     cgmb_uint(ctx, fract_part, real_prec_fract);
-}
-static void cgmb_fixed(double xin)
-{
-    cgmb_fixed(g_p, xin);
 }
 
 /* Write IEEE floating point variable */
@@ -1792,19 +1499,11 @@ static void cgmb_float(cgm_context *ctx, double xin)
     }
     }
 }
-static void cgmb_float(double xin)
-{
-    cgmb_float(g_p, xin);
-}
 
 /* Write direct colour value */
 static void cgmb_dcint(cgm_context *ctx, int xin)
 {
     cgmb_uint(ctx, xin, cprec);
-}
-static void cgmb_dcint(int xin)
-{
-    cgmb_dcint(g_p, xin);
 }
 
 /* Write a signed int at VDC integer precision */
@@ -1813,10 +1512,6 @@ static void cgmb_vint(cgm_context *ctx, int xin)
 {
     cgmb_gint(ctx, xin, 16);
 }
-static void cgmb_vint(int xin)
-{
-    cgmb_vint(g_p, xin);
-}
 
 /* Write a standard CGM signed int */
 
@@ -1824,29 +1519,17 @@ static void cgmb_sint(cgm_context *ctx, int xin)
 {
     cgmb_gint(ctx, xin, 16);
 }
-static void cgmb_sint(int xin)
-{
-    cgmb_sint(g_p, xin);
-}
 
 /* Write a signed int at index precision */
 static void cgmb_xint(cgm_context *ctx, int xin)
 {
     cgmb_gint(ctx, xin, 16);
 }
-static void cgmb_xint(int xin)
-{
-    cgmb_xint(g_p, xin);
-}
 
 /* Write an unsigned integer at colour index precision */
 static void cgmb_cxint(cgm_context *ctx, int xin)
 {
     cgmb_uint(ctx, (unsigned) xin, cxprec);
-}
-static void cgmb_cxint(int xin)
-{
-    cgmb_cxint(g_p, xin);
 }
 
 /* Write an integer at fixed (16 bit) precision */
@@ -1860,10 +1543,6 @@ static void cgmb_eint(cgm_context *ctx, int xin)
     byte2 = xin & 255;
     cgmb_out_bc(ctx, byte1);
     cgmb_out_bc(ctx, byte2);
-}
-static void cgmb_eint(int xin)
-{
-    cgmb_eint(g_p, xin);
 }
 
 /* Begin metafile */
@@ -1884,10 +1563,6 @@ static void cgmb_begin_p(cgm_context *ctx, const char *identifier)
 
     cgmb_fb(ctx);
 }
-static void cgmb_begin(const char *comment)
-{
-    cgmb_begin_p(g_p, comment);
-}
 
 /* End metafile */
 static void cgmb_end_p(cgm_context *ctx)
@@ -1900,10 +1575,6 @@ static void cgmb_end_p(cgm_context *ctx)
     /* flush out the buffer */
 
     cgmb_fb(ctx);
-}
-static void cgmb_end(void)
-{
-    cgmb_end_p(g_p);
 }
 
 /* Start picture */
@@ -1923,10 +1594,6 @@ static void cgmb_bp_p(cgm_context *ctx, const char *pic_name)
     cgmb_flush_cmd(ctx, final_flush);
     cgmb_fb(ctx);
 }
-static void cgmb_bp(const char *pic_name)
-{
-    cgmb_bp_p(g_p, pic_name);
-}
 
 /* Start picture body */
 static void cgmb_bpage_p(cgm_context *ctx)
@@ -1935,10 +1602,6 @@ static void cgmb_bpage_p(cgm_context *ctx)
 
     cgmb_flush_cmd(ctx, final_flush);
     cgmb_fb(ctx);
-}
-static void cgmb_bpage()
-{
-    cgmb_bpage_p(g_p);
 }
 
 /* End picture */
@@ -1949,10 +1612,6 @@ static void cgmb_epage_p(cgm_context *ctx)
 
     cgmb_flush_cmd(ctx, final_flush);
     cgmb_fb(ctx);
-}
-static void cgmb_epage()
-{
-    cgmb_epage_p(g_p);
 }
 
 /* Metafile version */
@@ -1966,10 +1625,6 @@ static void cgmb_mfversion_p(cgm_context *ctx, int version)
     cgmb_flush_cmd(ctx, final_flush);
     cgmb_fb(ctx);
 }
-static void cgmb_mfversion()
-{
-    cgmb_mfversion_p(g_p, 1);
-}
 
 /* Metafile description */
 
@@ -1981,10 +1636,6 @@ static void cgmb_mfdescrip_p(cgm_context *ctx, const char *descrip)
 
     cgmb_flush_cmd(ctx, final_flush);
     cgmb_fb(ctx);
-}
-static void cgmb_mfdescrip()
-{
-    cgmb_mfdescrip_p(g_p, "GKS 5 CGM Binary");
 }
 
 /* VDC type */
@@ -1998,10 +1649,6 @@ static void cgmb_vdctype_p(cgm_context *ctx, cgm::VdcType value)
     cgmb_flush_cmd(ctx, final_flush);
     cgmb_fb(ctx);
 }
-static void cgmb_vdctype()
-{
-    cgmb_vdctype_p(g_p, cgm::VdcType::Integer);
-}
 
 /* Integer precision */
 static void cgmb_intprec_p(cgm_context *ctx, int prec)
@@ -2012,10 +1659,6 @@ static void cgmb_intprec_p(cgm_context *ctx, int prec)
 
     cgmb_flush_cmd(ctx, final_flush);
     cgmb_fb(ctx);
-}
-static void cgmb_intprec()
-{
-    cgmb_intprec_p(g_p, 16);
 }
 
 /* Real precision */
@@ -2030,10 +1673,6 @@ static void cgmb_realprec_p(cgm_context *ctx, int prec, int expWidth, int mantWi
     cgmb_flush_cmd(ctx, final_flush);
     cgmb_fb(ctx);
 }
-static void cgmb_realprec(void)
-{
-    cgmb_realprec_p(g_p, 1, 16, 16);
-}
 
 /* Index precision */
 static void cgmb_indexprec_p(cgm_context *ctx, int value)
@@ -2044,10 +1683,6 @@ static void cgmb_indexprec_p(cgm_context *ctx, int value)
 
     cgmb_flush_cmd(ctx, final_flush);
     cgmb_fb(ctx);
-}
-static void cgmb_indexprec(void)
-{
-    cgmb_indexprec_p(g_p, 16);
 }
 
 /* Colour precision */
@@ -2061,10 +1696,6 @@ static void cgmb_colprec_p(cgm_context *ctx, int value)
     cgmb_flush_cmd(ctx, final_flush);
     cgmb_fb(ctx);
 }
-static void cgmb_colprec(void)
-{
-    cgmb_colprec_p(g_p, cprec);
-}
 
 /* Colour index precision */
 
@@ -2076,10 +1707,6 @@ static void cgmb_cindprec_p(cgm_context *ctx, int value)
 
     cgmb_flush_cmd(ctx, final_flush);
     cgmb_fb(ctx);
-}
-static void cgmb_cindprec(void)
-{
-    cgmb_cindprec_p(g_p, cxprec);
 }
 
 /* Colour value extent */
@@ -2098,10 +1725,6 @@ static void cgmb_cvextent_p(cgm_context *ctx, int minRed, int maxRed, int minGre
     cgmb_flush_cmd(ctx, final_flush);
     cgmb_fb(ctx);
 }
-static void cgmb_cvextent(void)
-{
-    cgmb_cvextent_p(g_p, 0, max_colors - 1, 0, max_colors - 1, 0, max_colors - 1);
-}
 
 /* Maximum colour index */
 
@@ -2113,10 +1736,6 @@ static void cgmb_maxcind_p(cgm_context *ctx, int value)
 
     cgmb_flush_cmd(ctx, final_flush);
     cgmb_fb(ctx);
-}
-static void cgmb_maxcind(void)
-{
-    cgmb_maxcind_p(g_p, MAX_COLOR - 1);
 }
 
 /* Metafile element list */
@@ -2135,10 +1754,6 @@ static void cgmb_mfellist_p(cgm_context *ctx)
 
     cgmb_flush_cmd(ctx, final_flush);
     cgmb_fb(ctx);
-}
-static void cgmb_mfellist(void)
-{
-    cgmb_mfellist_p(g_p);
 }
 
 /* Font List */
@@ -2170,15 +1785,6 @@ static void cgmb_fontlist_p(cgm_context *ctx, int numFonts, const char *fontName
     cgmb_fb(ctx);
     free(s);
 }
-static void cgmb_fontlist(void)
-{
-    std::vector<const char *> fontNames;
-    for (int i = 0; i < max_std_textfont; ++i)
-    {
-        fontNames.push_back(fonts[map[i]]);
-    }
-    cgmb_fontlist_p(g_p, max_std_textfont, fontNames.data());
-}
 
 /* Character announcer */
 
@@ -2190,10 +1796,6 @@ static void cgmb_cannounce_p(cgm_context *ctx, int value)
 
     cgmb_flush_cmd(ctx, final_flush);
     cgmb_fb(ctx);
-}
-static void cgmb_cannounce(void)
-{
-    cgmb_cannounce_p(g_p, 3);
 }
 
 /* Scaling mode */
@@ -2208,22 +1810,6 @@ static void cgmb_scalmode_p(cgm_context *ctx, int mode, double value)
     cgmb_flush_cmd(ctx, final_flush);
     cgmb_fb(ctx);
 }
-static void cgmb_scalmode(void)
-{
-    int mode;
-    double value;
-    if (g_p->mm > 0)
-    {
-        mode = 1;
-        value = g_p->mm;
-    }
-    else
-    {
-        mode = 0;
-        value = 0.0;
-    }
-    cgmb_scalmode_p(g_p, mode, value);
-}
 
 /* Colour selection mode */
 
@@ -2235,10 +1821,6 @@ static void cgmb_colselmode_p(cgm_context *ctx, int value)
 
     cgmb_flush_cmd(ctx, final_flush);
     cgmb_fb(ctx);
-}
-static void cgmb_colselmode(void)
-{
-    cgmb_colselmode_p(g_p, (int) indexed_color_mode);
 }
 
 /* line width specification mode */
@@ -2252,10 +1834,6 @@ static void cgmb_lwsmode_p(cgm_context *ctx, int value)
     cgmb_flush_cmd(ctx, final_flush);
     cgmb_fb(ctx);
 }
-static void cgmb_lwsmode(void)
-{
-    cgmb_lwsmode_p(g_p, (int) scaled);
-}
 
 /* marker size specification mode */
 
@@ -2267,10 +1845,6 @@ static void cgmb_msmode_p(cgm_context *ctx, int value)
 
     cgmb_flush_cmd(ctx, final_flush);
     cgmb_fb(ctx);
-}
-static void cgmb_msmode(void)
-{
-    cgmb_msmode_p(g_p, (int) scaled);
 }
 
 /* VDC extent */
@@ -2287,10 +1861,6 @@ static void cgmb_vdcextent_p(cgm_context *ctx, int xmin, int ymin, int xmax, int
     cgmb_flush_cmd(ctx, final_flush);
     cgmb_fb(ctx);
 }
-static void cgmb_vdcextent(void)
-{
-    cgmb_vdcextent_p(g_p, 0, 0, g_p->xext, g_p->yext);
-}
 
 /* Background colour */
 
@@ -2305,10 +1875,6 @@ static void cgmb_backcol_p(cgm_context *ctx, int r, int g, int b)
     cgmb_flush_cmd(ctx, final_flush);
     cgmb_fb(ctx);
 }
-static void cgmb_backcol(void)
-{
-    cgmb_backcol_p(g_p, 255, 255, 255);
-}
 
 /* VDC integer precision */
 
@@ -2320,10 +1886,6 @@ static void cgmb_vdcintprec_p(cgm_context *ctx, int value)
 
     cgmb_flush_cmd(ctx, final_flush);
     cgmb_fb(ctx);
-}
-static void cgmb_vdcintprec()
-{
-    cgmb_vdcintprec_p(g_p, 16);
 }
 
 /* Clip rectangle */
@@ -2339,10 +1901,6 @@ static void cgmb_cliprect_p(cgm_context *ctx, int llx, int lly, int urx, int ury
     cgmb_flush_cmd(ctx, final_flush);
     cgmb_fb(ctx);
 }
-static void cgmb_cliprect(int *int_coords)
-{
-    cgmb_cliprect_p(g_p, int_coords[0], int_coords[1], int_coords[2], int_coords[3]);
-}
 
 /* Clip indicator */
 
@@ -2354,10 +1912,6 @@ static void cgmb_clipindic_p(cgm_context *ctx, bool clip_ind)
 
     cgmb_flush_cmd(ctx, final_flush);
     cgmb_fb(ctx);
-}
-static void cgmb_clipindic(bool clip_ind)
-{
-    cgmb_clipindic_p(g_p, clip_ind);
 }
 
 /* Polyline */
@@ -2391,10 +1945,6 @@ static void cgmb_pline_p(cgm_context *ctx, int no_pairs, int *x1_ptr, int *y1_pt
     cgmb_flush_cmd(ctx, final_flush);
     cgmb_fb(ctx);
 }
-static void cgmb_pline(int no_pairs, int *x1_ptr, int *y1_ptr)
-{
-    cgmb_pline_p(g_p, no_pairs, x1_ptr, y1_ptr);
-}
 
 /* Polymarker */
 static void cgmb_pmarker_pt(cgm_context *ctx, int no_pairs, const cgm::Point<int> *pts)
@@ -2427,10 +1977,6 @@ static void cgmb_pmarker_p(cgm_context *ctx, int no_pairs, int *x1_ptr, int *y1_
     cgmb_flush_cmd(ctx, final_flush);
     cgmb_fb(ctx);
 }
-static void cgmb_pmarker(int no_pairs, int *x1_ptr, int *y1_ptr)
-{
-    cgmb_pmarker_p(g_p, no_pairs, x1_ptr, y1_ptr);
-}
 
 /* Text */
 
@@ -2446,10 +1992,6 @@ static void cgmb_text_p(cgm_context *ctx, int x, int y, bool final, const char *
 
     cgmb_flush_cmd(ctx, final_flush);
     cgmb_fb(ctx);
-}
-static void cgmb_text(int x, int y, int final, const char *buffer)
-{
-    cgmb_text_p(g_p, x, y, final != 0, buffer);
 }
 
 /* Polygon */
@@ -2482,10 +2024,6 @@ static void cgmb_pgon_p(cgm_context *ctx, int no_pairs, int *x1_ptr, int *y1_ptr
 
     cgmb_flush_cmd(ctx, final_flush);
     cgmb_fb(ctx);
-}
-static void cgmb_pgon(int no_pairs, int *x1_ptr, int *y1_ptr)
-{
-    cgmb_pgon_p(g_p, no_pairs, x1_ptr, y1_ptr);
 }
 
 /* Cell array */
@@ -2525,11 +2063,6 @@ static void cgmb_carray_p(cgm_context *ctx, int c1x, int c1y, int c2x, int c2y, 
     cgmb_flush_cmd(ctx, final_flush);
     cgmb_fb(ctx);
 }
-static void cgmb_carray(int xmin, int xmax, int ymin, int ymax, int dx,
-    int dy, int dimx, int *array)
-{
-    cgmb_carray_p(g_p, xmin, xmax, ymin, ymax, xmax, ymin, cprec, dx, dy, dimx, array);
-}
 
 /* Line type */
 
@@ -2541,10 +2074,6 @@ static void cgmb_ltype_p(cgm_context *ctx, int line_type)
 
     cgmb_flush_cmd(ctx, final_flush);
     cgmb_fb(ctx);
-}
-static void cgmb_ltype(int line_type)
-{
-    cgmb_ltype_p(g_p, line_type);
 }
 
 /* Line width */
@@ -2558,10 +2087,6 @@ static void cgmb_lwidth_p(cgm_context *ctx, double rmul)
     cgmb_flush_cmd(ctx, final_flush);
     cgmb_fb(ctx);
 }
-static void cgmb_lwidth(double rmul)
-{
-    cgmb_lwidth_p(g_p, rmul);
-}
 
 /* Line colour */
 
@@ -2573,10 +2098,6 @@ static void cgmb_lcolor_p(cgm_context *ctx, int index)
 
     cgmb_flush_cmd(ctx, final_flush);
     cgmb_fb(ctx);
-}
-static void cgmb_lcolour(int index)
-{
-    cgmb_lcolor_p(g_p, index);
 }
 
 /* Marker type */
@@ -2590,10 +2111,6 @@ static void cgmb_mtype_p(cgm_context *ctx, int marker)
     cgmb_flush_cmd(ctx, final_flush);
     cgmb_fb(ctx);
 }
-static void cgmb_mtype(int marker)
-{
-    cgmb_mtype_p(g_p, marker);
-}
 
 /* Marker size */
 
@@ -2605,10 +2122,6 @@ static void cgmb_msize_p(cgm_context *ctx, double rmul)
 
     cgmb_flush_cmd(ctx, final_flush);
     cgmb_fb(ctx);
-}
-static void cgmb_msize(double rmul)
-{
-    cgmb_msize_p(g_p, rmul);
 }
 
 /* Marker colour */
@@ -2622,10 +2135,6 @@ static void cgmb_mcolor_p(cgm_context *ctx, int index)
     cgmb_flush_cmd(ctx, final_flush);
     cgmb_fb(ctx);
 }
-static void cgmb_mcolour(int index)
-{
-    cgmb_mcolor_p(g_p, index);
-}
 
 /* Text font index */
 
@@ -2637,10 +2146,6 @@ static void cgmb_tfindex_p(cgm_context *ctx, int index)
 
     cgmb_flush_cmd(ctx, final_flush);
     cgmb_fb(ctx);
-}
-static void cgmb_tfindex(int index)
-{
-    cgmb_tfindex_p(g_p, index);
 }
 
 /* Text precision */
@@ -2654,10 +2159,6 @@ static void cgmb_tprec_p(cgm_context *ctx, int precision)
     cgmb_flush_cmd(ctx, final_flush);
     cgmb_fb(ctx);
 }
-static void cgmb_tprec(int precision)
-{
-    cgmb_tprec_p(g_p, precision);
-}
 
 /* Character expansion factor */
 
@@ -2669,10 +2170,6 @@ static void cgmb_cexpfac_p(cgm_context *ctx, double factor)
 
     cgmb_flush_cmd(ctx, final_flush);
     cgmb_fb(ctx);
-}
-static void cgmb_cexpfac(double factor)
-{
-    cgmb_cexpfac_p(g_p, factor);
 }
 
 /* Character space */
@@ -2686,10 +2183,6 @@ static void cgmb_cspace_p(cgm_context *ctx, double space)
     cgmb_flush_cmd(ctx, final_flush);
     cgmb_fb(ctx);
 }
-static void cgmb_cspace(double space)
-{
-    cgmb_cspace_p(g_p, space);
-}
 
 /* Text colour */
 
@@ -2702,10 +2195,6 @@ static void cgmb_tcolor_p(cgm_context *ctx, int index)
     cgmb_flush_cmd(ctx, final_flush);
     cgmb_fb(ctx);
 }
-static void cgmb_tcolour(int index)
-{
-    cgmb_tcolor_p(g_p, index);
-}
 
 /* Character height */
 
@@ -2717,10 +2206,6 @@ static void cgmb_cheight_p(cgm_context *ctx, int height)
 
     cgmb_flush_cmd(ctx, final_flush);
     cgmb_fb(ctx);
-}
-static void cgmb_cheight(int height)
-{
-    cgmb_cheight_p(g_p, height);
 }
 
 /* Character orientation */
@@ -2737,10 +2222,6 @@ static void cgmb_corient_p(cgm_context *ctx, int x_up, int y_up, int x_base, int
     cgmb_flush_cmd(ctx, final_flush);
     cgmb_fb(ctx);
 }
-static void cgmb_corient(int x_up, int y_up, int x_base, int y_base)
-{
-    cgmb_corient_p(g_p, x_up, y_up, x_base, y_base);
-}
 
 /* Text path */
 
@@ -2752,10 +2233,6 @@ static void cgmb_tpath_p(cgm_context *ctx, int new_path)
 
     cgmb_flush_cmd(ctx, final_flush);
     cgmb_fb(ctx);
-}
-static void cgmb_tpath(int new_path)
-{
-    cgmb_tpath_p(g_p, new_path);
 }
 
 /* Text alignment */
@@ -2772,10 +2249,6 @@ static void cgmb_talign_p(cgm_context *ctx, int hor, int ver, double contHoriz, 
     cgmb_flush_cmd(ctx, final_flush);
     cgmb_fb(ctx);
 }
-static void cgmb_talign(int hor, int ver)
-{
-    cgmb_talign_p(g_p, hor, ver, 0., 0.);
-}
 
 /* Interior style */
 
@@ -2787,10 +2260,6 @@ static void cgmb_intstyle_p(cgm_context *ctx, int style)
 
     cgmb_flush_cmd(ctx, final_flush);
     cgmb_fb(ctx);
-}
-static void cgmb_intstyle(int style)
-{
-    cgmb_intstyle_p(g_p, style);
 }
 
 /* Fill colour */
@@ -2804,10 +2273,6 @@ static void cgmb_fillcolor_p(cgm_context *ctx, int index)
     cgmb_flush_cmd(ctx, final_flush);
     cgmb_fb(ctx);
 }
-static void cgmb_fillcolour(int index)
-{
-    cgmb_fillcolor_p(g_p, index);
-}
 
 /* Hatch index */
 
@@ -2820,10 +2285,6 @@ static void cgmb_hindex_p(cgm_context *ctx, int new_index)
     cgmb_flush_cmd(ctx, final_flush);
     cgmb_fb(ctx);
 }
-static void cgmb_hindex(int new_index)
-{
-    cgmb_hindex_p(g_p, new_index);
-}
 
 /* Pattern index */
 
@@ -2835,10 +2296,6 @@ static void cgmb_pindex_p(cgm_context *ctx, int new_index)
 
     cgmb_flush_cmd(ctx, final_flush);
     cgmb_fb(ctx);
-}
-static void cgmb_pindex(int new_index)
-{
-    cgmb_pindex_p(g_p, new_index);
 }
 
 /* Colour table */
@@ -2859,28 +2316,6 @@ static void cgmb_coltab_c(cgm_context *ctx, int startIndex, int numColors, const
 
     cgmb_flush_cmd(ctx, final_flush);
     cgmb_fb(ctx);
-}
-static void cgmb_coltab_p(cgm_context *ctx, int beg_index, int no_entries, double *ctab)
-{
-    int i, j;
-
-    cgmb_start_cmd(ctx, 5, (int) ColTab);
-    cgmb_cxint(ctx, beg_index);
-
-    for (i = beg_index; i < (beg_index + no_entries); ++i)
-    {
-        for (j = 0; j < 3; ++j)
-        {
-            cgmb_dcint(ctx, (int) (ctab[(i - beg_index) * 3 + j] * (max_colors - 1)));
-        }
-    }
-
-    cgmb_flush_cmd(ctx, final_flush);
-    cgmb_fb(ctx);
-}
-static void cgmb_coltab(int beg_index, int no_entries, double *ctab)
-{
-    cgmb_coltab_p(g_p, beg_index, no_entries, ctab);
 }
 
 static void init_color_table(void)
