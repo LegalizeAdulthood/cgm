@@ -1,6 +1,7 @@
 add_library(cgm
     include/cgm/cgm.h
     include/cgm/builder.h
+    context.h
     impl.h
     impl.cpp
     cgm.cpp
@@ -9,6 +10,8 @@ add_library(cgm
     gkscore.cpp
     gksws.h
     gksws.cpp
+    stream.h
+    stream.cpp
     ../ReadMe.md
     )
 target_include_directories(cgm PUBLIC include)

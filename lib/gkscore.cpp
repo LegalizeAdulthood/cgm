@@ -9,6 +9,8 @@
 
 #include "gkscore.h"
 
+#include "impl.h"
+
 namespace
 {
 

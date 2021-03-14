@@ -1,8 +1,6 @@
 #if !defined(GKS_CORE_H)
 #define GKS_CORE_H
 
-#define MAX_COLOR 1256  /* maximum number of predefined colors */
-
 #define Color8Bit(c)                                                         \
   c <= 256 || c >= 980 ? c :                                                 \
   c >= 588 ? 80 + (c - 588) / 56 * 12 + nint((c - 588) % 56 * 11.0 / 56.0) : \

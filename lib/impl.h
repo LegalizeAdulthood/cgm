@@ -1,5 +1,7 @@
 #pragma once
 
+#define MAX_COLOR 1256  /* maximum number of predefined colors */
+
 #define term_char	    ';'		    /* std. terminator character */
 #define quote_char	    '\"'	    /* std. quote character */
 #define max_str		    128		    /* max length of std. strings */
