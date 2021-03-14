@@ -1,6 +1,10 @@
 add_library(cgm
     include/cgm/cgm.h
     include/cgm/builder.h
+    binary.h
+    binary.cpp
+    clear_text.h
+    clear_text.cpp
     context.h
     impl.h
     impl.cpp
