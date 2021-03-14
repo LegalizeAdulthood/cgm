@@ -131,10 +131,13 @@ struct cgm_context
     void (*vdcIntegerPrecisionBinary)(cgm_context *p, int value);
     void (*clipRectangle)(cgm_context *p, int llx, int lly, int urx, int ury);
     void (*clipIndicator)(cgm_context *p, bool clip_ind);
-    void (*polylineInt)(cgm_context *p, int numPoints, const cgm::Point<int> *points);
-    void (*polymarkerInt)(cgm_context *p, int numPoints, const cgm::Point<int> *points);
+    void (*polylineIntPt)(cgm_context *p, int numPoints, const cgm::Point<int> *points);
+    void (*polyline)(cgm_context *ctx, int no_pairs, int *x1_ptr, int *y1_ptr);
+    void (*polymarkerIntPt)(cgm_context *p, int numPoints, const cgm::Point<int> *points);
+    void (*polymarker)(cgm_context *p, int no_pairs, int *x1_ptr, int *y1_ptr);
     void (*textInt)(cgm_context *p, int x, int y, bool flag, const char *text);
-    void (*polygonInt)(cgm_context *p, int numPoints, const cgm::Point<int> *points);
+    void (*polygonIntPt)(cgm_context *p, int numPoints, const cgm::Point<int> *points);
+    void (*polygon)(cgm_context *p, int no_pairs, int *x1_ptr, int *y1_ptr);
     void (*cellArray)(cgm_context *p, int c1x, int c1y, int c2x, int c2y, int c3x, int c3y, int colorPrecision, int nx, int ny, int dimx, const int *colors);
     void (*lineType)(cgm_context *p, int line_type);
     void (*lineWidth)(cgm_context *p, double rmul);
@@ -156,12 +159,6 @@ struct cgm_context
     void (*hatchIndex)(cgm_context *p, int value);
     void (*patternIndex)(cgm_context *p, int value);
     void (*colorTable)(cgm_context *p, int startIndex, int numColors, const cgm::Color *colors);
-
-#if defined(__cplusplus) || defined(c_plusplus)
-    void (*cgm[n_melements])(...); /* cgm functions and procedures */
-#else
-    void (*cgm[n_melements])(); /* cgm functions and procedures */
-#endif
 };
 
 static cgm_context *g_p;
@@ -2996,26 +2993,25 @@ static void set_xform(bool init)
     }
 }
 
-static void output_points(void (*output_func)(int, int *, int *),
-    int n_points, double *x, double *y)
+static void output_points(void (*output_func)(cgm_context *, int, int *, int *),
+    cgm_context *ctx, int n_points, double *x, double *y)
 {
     int i;
     static int x_buffer[max_pbuffer], y_buffer[max_pbuffer];
-    int *d_x_buffer, *d_y_buffer;
 
     set_xform(false);
 
     if (n_points > max_pbuffer)
     {
-        d_x_buffer = (int *) gks_malloc(sizeof(double) * n_points);
-        d_y_buffer = (int *) gks_malloc(sizeof(double) * n_points);
+        int* d_x_buffer = (int*)gks_malloc(sizeof(double) * n_points);
+        int* d_y_buffer = (int*)gks_malloc(sizeof(double) * n_points);
 
         for (i = 0; i < n_points; i++)
         {
             WC_to_VDC(x[i], y[i], &d_x_buffer[i], &d_y_buffer[i]);
         }
 
-        output_func(n_points, d_x_buffer, d_y_buffer);
+        output_func(ctx, n_points, d_x_buffer, d_y_buffer);
 
         free(d_y_buffer);
         free(d_x_buffer);
@@ -3027,7 +3023,7 @@ static void output_points(void (*output_func)(int, int *, int *),
             WC_to_VDC(x[i], y[i], &x_buffer[i], &y_buffer[i]);
         }
 
-        output_func(n_points, x_buffer, y_buffer);
+        output_func(ctx, n_points, x_buffer, y_buffer);
     }
 }
 
@@ -3306,10 +3302,13 @@ static void setup_clear_text_context(cgm_context *ctx)
     ctx->vdcIntegerPrecisionClearText = cgmt_vdcintprec_p;
     ctx->clipRectangle = cgmt_cliprect_p;
     ctx->clipIndicator = cgmt_clipindic_p;
-    ctx->polylineInt = cgmt_pline_pt;
-    ctx->polymarkerInt = cgmt_pmarker_pt;
+    ctx->polylineIntPt = cgmt_pline_pt;
+    ctx->polyline = cgmt_pline_p;
+    ctx->polymarkerIntPt = cgmt_pmarker_pt;
+    ctx->polymarker = cgmt_pmarker_p;
     ctx->textInt = cgmt_text_p;
-    ctx->polygonInt = cgmt_pgon_pt;
+    ctx->polygonIntPt = cgmt_pgon_pt;
+    ctx->polygon = cgmt_pgon_p;
     ctx->cellArray = cgmt_carray_p;
     ctx->lineType = cgmt_ltype_p;
     ctx->lineWidth = cgmt_lwidth_p;
@@ -3331,58 +3330,6 @@ static void setup_clear_text_context(cgm_context *ctx)
     ctx->hatchIndex = cgmt_hindex_p;
     ctx->patternIndex = cgmt_pindex_p;
     ctx->colorTable = cgmt_coltab_c;
-    ctx->cgm[begin] = nullptr;
-    ctx->cgm[end] = nullptr;
-    ctx->cgm[bp] = nullptr;
-    ctx->cgm[bpage] = nullptr;
-    ctx->cgm[epage] = nullptr;
-    ctx->cgm[mfversion] = nullptr;
-    ctx->cgm[mfdescrip] = nullptr;
-    ctx->cgm[vdctype] = nullptr;
-    ctx->cgm[intprec] = nullptr;
-    ctx->cgm[realprec] = nullptr;
-    ctx->cgm[indexprec] = nullptr;
-    ctx->cgm[colprec] = nullptr;
-    ctx->cgm[cindprec] = nullptr;
-    ctx->cgm[cvextent] = nullptr;
-    ctx->cgm[maxcind] = nullptr;
-    ctx->cgm[mfellist] = nullptr;
-    ctx->cgm[fontlist] = nullptr;
-    ctx->cgm[cannounce] = nullptr;
-    ctx->cgm[scalmode] = nullptr;
-    ctx->cgm[colselmode] = nullptr;
-    ctx->cgm[lwsmode] = nullptr;
-    ctx->cgm[msmode] = nullptr;
-    ctx->cgm[vdcextent] = nullptr;
-    ctx->cgm[backcol] = nullptr;
-    ctx->cgm[vdcintprec] = nullptr;
-    ctx->cgm[cliprect] = nullptr;
-    ctx->cgm[clipindic] = nullptr;
-    ctx->cgm[pline] = CGM_FUNC cgmt_pline;
-    ctx->cgm[pmarker] = CGM_FUNC cgmt_pmarker;
-    ctx->cgm[text] = nullptr;
-    ctx->cgm[pgon] = CGM_FUNC cgmt_pgon;
-    ctx->cgm[ltype] = nullptr;
-    ctx->cgm[lwidth] = nullptr;
-    ctx->cgm[lcolour] = nullptr;
-    ctx->cgm[mtype] = nullptr;
-    ctx->cgm[msize] = nullptr;
-    ctx->cgm[mcolour] = nullptr;
-    ctx->cgm[tfindex] = nullptr;
-    ctx->cgm[tprec] = nullptr;
-    ctx->cgm[cexpfac] = nullptr;
-    ctx->cgm[cspace] = nullptr;
-    ctx->cgm[tcolour] = nullptr;
-    ctx->cgm[cheight] = nullptr;
-    ctx->cgm[corient] = nullptr;
-    ctx->cgm[tpath] = nullptr;
-    ctx->cgm[talign] = nullptr;
-    ctx->cgm[intstyle] = nullptr;
-    ctx->cgm[fillcolour] = nullptr;
-    ctx->cgm[hindex] = nullptr;
-    ctx->cgm[pindex] = nullptr;
-    ctx->cgm[coltab] = nullptr;
-    ctx->cgm[carray] = CGM_FUNC cgmt_carray;
 
     ctx->buffer_ind = 0;
     ctx->buffer[0] = '\0';
@@ -3422,10 +3369,13 @@ static void setup_binary_context(cgm_context *ctx)
     ctx->vdcIntegerPrecisionBinary = cgmb_vdcintprec_p;
     ctx->clipRectangle = cgmb_cliprect_p;
     ctx->clipIndicator = cgmb_clipindic_p;
-    ctx->polylineInt = cgmb_pline_pt;
-    ctx->polymarkerInt = cgmb_pmarker_pt;
+    ctx->polylineIntPt = cgmb_pline_pt;
+    ctx->polyline = cgmb_pline_p;
+    ctx->polymarkerIntPt = cgmb_pmarker_pt;
+    ctx->polymarker = cgmb_pmarker_p;
     ctx->textInt = cgmb_text_p;
-    ctx->polygonInt = cgmb_pgon_pt;
+    ctx->polygonIntPt = cgmb_pgon_pt;
+    ctx->polygon = cgmb_pgon_p;
     ctx->cellArray = cgmb_carray_p;
     ctx->lineType = cgmb_ltype_p;
     ctx->lineWidth = cgmb_lwidth_p;
@@ -3447,58 +3397,6 @@ static void setup_binary_context(cgm_context *ctx)
     ctx->hatchIndex = cgmb_hindex_p;
     ctx->patternIndex = cgmb_pindex_p;
     ctx->colorTable = cgmb_coltab_c;
-    ctx->cgm[begin] = nullptr;
-    ctx->cgm[end] = nullptr;
-    ctx->cgm[bp] = nullptr;
-    ctx->cgm[bpage] = nullptr;
-    ctx->cgm[epage] = nullptr;
-    ctx->cgm[mfversion] = nullptr;
-    ctx->cgm[mfdescrip] = nullptr;
-    ctx->cgm[vdctype] = nullptr;
-    ctx->cgm[intprec] = nullptr;
-    ctx->cgm[realprec] = nullptr;
-    ctx->cgm[indexprec] = nullptr;
-    ctx->cgm[colprec] = nullptr;
-    ctx->cgm[cindprec] = nullptr;
-    ctx->cgm[cvextent] = nullptr;
-    ctx->cgm[maxcind] = nullptr;
-    ctx->cgm[mfellist] = nullptr;
-    ctx->cgm[fontlist] = nullptr;
-    ctx->cgm[cannounce] = nullptr;
-    ctx->cgm[scalmode] = nullptr;
-    ctx->cgm[colselmode] = nullptr;
-    ctx->cgm[lwsmode] = nullptr;
-    ctx->cgm[msmode] = nullptr;
-    ctx->cgm[vdcextent] = nullptr;
-    ctx->cgm[backcol] = nullptr;
-    ctx->cgm[vdcintprec] = nullptr;
-    ctx->cgm[cliprect] = nullptr;
-    ctx->cgm[clipindic] = nullptr;
-    ctx->cgm[pline] = CGM_FUNC cgmb_pline;
-    ctx->cgm[pmarker] = CGM_FUNC cgmb_pmarker;
-    ctx->cgm[text] = nullptr;
-    ctx->cgm[pgon] = CGM_FUNC cgmb_pgon;
-    ctx->cgm[ltype] = nullptr;
-    ctx->cgm[lwidth] = nullptr;
-    ctx->cgm[lcolour] = nullptr;
-    ctx->cgm[mtype] = nullptr;
-    ctx->cgm[msize] = nullptr;
-    ctx->cgm[mcolour] = nullptr;
-    ctx->cgm[tfindex] = nullptr;
-    ctx->cgm[tprec] = nullptr;
-    ctx->cgm[cexpfac] = nullptr;
-    ctx->cgm[cspace] = nullptr;
-    ctx->cgm[tcolour] = nullptr;
-    ctx->cgm[cheight] = nullptr;
-    ctx->cgm[corient] = nullptr;
-    ctx->cgm[tpath] = nullptr;
-    ctx->cgm[talign] = nullptr;
-    ctx->cgm[intstyle] = nullptr;
-    ctx->cgm[fillcolour] = nullptr;
-    ctx->cgm[hindex] = nullptr;
-    ctx->cgm[pindex] = nullptr;
-    ctx->cgm[coltab] = nullptr;
-    ctx->cgm[carray] = CGM_FUNC cgmb_carray;
 
     ctx->buffer_ind = 0;
     ctx->buffer[0] = '\0';
@@ -3707,8 +3605,7 @@ static void gks_drv_cgm(Function fctid, int dx, int dy, int dimx, int *ia,
                 cgm_begin_page();
 
             setup_polyline_attributes(false);
-            output_points((void (*)(int, int *, int *)) g_p->cgm[pline],
-                ia[0], r1, r2);
+            output_points(g_p->polyline, g_p, ia[0], r1, r2);
         }
         break;
 
@@ -3719,8 +3616,7 @@ static void gks_drv_cgm(Function fctid, int dx, int dy, int dimx, int *ia,
                 cgm_begin_page();
 
             setup_polymarker_attributes(false);
-            output_points((void (*)(int, int *, int *)) g_p->cgm[pmarker],
-                ia[0], r1, r2);
+            output_points(g_p->polymarker, g_p, ia[0], r1, r2);
         }
         break;
 
@@ -3747,8 +3643,7 @@ static void gks_drv_cgm(Function fctid, int dx, int dy, int dimx, int *ia,
                 cgm_begin_page();
 
             setup_fill_attributes(false);
-            output_points((void (*)(int, int *, int *)) g_p->cgm[pgon],
-                ia[0], r1, r2);
+            output_points(g_p->polygon, g_p, ia[0], r1, r2);
         }
         break;
 
@@ -3765,7 +3660,7 @@ static void gks_drv_cgm(Function fctid, int dx, int dy, int dimx, int *ia,
             WC_to_VDC(r1[0], r2[0], &xmin, &ymin);
             WC_to_VDC(r1[1], r2[1], &xmax, &ymax);
 
-            g_p->cgm[carray](xmin, xmax, ymin, ymax, dx, dy, dimx, ia);
+            g_p->cellArray(g_p, xmin, ymin, xmax, ymax, xmax, ymin, max_colors - 1, dx, dy, dimx, ia);
         }
         break;
 
