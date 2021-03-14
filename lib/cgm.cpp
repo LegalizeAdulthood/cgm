@@ -2318,33 +2318,33 @@ static void cgmb_coltab_c(cgm_context *ctx, int startIndex, int numColors, const
     cgmb_fb(ctx);
 }
 
-static void init_color_table(void)
+static void init_color_table(cgm_context *ctx)
 {
     int i, j;
 
     for (i = 0; i < MAX_COLOR; i++)
     {
         j = i;
-        gks_inq_rgb(j, &g_p->color_t[i * 3], &g_p->color_t[i * 3 + 1],
-            &g_p->color_t[i * 3 + 2]);
+        gks_inq_rgb(j, &ctx->color_t[i * 3], &ctx->color_t[i * 3 + 1],
+            &ctx->color_t[i * 3 + 2]);
     }
 }
 
-static void setup_colors(void)
+static void setup_colors(cgm_context *ctx)
 {
     cgm::Color colorTable[MAX_COLOR];
 
     for (int i = 0; i < MAX_COLOR; ++i)
     {
-        colorTable[i].red = g_p->color_t[3*i + 0];
-        colorTable[i].green = g_p->color_t[3*i + 1];
-        colorTable[i].blue = g_p->color_t[3*i + 2];
+        colorTable[i].red = ctx->color_t[3*i + 0];
+        colorTable[i].green = ctx->color_t[3*i + 1];
+        colorTable[i].blue = ctx->color_t[3*i + 2];
     }
 
-    g_p->colorTable(g_p, 0, MAX_COLOR, &colorTable[0]);
+    ctx->colorTable(ctx, 0, MAX_COLOR, &colorTable[0]);
 }
 
-static void set_xform(bool init)
+static void set_xform(cgm_context *ctx, bool init)
 {
     int errind, tnr;
     double vp_new[4], wn_new[4];
@@ -2357,7 +2357,7 @@ static void set_xform(bool init)
     if (init)
     {
         gks_inq_current_xformno(&errind, &tnr);
-        gks_inq_xform(tnr, &errind, g_p->wn, g_p->vp);
+        gks_inq_xform(tnr, &errind, ctx->wn, ctx->vp);
         gks_inq_clip(&errind, &clip_old, clprt);
     }
 
@@ -2367,24 +2367,24 @@ static void set_xform(bool init)
 
     for (i = 0; i < 4; i++)
     {
-        if (vp_new[i] != g_p->vp[i])
+        if (vp_new[i] != ctx->vp[i])
         {
-            g_p->vp[i] = vp_new[i];
+            ctx->vp[i] = vp_new[i];
             update = true;
         }
-        if (wn_new[i] != g_p->wn[i])
+        if (wn_new[i] != ctx->wn[i])
         {
-            g_p->wn[i] = wn_new[i];
+            ctx->wn[i] = wn_new[i];
             update = true;
         }
     }
 
     if (init || update || (clip_old != clip_new))
     {
-        g_p->xform.a = (vp_new[1] - vp_new[0]) / (wn_new[1] - wn_new[0]);
-        g_p->xform.b = vp_new[0] - wn_new[0] * g_p->xform.a;
-        g_p->xform.c = (vp_new[3] - vp_new[2]) / (wn_new[3] - wn_new[2]);
-        g_p->xform.d = vp_new[2] - wn_new[2] * g_p->xform.c;
+        ctx->xform.a = (vp_new[1] - vp_new[0]) / (wn_new[1] - wn_new[0]);
+        ctx->xform.b = vp_new[0] - wn_new[0] * ctx->xform.a;
+        ctx->xform.c = (vp_new[3] - vp_new[2]) / (wn_new[3] - wn_new[2]);
+        ctx->xform.d = vp_new[2] - wn_new[2] * ctx->xform.c;
 
         if (init)
         {
@@ -2395,12 +2395,12 @@ static void set_xform(bool init)
                 clip_rect[2] = (int) (vp_new[1] * max_coord);
                 clip_rect[3] = (int) (vp_new[3] * max_coord);
 
-                g_p->clipRectangle(g_p, clip_rect[0], clip_rect[1], clip_rect[2], clip_rect[3]);
-                g_p->clipIndicator(g_p, true);
+                ctx->clipRectangle(ctx, clip_rect[0], clip_rect[1], clip_rect[2], clip_rect[3]);
+                ctx->clipIndicator(ctx, true);
             }
             else
             {
-                g_p->clipIndicator(g_p, false);
+                ctx->clipIndicator(ctx, false);
             }
             clip_old = clip_new;
         }
@@ -2415,12 +2415,12 @@ static void set_xform(bool init)
                     clip_rect[2] = (int) (vp_new[1] * max_coord);
                     clip_rect[3] = (int) (vp_new[3] * max_coord);
 
-                    g_p->clipRectangle(g_p, clip_rect[0], clip_rect[1], clip_rect[2], clip_rect[3]);
-                    g_p->clipIndicator(g_p, true);
+                    ctx->clipRectangle(ctx, clip_rect[0], clip_rect[1], clip_rect[2], clip_rect[3]);
+                    ctx->clipIndicator(ctx, true);
                 }
                 else
                 {
-                    g_p->clipIndicator(g_p, false);
+                    ctx->clipIndicator(ctx, false);
                 }
                 clip_old = clip_new;
             }
@@ -2434,7 +2434,7 @@ static void output_points(void (*output_func)(cgm_context *, int, int *, int *),
     int i;
     static int x_buffer[max_pbuffer], y_buffer[max_pbuffer];
 
-    set_xform(false);
+    set_xform(g_p, false);
 
     if (n_points > max_pbuffer)
     {
@@ -2462,16 +2462,16 @@ static void output_points(void (*output_func)(cgm_context *, int, int *, int *),
     }
 }
 
-static void setup_polyline_attributes(bool init)
+static void setup_polyline_attributes(cgm_context *ctx, bool init)
 {
     line_attributes newpline;
     int errind;
 
     if (init)
     {
-        g_p->pline.type = 1;
-        g_p->pline.width = 1.0;
-        g_p->pline.color = 1;
+        ctx->pline.type = 1;
+        ctx->pline.width = 1.0;
+        ctx->pline.color = 1;
     }
     else
     {
@@ -2479,40 +2479,40 @@ static void setup_polyline_attributes(bool init)
         gks_inq_pline_linewidth(&errind, &newpline.width);
         gks_inq_pline_color_index(&errind, &newpline.color);
 
-        if (g_p->encode == cgm_grafkit)
+        if (ctx->encode == cgm_grafkit)
         {
             if (newpline.type < 0)
                 newpline.type = max_std_linetype - newpline.type;
         }
 
-        if (newpline.type != g_p->pline.type)
+        if (newpline.type != ctx->pline.type)
         {
-            g_p->lineType(g_p, newpline.type);
-            g_p->pline.type = newpline.type;
+            ctx->lineType(ctx, newpline.type);
+            ctx->pline.type = newpline.type;
         }
-        if (newpline.width != g_p->pline.width)
+        if (newpline.width != ctx->pline.width)
         {
-            g_p->lineWidth(g_p, newpline.width);
-            g_p->pline.width = newpline.width;
+            ctx->lineWidth(ctx, newpline.width);
+            ctx->pline.width = newpline.width;
         }
-        if (newpline.color != g_p->pline.color)
+        if (newpline.color != ctx->pline.color)
         {
-            g_p->lineColor(g_p, newpline.color);
-            g_p->pline.color = newpline.color;
+            ctx->lineColor(ctx, newpline.color);
+            ctx->pline.color = newpline.color;
         }
     }
 }
 
-static void setup_polymarker_attributes(bool init)
+static void setup_polymarker_attributes(cgm_context *ctx, bool init)
 {
     marker_attributes newpmark;
     int errind;
 
     if (init)
     {
-        g_p->pmark.type = 3;
-        g_p->pmark.width = 1.0;
-        g_p->pmark.color = 1;
+        ctx->pmark.type = 3;
+        ctx->pmark.width = 1.0;
+        ctx->pmark.color = 1;
     }
     else
     {
@@ -2520,7 +2520,7 @@ static void setup_polymarker_attributes(bool init)
         gks_inq_pmark_size(&errind, &newpmark.width);
         gks_inq_pmark_color_index(&errind, &newpmark.color);
 
-        if (g_p->encode == cgm_grafkit)
+        if (ctx->encode == cgm_grafkit)
         {
             if (newpmark.type < 0)
                 newpmark.type = max_std_markertype - newpmark.type;
@@ -2528,25 +2528,25 @@ static void setup_polymarker_attributes(bool init)
                 newpmark.type = 3;
         }
 
-        if (newpmark.type != g_p->pmark.type)
+        if (newpmark.type != ctx->pmark.type)
         {
-            g_p->markerType(g_p, newpmark.type);
-            g_p->pmark.type = newpmark.type;
+            ctx->markerType(ctx, newpmark.type);
+            ctx->pmark.type = newpmark.type;
         }
-        if (newpmark.width != g_p->pmark.width)
+        if (newpmark.width != ctx->pmark.width)
         {
-            g_p->markerSize(g_p, newpmark.width);
-            g_p->pmark.width = newpmark.width;
+            ctx->markerSize(ctx, newpmark.width);
+            ctx->pmark.width = newpmark.width;
         }
-        if (newpmark.color != g_p->pmark.color)
+        if (newpmark.color != ctx->pmark.color)
         {
-            g_p->markerColor(g_p, newpmark.color);
-            g_p->pmark.color = newpmark.color;
+            ctx->markerColor(ctx, newpmark.color);
+            ctx->pmark.color = newpmark.color;
         }
     }
 }
 
-static void setup_text_attributes(bool init)
+static void setup_text_attributes(cgm_context *ctx, bool init)
 {
     text_attributes newtext;
     int errind;
@@ -2554,17 +2554,17 @@ static void setup_text_attributes(bool init)
 
     if (init)
     {
-        g_p->text.font = 1;
-        g_p->text.prec = 0;
-        g_p->text.expfac = 1.0;
-        g_p->text.spacing = 0.0;
-        g_p->text.color = 1;
-        g_p->text.height = 0.01;
-        g_p->text.upx = 0;
-        g_p->text.upy = max_coord;
-        g_p->text.path = 0;
-        g_p->text.halign = 0;
-        g_p->text.valign = 0;
+        ctx->text.font = 1;
+        ctx->text.prec = 0;
+        ctx->text.expfac = 1.0;
+        ctx->text.spacing = 0.0;
+        ctx->text.color = 1;
+        ctx->text.height = 0.01;
+        ctx->text.upx = 0;
+        ctx->text.upy = max_coord;
+        ctx->text.path = 0;
+        ctx->text.halign = 0;
+        ctx->text.valign = 0;
     }
     else
     {
@@ -2575,8 +2575,8 @@ static void setup_text_attributes(bool init)
         gks_set_chr_xform();
         gks_chr_height(&newtext.height);
         gks_inq_text_upvec(&errind, &upx, &upy);
-        upx *= g_p->xform.a;
-        upy *= g_p->xform.c;
+        upx *= ctx->xform.a;
+        upy *= ctx->xform.c;
         gks_seg_xform(&upx, &upy);
         norm = fabs(upx) > fabs(upy) ? fabs(upx) : fabs(upy);
         newtext.upx = (int) (upx / norm * max_coord);
@@ -2584,74 +2584,74 @@ static void setup_text_attributes(bool init)
         gks_inq_text_path(&errind, &newtext.path);
         gks_inq_text_align(&errind, &newtext.halign, &newtext.valign);
 
-        if (g_p->encode == cgm_grafkit)
+        if (ctx->encode == cgm_grafkit)
         {
             if (newtext.font < 0)
                 newtext.font = max_std_textfont - newtext.font;
             newtext.prec = 2;
         }
 
-        if (newtext.font != g_p->text.font)
+        if (newtext.font != ctx->text.font)
         {
-            g_p->textFontIndex(g_p, newtext.font);
-            g_p->text.font = newtext.font;
+            ctx->textFontIndex(ctx, newtext.font);
+            ctx->text.font = newtext.font;
         }
-        if (newtext.prec != g_p->text.prec)
+        if (newtext.prec != ctx->text.prec)
         {
-            g_p->textPrecision(g_p, newtext.prec);
-            g_p->text.prec = newtext.prec;
+            ctx->textPrecision(ctx, newtext.prec);
+            ctx->text.prec = newtext.prec;
         }
-        if (newtext.expfac != g_p->text.expfac)
+        if (newtext.expfac != ctx->text.expfac)
         {
-            g_p->charExpansion(g_p, newtext.expfac);
-            g_p->text.expfac = newtext.expfac;
+            ctx->charExpansion(ctx, newtext.expfac);
+            ctx->text.expfac = newtext.expfac;
         }
-        if (newtext.spacing != g_p->text.spacing)
+        if (newtext.spacing != ctx->text.spacing)
         {
-            g_p->charSpacing(g_p, newtext.spacing);
-            g_p->text.spacing = newtext.spacing;
+            ctx->charSpacing(ctx, newtext.spacing);
+            ctx->text.spacing = newtext.spacing;
         }
-        if (newtext.color != g_p->text.color)
+        if (newtext.color != ctx->text.color)
         {
-            g_p->textColor(g_p, newtext.color);
-            g_p->text.color = newtext.color;
+            ctx->textColor(ctx, newtext.color);
+            ctx->text.color = newtext.color;
         }
-        if (newtext.height != g_p->text.height)
+        if (newtext.height != ctx->text.height)
         {
-            g_p->charHeight(g_p, (int) (newtext.height * max_coord));
-            g_p->text.height = newtext.height;
+            ctx->charHeight(ctx, (int) (newtext.height * max_coord));
+            ctx->text.height = newtext.height;
         }
-        if ((newtext.upx != g_p->text.upx) || (newtext.upy != g_p->text.upy))
+        if ((newtext.upx != ctx->text.upx) || (newtext.upy != ctx->text.upy))
         {
-            g_p->charOrientation(g_p, newtext.upx, newtext.upy, newtext.upy, -newtext.upx);
-            g_p->text.upx = newtext.upx;
-            g_p->text.upy = newtext.upy;
+            ctx->charOrientation(ctx, newtext.upx, newtext.upy, newtext.upy, -newtext.upx);
+            ctx->text.upx = newtext.upx;
+            ctx->text.upy = newtext.upy;
         }
-        if (newtext.path != g_p->text.path)
+        if (newtext.path != ctx->text.path)
         {
-            g_p->textPath(g_p, newtext.path);
-            g_p->text.path = newtext.path;
+            ctx->textPath(ctx, newtext.path);
+            ctx->text.path = newtext.path;
         }
-        if ((newtext.halign != g_p->text.halign) || (newtext.valign != g_p->text.valign))
+        if ((newtext.halign != ctx->text.halign) || (newtext.valign != ctx->text.valign))
         {
-            g_p->textAlignment(g_p, newtext.halign, newtext.valign, 0.0, 0.0);
-            g_p->text.halign = newtext.halign;
-            g_p->text.valign = newtext.valign;
+            ctx->textAlignment(ctx, newtext.halign, newtext.valign, 0.0, 0.0);
+            ctx->text.halign = newtext.halign;
+            ctx->text.valign = newtext.valign;
         }
     }
 }
 
-static void setup_fill_attributes(bool init)
+static void setup_fill_attributes(cgm_context *ctx, bool init)
 {
     fill_attributes newfill;
     int errind;
 
     if (init)
     {
-        g_p->fill.intstyle = 0;
-        g_p->fill.color = 1;
-        g_p->fill.pattern_index = 1;
-        g_p->fill.hatch_index = 1;
+        ctx->fill.intstyle = 0;
+        ctx->fill.color = 1;
+        ctx->fill.pattern_index = 1;
+        ctx->fill.hatch_index = 1;
     }
     else
     {
@@ -2660,25 +2660,25 @@ static void setup_fill_attributes(bool init)
         gks_inq_fill_style_index(&errind, &newfill.pattern_index);
         gks_inq_fill_style_index(&errind, &newfill.hatch_index);
 
-        if (newfill.intstyle != g_p->fill.intstyle)
+        if (newfill.intstyle != ctx->fill.intstyle)
         {
-            g_p->interiorStyle(g_p, newfill.intstyle);
-            g_p->fill.intstyle = newfill.intstyle;
+            ctx->interiorStyle(ctx, newfill.intstyle);
+            ctx->fill.intstyle = newfill.intstyle;
         }
-        if (newfill.color != g_p->fill.color)
+        if (newfill.color != ctx->fill.color)
         {
-            g_p->fillColor(g_p, newfill.color);
-            g_p->fill.color = newfill.color;
+            ctx->fillColor(ctx, newfill.color);
+            ctx->fill.color = newfill.color;
         }
-        if (newfill.pattern_index != g_p->fill.pattern_index)
+        if (newfill.pattern_index != ctx->fill.pattern_index)
         {
-            g_p->patternIndex(g_p, newfill.pattern_index);
-            g_p->fill.pattern_index = newfill.pattern_index;
+            ctx->patternIndex(ctx, newfill.pattern_index);
+            ctx->fill.pattern_index = newfill.pattern_index;
         }
-        if (newfill.hatch_index != g_p->fill.hatch_index)
+        if (newfill.hatch_index != ctx->fill.hatch_index)
         {
-            g_p->hatchIndex(g_p, newfill.hatch_index);
-            g_p->fill.hatch_index = newfill.hatch_index;
+            ctx->hatchIndex(ctx, newfill.hatch_index);
+            ctx->fill.hatch_index = newfill.hatch_index;
         }
     }
 }
@@ -2770,11 +2770,6 @@ static void setup_clear_text_context(cgm_context *ctx)
     ctx->buffer[0] = '\0';
 }
 
-static void setup_clear_text_context()
-{
-    setup_clear_text_context(g_p);
-}
-
 static void setup_binary_context(cgm_context *ctx)
 {
     ctx->beginMetafile = cgmb_begin_p;
@@ -2838,58 +2833,54 @@ static void setup_binary_context(cgm_context *ctx)
 
     ctx->bfr_index = 0;
 }
-static void setup_binary_context()
-{
-    setup_binary_context(g_p);
-}
 
-static void cgm_begin_page()
+static void cgm_begin_page(cgm_context *ctx)
 {
-    g_p->beginPicture(g_p, local_time());
+    ctx->beginPicture(ctx, local_time());
 
-    if (g_p->encode != cgm_grafkit)
+    if (ctx->encode != cgm_grafkit)
     {
-        if (g_p->mm > 0)
+        if (ctx->mm > 0)
         {
-            g_p->scalingMode(g_p, 1, g_p->mm);
+            ctx->scalingMode(ctx, 1, ctx->mm);
         }
         else
         {
-            g_p->scalingMode(g_p, 0, 0.0);
+            ctx->scalingMode(ctx, 0, 0.0);
         }
     }
 
-    g_p->colorSelectionMode(g_p, 1);
+    ctx->colorSelectionMode(ctx, 1);
 
-    if (g_p->encode != cgm_grafkit)
+    if (ctx->encode != cgm_grafkit)
     {
-        g_p->lineWidthSpecificationMode(g_p, 1);
-        g_p->markerSizeSpecificationMode(g_p, 1);
+        ctx->lineWidthSpecificationMode(ctx, 1);
+        ctx->markerSizeSpecificationMode(ctx, 1);
     }
 
-    g_p->vdcExtentInt(g_p, 0, 0, g_p->xext, g_p->yext);
-    g_p->backgroundColor(g_p, 255, 255, 255);
+    ctx->vdcExtentInt(ctx, 0, 0, ctx->xext, ctx->yext);
+    ctx->backgroundColor(ctx, 255, 255, 255);
 
-    g_p->beginPictureBody(g_p);
-    if (g_p->encode != cgm_clear_text)
+    ctx->beginPictureBody(ctx);
+    if (ctx->encode != cgm_clear_text)
     {
-        g_p->vdcIntegerPrecisionBinary(g_p, 16);
+        ctx->vdcIntegerPrecisionBinary(ctx, 16);
     }
     else
     {
-        g_p->vdcIntegerPrecisionClearText(g_p, -32768, 32767);
+        ctx->vdcIntegerPrecisionClearText(ctx, -32768, 32767);
     }
 
-    setup_colors();
+    setup_colors(g_p);
 
-    set_xform(true);
+    set_xform(g_p, true);
 
-    setup_polyline_attributes(true);
-    setup_polymarker_attributes(true);
-    setup_text_attributes(true);
-    setup_fill_attributes(true);
+    setup_polyline_attributes(g_p, true);
+    setup_polymarker_attributes(g_p, true);
+    setup_text_attributes(g_p, true);
+    setup_fill_attributes(g_p, true);
 
-    g_p->begin_page = false;
+    ctx->begin_page = false;
 }
 
 enum class Function
@@ -2932,21 +2923,21 @@ static void gks_drv_cgm(Function fctid, int dx, int dy, int dimx, int *ia,
             g_p->encode = cgm_binary;
             g_p->flush_buffer_context = &g_p->conid;
             g_p->flush_buffer = gks_flush_buffer;
-            setup_binary_context();
+            setup_binary_context(g_p);
         }
         else if (ia[2] == 8)
         {
             g_p->encode = cgm_clear_text;
             g_p->flush_buffer_context = &g_p->conid;
             g_p->flush_buffer = gks_flush_buffer;
-            setup_clear_text_context();
+            setup_clear_text_context(g_p);
         }
         else if (ia[2] == (7 | 0x50000))
         {
             g_p->encode = cgm_grafkit;
             g_p->flush_buffer_context = &g_p->conid;
             g_p->flush_buffer = gks_flush_buffer;
-            setup_binary_context();
+            setup_binary_context(g_p);
         }
         else
         {
@@ -3000,7 +2991,7 @@ static void gks_drv_cgm(Function fctid, int dx, int dy, int dimx, int *ia,
         if (g_p->encode != cgm_grafkit)
             g_p->characterCodingAnnouncer(g_p, 3);
 
-        init_color_table();
+        init_color_table(g_p);
 
         g_p->xext = g_p->yext = max_coord;
 
@@ -3037,9 +3028,9 @@ static void gks_drv_cgm(Function fctid, int dx, int dy, int dimx, int *ia,
         if (g_p->active)
         {
             if (g_p->begin_page)
-                cgm_begin_page();
+                cgm_begin_page(g_p);
 
-            setup_polyline_attributes(false);
+            setup_polyline_attributes(g_p, false);
             output_points(g_p->polyline, g_p, ia[0], r1, r2);
         }
         break;
@@ -3048,9 +3039,9 @@ static void gks_drv_cgm(Function fctid, int dx, int dy, int dimx, int *ia,
         if (g_p->active)
         {
             if (g_p->begin_page)
-                cgm_begin_page();
+                cgm_begin_page(g_p);
 
-            setup_polymarker_attributes(false);
+            setup_polymarker_attributes(g_p, false);
             output_points(g_p->polymarker, g_p, ia[0], r1, r2);
         }
         break;
@@ -3061,10 +3052,10 @@ static void gks_drv_cgm(Function fctid, int dx, int dy, int dimx, int *ia,
             int x, y;
 
             if (g_p->begin_page)
-                cgm_begin_page();
+                cgm_begin_page(g_p);
 
-            set_xform(false);
-            setup_text_attributes(false);
+            set_xform(g_p, false);
+            setup_text_attributes(g_p, false);
 
             WC_to_VDC(r1[0], r2[0], &x, &y);
             g_p->textInt(g_p, x, y, true, chars);
@@ -3075,9 +3066,9 @@ static void gks_drv_cgm(Function fctid, int dx, int dy, int dimx, int *ia,
         if (g_p->active)
         {
             if (g_p->begin_page)
-                cgm_begin_page();
+                cgm_begin_page(g_p);
 
-            setup_fill_attributes(false);
+            setup_fill_attributes(g_p, false);
             output_points(g_p->polygon, g_p, ia[0], r1, r2);
         }
         break;
@@ -3088,9 +3079,9 @@ static void gks_drv_cgm(Function fctid, int dx, int dy, int dimx, int *ia,
             int xmin, xmax, ymin, ymax;
 
             if (g_p->begin_page)
-                cgm_begin_page();
+                cgm_begin_page(g_p);
 
-            set_xform(false);
+            set_xform(g_p, false);
 
             WC_to_VDC(r1[0], r2[0], &xmin, &ymin);
             WC_to_VDC(r1[1], r2[1], &xmax, &ymax);
