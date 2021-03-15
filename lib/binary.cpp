@@ -1126,22 +1126,6 @@ static void cgmb_hindex_p(cgm_context *ctx, int new_index)
     cgmb_fb(ctx);
 }
 
-/* Pattern index */
-static void cgmb_pindex_p(cgm_context *ctx, int new_index)
-{
-    cgmb_start_cmd(ctx, 5, (int) PatIndex);
-
-    cgmb_xint(ctx, new_index);
-
-    cgmb_flush_cmd(ctx, final_flush);
-    cgmb_fb(ctx);
-}
-
-/* Colour table */
-static void cgmb_coltab_c(cgm_context *ctx, int startIndex, int numColors, const cgm::Color *colors)
-{
-}
-
 namespace cgm
 {
 
@@ -1445,7 +1429,13 @@ void BinaryMetafileWriter::hatchIndex(int value)
 
 void BinaryMetafileWriter::patternIndex(int value)
 {
-    cgmb_pindex_p(&m_context, value);
+    cgm_context *ctx = &m_context;
+    cgmb_start_cmd(ctx, 5, (int) PatIndex);
+
+    cgmb_xint(ctx, value);
+
+    cgmb_flush_cmd(ctx, final_flush);
+    cgmb_fb(ctx);
 }
 
 void BinaryMetafileWriter::colorTable(int startIndex, std::vector<Color> const &colors)
