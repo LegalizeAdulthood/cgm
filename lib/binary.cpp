@@ -1079,20 +1079,6 @@ static void cgmb_tpath_p(cgm_context *ctx, int new_path)
     cgmb_fb(ctx);
 }
 
-/* Text alignment */
-static void cgmb_talign_p(cgm_context *ctx, int hor, int ver, double contHoriz, double contVert)
-{
-    cgmb_start_cmd(ctx, 5, (int) TAlign);
-
-    cgmb_eint(ctx, hor);
-    cgmb_eint(ctx, ver);
-    cgmb_fixed(ctx, contHoriz);
-    cgmb_fixed(ctx, contVert);
-
-    cgmb_flush_cmd(ctx, final_flush);
-    cgmb_fb(ctx);
-}
-
 namespace cgm
 {
 
@@ -1376,7 +1362,16 @@ void BinaryMetafileWriter::textPath(TextPath value)
 
 void BinaryMetafileWriter::textAlignment(HorizAlign horiz, VertAlign vert, float contHoriz, float contVert)
 {
-    cgmb_talign_p(&m_context, static_cast<int>(horiz), static_cast<int>(vert), static_cast<double>(contHoriz), static_cast<double>(contVert));
+    cgm_context *ctx = &m_context;
+    cgmb_start_cmd(ctx, 5, (int) TAlign);
+
+    cgmb_eint(ctx, static_cast<int>(horiz));
+    cgmb_eint(ctx, static_cast<int>(vert));
+    cgmb_fixed(ctx, static_cast<double>(contHoriz));
+    cgmb_fixed(ctx, static_cast<double>(contVert));
+
+    cgmb_flush_cmd(ctx, final_flush);
+    cgmb_fb(ctx);
 }
 
 void BinaryMetafileWriter::interiorStyle(InteriorStyle value)
