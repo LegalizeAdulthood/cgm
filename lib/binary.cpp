@@ -1115,17 +1115,6 @@ static void cgmb_fillcolor_p(cgm_context *ctx, int index)
     cgmb_fb(ctx);
 }
 
-/* Hatch index */
-static void cgmb_hindex_p(cgm_context *ctx, int new_index)
-{
-    cgmb_start_cmd(ctx, 5, (int) HatchIndex);
-
-    cgmb_xint(ctx, new_index);
-
-    cgmb_flush_cmd(ctx, final_flush);
-    cgmb_fb(ctx);
-}
-
 namespace cgm
 {
 
@@ -1424,7 +1413,13 @@ void BinaryMetafileWriter::fillColor(int value)
 
 void BinaryMetafileWriter::hatchIndex(int value)
 {
-    cgmb_hindex_p(&m_context, value);
+    cgm_context *ctx = &m_context;
+    cgmb_start_cmd(ctx, 5, (int) HatchIndex);
+
+    cgmb_xint(ctx, value);
+
+    cgmb_flush_cmd(ctx, final_flush);
+    cgmb_fb(ctx);
 }
 
 void BinaryMetafileWriter::patternIndex(int value)
