@@ -1,17 +1,15 @@
 #pragma once
 
-#include "context.h"
 #include "stream.h"
 
 namespace cgm
 {
 
-void setup_binary_context(cgm_context *ctx);
-
 class BinaryMetafileWriter : public MetafileStreamWriter
 {
 public:
     explicit BinaryMetafileWriter(std::ostream &stream);
+    explicit BinaryMetafileWriter(int fd);
 
     void beginMetafile(const char *identifier) override;
     void endMetafile() override;
@@ -36,7 +34,7 @@ public:
     void metafileElementList() override;
     void fontList(std::vector<std::string> const &fonts) override;
     void characterCodingAnnouncer(CharCodeAnnouncer value) override;
-    void scaleMode(ScaleMode mode, float value) override;
+    void scalingMode(ScalingMode mode, float value) override;
     void colorSelectionMode(ColorMode mode) override;
     void lineWidthSpecificationMode(SpecificationMode mode) override;
     void markerSizeSpecificationMode(SpecificationMode mode) override;

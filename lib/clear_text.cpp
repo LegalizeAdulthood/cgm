@@ -948,73 +948,16 @@ static void cgmt_carray_p(cgm_context *ctx, int c1x, int c1y, int c2x, int c2y, 
 namespace cgm
 {
 
-void setup_clear_text_context(cgm_context *ctx)
-{
-    ctx->beginMetafile = cgmt_begin_p;
-    ctx->endMetafile = cgmt_end_p;
-    ctx->beginPicture = cgmt_bp_p;
-    ctx->beginPictureBody = cgmt_bpage_p;
-    ctx->endPicture = cgmt_epage_p;
-    ctx->metafileVersion = cgmt_mfversion_p;
-    ctx->metafileDescription = cgmt_mfdescrip_p;
-    ctx->vdcType = cgmt_vdctype_p;
-    ctx->intPrecisionClearText = cgmt_intprec_p;
-    ctx->realPrecisionClearText = cgmt_realprec_p;
-    ctx->indexPrecisionClearText = cgmt_indexprec_p;
-    ctx->colorPrecisionClearText = cgmt_colprec_p;
-    ctx->colorIndexPrecisionClearText = cgmt_cindprec_p;
-    ctx->maximumColorIndex = cgmt_maxcind_p;
-    ctx->colorValueExtent = cgmt_cvextent_p;
-    ctx->metafileElementList = cgmt_mfellist_p;
-    ctx->fontList = cgmt_fontlist_p;
-    ctx->characterCodingAnnouncer = cgmt_cannounce_p;
-    ctx->scalingMode = cgmt_scalmode_p;
-    ctx->colorSelectionMode = cgmt_colselmode_p;
-    ctx->lineWidthSpecificationMode = cgmt_lwsmode_p;
-    ctx->markerSizeSpecificationMode = cgmt_msmode_p;
-    ctx->vdcExtentInt = cgmt_vdcextent_p;
-    ctx->backgroundColor = cgmt_backcol_p;
-    ctx->vdcIntegerPrecisionClearText = cgmt_vdcintprec_p;
-    ctx->clipRectangle = cgmt_cliprect_p;
-    ctx->clipIndicator = cgmt_clipindic_p;
-    ctx->polylineIntPt = cgmt_pline_pt;
-    ctx->polyline = cgmt_pline_p;
-    ctx->polymarkerIntPt = cgmt_pmarker_pt;
-    ctx->polymarker = cgmt_pmarker_p;
-    ctx->textInt = cgmt_text_p;
-    ctx->polygonIntPt = cgmt_pgon_pt;
-    ctx->polygon = cgmt_pgon_p;
-    ctx->cellArray = cgmt_carray_p;
-    ctx->lineType = cgmt_ltype_p;
-    ctx->lineWidth = cgmt_lwidth_p;
-    ctx->lineColor = cgmt_lcolor_p;
-    ctx->markerType = cgmt_mtype_p;
-    ctx->markerSize = cgmt_msize_p;
-    ctx->markerColor = cgmt_mcolor_p;
-    ctx->textFontIndex = cgmt_tfindex_p;
-    ctx->textPrecision = cgmt_tprec_p;
-    ctx->charExpansion = cgmt_cexpfac_p;
-    ctx->charSpacing = cgmt_cspace_p;
-    ctx->textColor = cgmt_tcolor_p;
-    ctx->charHeight = cgmt_cheight_p;
-    ctx->charOrientation = cgmt_corient_p;
-    ctx->textPath = cgmt_tpath_p;
-    ctx->textAlignment = cgmt_talign_p;
-    ctx->interiorStyle = cgmt_intstyle_p;
-    ctx->fillColor = cgmt_fillcolor_p;
-    ctx->hatchIndex = cgmt_hindex_p;
-    ctx->patternIndex = cgmt_pindex_p;
-    ctx->colorTable = cgmt_coltab_c;
-
-    ctx->buffer_ind = 0;
-    ctx->buffer[0] = '\0';
-}
-
 ClearTextMetafileWriter::ClearTextMetafileWriter(std::ostream &stream)
     : MetafileStreamWriter(stream)
 {
     m_context.encode = cgm_clear_text;
-    setup_clear_text_context(&m_context);
+}
+
+ClearTextMetafileWriter::ClearTextMetafileWriter(int fd)
+    : MetafileStreamWriter(fd)
+{
+    m_context.encode = cgm_clear_text;
 }
 
 
@@ -1139,7 +1082,7 @@ void ClearTextMetafileWriter::characterCodingAnnouncer(CharCodeAnnouncer value)
     cgmt_cannounce_p(&m_context, static_cast<int>(value));
 }
 
-void ClearTextMetafileWriter::scaleMode(ScaleMode mode, float value)
+void ClearTextMetafileWriter::scalingMode(ScalingMode mode, float value)
 {
     cgmt_scalmode_p(&m_context, static_cast<int>(mode), static_cast<double>(value));
 }

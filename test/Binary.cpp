@@ -530,23 +530,23 @@ TEST_CASE("binary encoding")
     {
         SECTION("abstract")
         {
-            writer->scaleMode(cgm::ScaleMode::Abstract, 1.0f);
+            writer->scalingMode(cgm::ScalingMode::Abstract, 1.0f);
 
             const std::string str = stream.str();
             REQUIRE(str.size() == headerLen + 6);
             REQUIRE(header(str) == OpCode{PictureDescriptor, ScalingMode, 6});
-            REQUIRE(i16(str, 2) == static_cast<int>(cgm::ScaleMode::Abstract));
+            REQUIRE(i16(str, 2) == static_cast<int>(cgm::ScalingMode::Abstract));
             // TODO: decode 16.16 fixed-point as float
             // REQUIRE(f32(str, 4) == 1.0f);
         }
         SECTION("metric")
         {
-            writer->scaleMode(cgm::ScaleMode::Metric, 1.0f);
+            writer->scalingMode(cgm::ScalingMode::Metric, 1.0f);
 
             const std::string str = stream.str();
             REQUIRE(str.size() == headerLen + 6);
             REQUIRE(header(str) == OpCode{PictureDescriptor, ScalingMode, 6});
-            REQUIRE(i16(str, 2) == static_cast<int>(cgm::ScaleMode::Metric));
+            REQUIRE(i16(str, 2) == static_cast<int>(cgm::ScalingMode::Metric));
             // TODO: decode 16.16 fixed-point as float
             //REQUIRE(f32(str, 4) == 1.0f);
         }

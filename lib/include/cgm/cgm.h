@@ -29,7 +29,7 @@ enum class CharCodeAnnouncer
     Extended8Bit
 };
 
-enum class ScaleMode
+enum class ScalingMode
 {
     Abstract,
     Metric
@@ -145,7 +145,7 @@ public:
     virtual void metafileElementList() = 0;
     virtual void fontList(std::vector<std::string> const & fonts) = 0;
     virtual void characterCodingAnnouncer(CharCodeAnnouncer value) = 0;
-    virtual void scaleMode(ScaleMode mode, float value) = 0;
+    virtual void scalingMode(ScalingMode mode, float value) = 0;
     virtual void colorSelectionMode(ColorMode mode) = 0;
     virtual void lineWidthSpecificationMode(SpecificationMode mode) = 0;
     virtual void markerSizeSpecificationMode(SpecificationMode mode) = 0;

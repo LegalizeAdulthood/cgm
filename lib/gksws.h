@@ -20,6 +20,6 @@ enum class Function
 
 void gks_drv_cgm(Function fctid, int dx, int dy, int dimx, int *ia,
     int lr1, double *r1, int lr2, double *r2, int lc, char *chars,
-    void **context);
+    void **cbContext);
 
 #endif

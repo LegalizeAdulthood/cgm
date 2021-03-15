@@ -201,7 +201,7 @@ public:
     {
     }
 
-    Self &scaleMode(ScaleMode mode, float value)
+    Self &scaleMode(ScalingMode mode, float value)
     {
         return *this;
     }

@@ -1159,75 +1159,16 @@ static void cgmb_coltab_c(cgm_context *ctx, int startIndex, int numColors, const
 namespace cgm
 {
 
-void setup_binary_context(cgm_context *ctx)
-{
-    ctx->beginMetafile = cgmb_begin_p;
-    ctx->endMetafile = cgmb_end_p;
-    ctx->beginPicture = cgmb_bp_p;
-    ctx->beginPictureBody = cgmb_bpage_p;
-    ctx->endPicture = cgmb_epage_p;
-    ctx->metafileVersion = cgmb_mfversion_p;
-    ctx->metafileDescription = cgmb_mfdescrip_p;
-    ctx->vdcType = cgmb_vdctype_p;
-    ctx->intPrecisionBinary = cgmb_intprec_p;
-    ctx->realPrecisionBinary = cgmb_realprec_p;
-    ctx->indexPrecisionBinary = cgmb_indexprec_p;
-    ctx->colorPrecisionBinary = cgmb_colprec_p;
-    ctx->colorIndexPrecisionBinary = cgmb_cindprec_p;
-    ctx->maximumColorIndex = cgmb_maxcind_p;
-    ctx->colorValueExtent = cgmb_cvextent_p;
-    ctx->metafileElementList = cgmb_mfellist_p;
-    ctx->fontList = cgmb_fontlist_p;
-    ctx->characterCodingAnnouncer = cgmb_cannounce_p;
-    ctx->scalingMode = cgmb_scalmode_p;
-    ctx->colorSelectionMode = cgmb_colselmode_p;
-    ctx->lineWidthSpecificationMode = cgmb_lwsmode_p;
-    ctx->markerSizeSpecificationMode = cgmb_msmode_p;
-    ctx->vdcExtentInt = cgmb_vdcextent_p;
-    ctx->backgroundColor = cgmb_backcol_p;
-    ctx->vdcIntegerPrecisionBinary = cgmb_vdcintprec_p;
-    ctx->clipRectangle = cgmb_cliprect_p;
-    ctx->clipIndicator = cgmb_clipindic_p;
-    ctx->polylineIntPt = cgmb_pline_pt;
-    ctx->polyline = cgmb_pline_p;
-    ctx->polymarkerIntPt = cgmb_pmarker_pt;
-    ctx->polymarker = cgmb_pmarker_p;
-    ctx->textInt = cgmb_text_p;
-    ctx->polygonIntPt = cgmb_pgon_pt;
-    ctx->polygon = cgmb_pgon_p;
-    ctx->cellArray = cgmb_carray_p;
-    ctx->lineType = cgmb_ltype_p;
-    ctx->lineWidth = cgmb_lwidth_p;
-    ctx->lineColor = cgmb_lcolor_p;
-    ctx->markerType = cgmb_mtype_p;
-    ctx->markerSize = cgmb_msize_p;
-    ctx->markerColor = cgmb_mcolor_p;
-    ctx->textFontIndex = cgmb_tfindex_p;
-    ctx->textPrecision = cgmb_tprec_p;
-    ctx->charExpansion = cgmb_cexpfac_p;
-    ctx->charSpacing = cgmb_cspace_p;
-    ctx->textColor = cgmb_tcolor_p;
-    ctx->charHeight = cgmb_cheight_p;
-    ctx->charOrientation = cgmb_corient_p;
-    ctx->textPath = cgmb_tpath_p;
-    ctx->textAlignment = cgmb_talign_p;
-    ctx->interiorStyle = cgmb_intstyle_p;
-    ctx->fillColor = cgmb_fillcolor_p;
-    ctx->hatchIndex = cgmb_hindex_p;
-    ctx->patternIndex = cgmb_pindex_p;
-    ctx->colorTable = cgmb_coltab_c;
-
-    ctx->buffer_ind = 0;
-    ctx->buffer[0] = '\0';
-
-    ctx->bfr_index = 0;
-}
-
 BinaryMetafileWriter::BinaryMetafileWriter(std::ostream &stream)
     : MetafileStreamWriter(stream)
 {
     m_context.encode = cgm_binary;
-    setup_binary_context(&m_context);
+}
+
+BinaryMetafileWriter::BinaryMetafileWriter(int fd)
+    : MetafileStreamWriter(fd)
+{
+    m_context.encode = cgm_binary;
 }
 
 void BinaryMetafileWriter::beginMetafile(const char *identifier)
@@ -1351,7 +1292,7 @@ void BinaryMetafileWriter::characterCodingAnnouncer(CharCodeAnnouncer value)
     cgmb_cannounce_p(&m_context, static_cast<int>(value));
 }
 
-void BinaryMetafileWriter::scaleMode(ScaleMode mode, float value)
+void BinaryMetafileWriter::scalingMode(ScalingMode mode, float value)
 {
     cgmb_scalmode_p(&m_context, static_cast<int>(mode), static_cast<double>(value));
 }

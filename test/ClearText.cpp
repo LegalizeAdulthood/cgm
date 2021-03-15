@@ -149,13 +149,13 @@ TEST_CASE("clear text encoding")
     {
         SECTION("abstract")
         {
-            writer->scaleMode(cgm::ScaleMode::Abstract, 1.0f);
+            writer->scalingMode(cgm::ScalingMode::Abstract, 1.0f);
 
             REQUIRE(stream.str() == "ScaleMode Abstract 1.000000;\n");
         }
         SECTION("metric")
         {
-            writer->scaleMode(cgm::ScaleMode::Metric, 1.0f);
+            writer->scalingMode(cgm::ScalingMode::Metric, 1.0f);
 
             REQUIRE(stream.str() == "ScaleMode Metric 1.000000;\n");
         }
