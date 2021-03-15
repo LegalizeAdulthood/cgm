@@ -69,6 +69,25 @@ public:
     void hatchIndex(int value) override;
     void patternIndex(int value) override;
     void colorTable(int startIndex, std::vector<Color> const &colors) override;
+
+private:
+    void cgmb_fb();
+    void cgmb_outc( char chr );
+    void cgmb_start_cmd( int cl, int el );
+    void cgmb_flush_cmd( int this_flush );
+    void cgmb_out_bc( int c );
+    void cgmb_out_bs( const char *cptr, int n );
+    void cgmb_string( const char *cptr, int slen );
+    void cgmb_gint( int xin, int precision );
+    void cgmb_uint( unsigned xin, int precision );
+    void cgmb_fixed( double xin );
+    void cgmb_float( double xin );
+    void cgmb_dcint( int xin );
+    void cgmb_vint( int xin );
+    void cgmb_sint( int xin );
+    void cgmb_xint( int xin );
+    void cgmb_cxint( int xin );
+    void cgmb_eint( int xin );
 };
 
 }        // namespace cgm
