@@ -1093,17 +1093,6 @@ static void cgmb_talign_p(cgm_context *ctx, int hor, int ver, double contHoriz, 
     cgmb_fb(ctx);
 }
 
-/* Interior style */
-static void cgmb_intstyle_p(cgm_context *ctx, int style)
-{
-    cgmb_start_cmd(ctx, 5, (int) IntStyle);
-
-    cgmb_eint(ctx, style);
-
-    cgmb_flush_cmd(ctx, final_flush);
-    cgmb_fb(ctx);
-}
-
 namespace cgm
 {
 
@@ -1392,7 +1381,13 @@ void BinaryMetafileWriter::textAlignment(HorizAlign horiz, VertAlign vert, float
 
 void BinaryMetafileWriter::interiorStyle(InteriorStyle value)
 {
-    cgmb_intstyle_p(&m_context, static_cast<int>(value));
+    cgm_context *ctx = &m_context;
+    cgmb_start_cmd(ctx, 5, (int) IntStyle);
+
+    cgmb_eint(ctx, static_cast<int>(value));
+
+    cgmb_flush_cmd(ctx, final_flush);
+    cgmb_fb(ctx);
 }
 
 void BinaryMetafileWriter::fillColor(int value)
