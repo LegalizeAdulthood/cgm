@@ -1140,20 +1140,6 @@ static void cgmb_pindex_p(cgm_context *ctx, int new_index)
 /* Colour table */
 static void cgmb_coltab_c(cgm_context *ctx, int startIndex, int numColors, const cgm::Color *colors)
 {
-    int i, j;
-
-    cgmb_start_cmd(ctx, 5, (int) ColTab);
-    cgmb_cxint(ctx, startIndex);
-
-    for (i = startIndex; i < (startIndex + numColors); ++i)
-    {
-        cgmb_dcint(ctx, (int) (colors[(i - startIndex)].red * (max_colors - 1)));
-        cgmb_dcint(ctx, (int) (colors[(i - startIndex)].green * (max_colors - 1)));
-        cgmb_dcint(ctx, (int) (colors[(i - startIndex)].blue * (max_colors - 1)));
-    }
-
-    cgmb_flush_cmd(ctx, final_flush);
-    cgmb_fb(ctx);
 }
 
 namespace cgm
@@ -1464,7 +1450,21 @@ void BinaryMetafileWriter::patternIndex(int value)
 
 void BinaryMetafileWriter::colorTable(int startIndex, std::vector<Color> const &colors)
 {
-    cgmb_coltab_c(&m_context, startIndex, static_cast<int>(colors.size()), colors.data());
+    cgm_context *ctx = &m_context;
+    const int numColors = static_cast<int>(colors.size());
+
+    cgmb_start_cmd(ctx, 5, (int) ColTab);
+    cgmb_cxint(ctx, startIndex);
+
+    for (int i = startIndex; i < (startIndex + numColors); ++i)
+    {
+        cgmb_dcint(ctx, (int) (colors[(i - startIndex)].red * (max_colors - 1)));
+        cgmb_dcint(ctx, (int) (colors[(i - startIndex)].green * (max_colors - 1)));
+        cgmb_dcint(ctx, (int) (colors[(i - startIndex)].blue * (max_colors - 1)));
+    }
+
+    cgmb_flush_cmd(ctx, final_flush);
+    cgmb_fb(ctx);
 }
 
 }        // namespace cgm
