@@ -1104,17 +1104,6 @@ static void cgmb_intstyle_p(cgm_context *ctx, int style)
     cgmb_fb(ctx);
 }
 
-/* Fill colour */
-static void cgmb_fillcolor_p(cgm_context *ctx, int index)
-{
-    cgmb_start_cmd(ctx, 5, (int) FillColour);
-
-    cgmb_cxint(ctx, index);
-
-    cgmb_flush_cmd(ctx, final_flush);
-    cgmb_fb(ctx);
-}
-
 namespace cgm
 {
 
@@ -1408,7 +1397,13 @@ void BinaryMetafileWriter::interiorStyle(InteriorStyle value)
 
 void BinaryMetafileWriter::fillColor(int value)
 {
-    cgmb_fillcolor_p(&m_context, value);
+    cgm_context *ctx = &m_context;
+    cgmb_start_cmd(ctx, 5, (int) FillColour);
+
+    cgmb_cxint(ctx, value);
+
+    cgmb_flush_cmd(ctx, final_flush);
+    cgmb_fb(ctx);
 }
 
 void BinaryMetafileWriter::hatchIndex(int value)
