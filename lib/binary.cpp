@@ -1043,17 +1043,6 @@ static void cgmb_tcolor_p(cgm_context *ctx, int index)
     cgmb_fb(ctx);
 }
 
-/* Character height */
-static void cgmb_cheight_p(cgm_context *ctx, int height)
-{
-    cgmb_start_cmd(ctx, 5, (int) CHeight);
-
-    cgmb_vint(ctx, height);
-
-    cgmb_flush_cmd(ctx, final_flush);
-    cgmb_fb(ctx);
-}
-
 namespace cgm
 {
 
@@ -1322,7 +1311,13 @@ void BinaryMetafileWriter::textColor(int index)
 
 void BinaryMetafileWriter::charHeight(int value)
 {
-    cgmb_cheight_p(&m_context, value);
+    cgm_context *ctx = &m_context;
+    cgmb_start_cmd(ctx, 5, (int) CHeight);
+
+    cgmb_vint(ctx, value);
+
+    cgmb_flush_cmd(ctx, final_flush);
+    cgmb_fb(ctx);
 }
 
 void BinaryMetafileWriter::charOrientation(int upX, int upY, int baseX, int baseY)
