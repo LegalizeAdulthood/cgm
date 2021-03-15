@@ -1054,20 +1054,6 @@ static void cgmb_cheight_p(cgm_context *ctx, int height)
     cgmb_fb(ctx);
 }
 
-/* Character orientation */
-static void cgmb_corient_p(cgm_context *ctx, int x_up, int y_up, int x_base, int y_base)
-{
-    cgmb_start_cmd(ctx, 5, (int) COrient);
-
-    cgmb_vint(ctx, x_up);
-    cgmb_vint(ctx, y_up);
-    cgmb_vint(ctx, x_base);
-    cgmb_vint(ctx, y_base);
-
-    cgmb_flush_cmd(ctx, final_flush);
-    cgmb_fb(ctx);
-}
-
 namespace cgm
 {
 
@@ -1341,7 +1327,16 @@ void BinaryMetafileWriter::charHeight(int value)
 
 void BinaryMetafileWriter::charOrientation(int upX, int upY, int baseX, int baseY)
 {
-    cgmb_corient_p(&m_context, upX, upY, baseX, baseY);
+    cgm_context *ctx = &m_context;
+    cgmb_start_cmd(ctx, 5, (int) COrient);
+
+    cgmb_vint(ctx, upX);
+    cgmb_vint(ctx, upY);
+    cgmb_vint(ctx, baseX);
+    cgmb_vint(ctx, baseY);
+
+    cgmb_flush_cmd(ctx, final_flush);
+    cgmb_fb(ctx);
 }
 
 void BinaryMetafileWriter::textPath(TextPath value)
