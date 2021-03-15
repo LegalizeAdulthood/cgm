@@ -1152,7 +1152,7 @@ void ClearTextMetafileWriter::polygon(const std::vector<Point<int>> &points)
     cgmt_pgon_pt(&m_context, static_cast<int>(points.size()), points.data());
 }
 
-void ClearTextMetafileWriter::cellArray(Point<int> c1, Point<int> c2, Point<int> c3, int colorPrecision, int nx, int ny, int *colors)
+void ClearTextMetafileWriter::cellArray(Point<int> c1, Point<int> c2, Point<int> c3, int colorPrecision, int nx, int ny, const int *colors)
 {
     cgmt_carray_p(&m_context, c1.x, c1.y, c2.x, c2.y, c3.x, c3.y, colorPrecision, nx, ny, nx, colors);
 }

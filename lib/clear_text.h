@@ -48,7 +48,7 @@ public:
     void polymarker(const std::vector<Point<int>> &points) override;
     void text(Point<int> point, TextFlag flag, const char *text) override;
     void polygon(const std::vector<Point<int>> &points) override;
-    void cellArray(Point<int> c1, Point<int> c2, Point<int> c3, int colorPrecision, int nx, int ny, int *colors) override;
+    void cellArray( Point<int> c1, Point<int> c2, Point<int> c3, int colorPrecision, int nx, int ny, const int* colors ) override;
     void lineType(int value) override;
     void lineWidth(float value) override;
     void lineColor(int value) override;

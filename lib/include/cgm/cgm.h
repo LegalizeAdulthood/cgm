@@ -159,7 +159,7 @@ public:
     virtual void polymarker(const std::vector<Point<int>> &points) = 0;
     virtual void text(Point<int> point, TextFlag flag, const char *text) = 0;
     virtual void polygon(const std::vector<Point<int>> &points) = 0;
-    virtual void cellArray(Point<int> c1, Point<int> c2, Point<int> c3, int colorPrecision, int nx, int ny, int *colors) = 0;
+    virtual void cellArray(Point<int> c1, Point<int> c2, Point<int> c3, int colorPrecision, int nx, int ny, const int *colors) = 0;
     virtual void lineType(int value) = 0;
     virtual void lineWidth(float value) = 0;
     virtual void lineColor(int value) = 0;

@@ -922,105 +922,6 @@ static void cgmb_carray_p(cgm_context *ctx, int c1x, int c1y, int c2x, int c2y, 
     cgmb_fb(ctx);
 }
 
-/* Line type */
-static void cgmb_ltype_p(cgm_context *ctx, int line_type)
-{
-    cgmb_start_cmd(ctx, 5, (int) LType);
-
-    cgmb_xint(ctx, line_type);
-
-    cgmb_flush_cmd(ctx, final_flush);
-    cgmb_fb(ctx);
-}
-
-/* Line width */
-static void cgmb_lwidth_p(cgm_context *ctx, double rmul)
-{
-    cgmb_start_cmd(ctx, 5, (int) LWidth);
-
-    cgmb_fixed(ctx, rmul);
-
-    cgmb_flush_cmd(ctx, final_flush);
-    cgmb_fb(ctx);
-}
-
-/* Line colour */
-static void cgmb_lcolor_p(cgm_context *ctx, int index)
-{
-    cgmb_start_cmd(ctx, 5, (int) LColour);
-
-    cgmb_cxint(ctx, index);
-
-    cgmb_flush_cmd(ctx, final_flush);
-    cgmb_fb(ctx);
-}
-
-/* Marker type */
-static void cgmb_mtype_p(cgm_context *ctx, int marker)
-{
-    cgmb_start_cmd(ctx, 5, (int) MType);
-
-    cgmb_xint(ctx, marker);
-
-    cgmb_flush_cmd(ctx, final_flush);
-    cgmb_fb(ctx);
-}
-
-/* Marker size */
-static void cgmb_msize_p(cgm_context *ctx, double rmul)
-{
-    cgmb_start_cmd(ctx, 5, (int) MSize);
-
-    cgmb_fixed(ctx, rmul);
-
-    cgmb_flush_cmd(ctx, final_flush);
-    cgmb_fb(ctx);
-}
-
-/* Marker colour */
-static void cgmb_mcolor_p(cgm_context *ctx, int index)
-{
-    cgmb_start_cmd(ctx, 5, (int) MColour);
-
-    cgmb_cxint(ctx, index);
-
-    cgmb_flush_cmd(ctx, final_flush);
-    cgmb_fb(ctx);
-}
-
-/* Text font index */
-static void cgmb_tfindex_p(cgm_context *ctx, int index)
-{
-    cgmb_start_cmd(ctx, 5, (int) TFIndex);
-
-    cgmb_xint(ctx, index);
-
-    cgmb_flush_cmd(ctx, final_flush);
-    cgmb_fb(ctx);
-}
-
-/* Text precision */
-static void cgmb_tprec_p(cgm_context *ctx, int precision)
-{
-    cgmb_start_cmd(ctx, 5, (int) TPrec);
-
-    cgmb_eint(ctx, precision);
-
-    cgmb_flush_cmd(ctx, final_flush);
-    cgmb_fb(ctx);
-}
-
-/* Character expansion factor */
-static void cgmb_cexpfac_p(cgm_context *ctx, double factor)
-{
-    cgmb_start_cmd(ctx, 5, (int) CExpFac);
-
-    cgmb_fixed(ctx, factor);
-
-    cgmb_flush_cmd(ctx, final_flush);
-    cgmb_fb(ctx);
-}
-
 namespace cgm
 {
 
@@ -1227,54 +1128,108 @@ void BinaryMetafileWriter::polygon(const std::vector<Point<int>> &points)
     cgmb_pgon_pt(&m_context, static_cast<int>(points.size()), points.data());
 }
 
-void BinaryMetafileWriter::cellArray(Point<int> c1, Point<int> c2, Point<int> c3, int colorPrecision, int nx, int ny, int *colors)
+void BinaryMetafileWriter::cellArray(Point<int> c1, Point<int> c2, Point<int> c3, int colorPrecision, int nx, int ny, const int *colors)
 {
     cgmb_carray_p(&m_context, c1.x, c1.y, c2.x, c2.y, c3.x, c3.y, colorPrecision, nx, ny, nx, colors);
 }
 
 void BinaryMetafileWriter::lineType(int value)
 {
-    cgmb_ltype_p(&m_context, value);
+    cgm_context *ctx = &m_context;
+    cgmb_start_cmd(ctx, 5, (int) LType);
+
+    cgmb_xint(ctx, value);
+
+    cgmb_flush_cmd(ctx, final_flush);
+    cgmb_fb(ctx);
 }
 
 void BinaryMetafileWriter::lineWidth(float value)
 {
-    cgmb_lwidth_p(&m_context, static_cast<double>(value));
+    cgm_context *ctx = &m_context;
+    cgmb_start_cmd(ctx, 5, (int) LWidth);
+
+    cgmb_fixed(ctx, static_cast<double>(value));
+
+    cgmb_flush_cmd(ctx, final_flush);
+    cgmb_fb(ctx);
 }
 
 void BinaryMetafileWriter::lineColor(int value)
 {
-    cgmb_lcolor_p(&m_context, value);
+    cgm_context *ctx = &m_context;
+    cgmb_start_cmd(ctx, 5, (int) LColour);
+
+    cgmb_cxint(ctx, value);
+
+    cgmb_flush_cmd(ctx, final_flush);
+    cgmb_fb(ctx);
 }
 
 void BinaryMetafileWriter::markerType(int value)
 {
-    cgmb_mtype_p(&m_context, value);
+    cgm_context *ctx = &m_context;
+    cgmb_start_cmd(ctx, 5, (int) MType);
+
+    cgmb_xint(ctx, value);
+
+    cgmb_flush_cmd(ctx, final_flush);
+    cgmb_fb(ctx);
 }
 
 void BinaryMetafileWriter::markerSize(float value)
 {
-    cgmb_msize_p(&m_context, static_cast<double>(value));
+    cgm_context *ctx = &m_context;
+    cgmb_start_cmd(ctx, 5, (int) MSize);
+
+    cgmb_fixed(ctx, static_cast<double>(value));
+
+    cgmb_flush_cmd(ctx, final_flush);
+    cgmb_fb(ctx);
 }
 
 void BinaryMetafileWriter::markerColor(int value)
 {
-    cgmb_mcolor_p(&m_context, value);
+    cgm_context *ctx = &m_context;
+    cgmb_start_cmd(ctx, 5, (int) MColour);
+
+    cgmb_cxint(ctx, value);
+
+    cgmb_flush_cmd(ctx, final_flush);
+    cgmb_fb(ctx);
 }
 
 void BinaryMetafileWriter::textFontIndex(int value)
 {
-    cgmb_tfindex_p(&m_context, value);
+    cgm_context *ctx = &m_context;
+    cgmb_start_cmd(ctx, 5, (int) TFIndex);
+
+    cgmb_xint(ctx, value);
+
+    cgmb_flush_cmd(ctx, final_flush);
+    cgmb_fb(ctx);
 }
 
 void BinaryMetafileWriter::textPrecision(TextPrecision value)
 {
-    cgmb_tprec_p(&m_context, static_cast<int>(value));
+    cgm_context *ctx = &m_context;
+    cgmb_start_cmd(ctx, 5, (int) TPrec);
+
+    cgmb_eint(ctx, static_cast<int>(value));
+
+    cgmb_flush_cmd(ctx, final_flush);
+    cgmb_fb(ctx);
 }
 
 void BinaryMetafileWriter::charExpansion(float value)
 {
-    cgmb_cexpfac_p(&m_context, static_cast<double>(value));
+    cgm_context *ctx = &m_context;
+    cgmb_start_cmd(ctx, 5, (int) CExpFac);
+
+    cgmb_fixed(ctx, static_cast<double>(value));
+
+    cgmb_flush_cmd(ctx, final_flush);
+    cgmb_fb(ctx);
 }
 
 void BinaryMetafileWriter::charSpacing(float value)
