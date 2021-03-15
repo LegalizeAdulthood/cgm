@@ -1068,17 +1068,6 @@ static void cgmb_corient_p(cgm_context *ctx, int x_up, int y_up, int x_base, int
     cgmb_fb(ctx);
 }
 
-/* Text path */
-static void cgmb_tpath_p(cgm_context *ctx, int new_path)
-{
-    cgmb_start_cmd(ctx, 5, (int) TPath);
-
-    cgmb_eint(ctx, new_path);
-
-    cgmb_flush_cmd(ctx, final_flush);
-    cgmb_fb(ctx);
-}
-
 namespace cgm
 {
 
@@ -1357,7 +1346,13 @@ void BinaryMetafileWriter::charOrientation(int upX, int upY, int baseX, int base
 
 void BinaryMetafileWriter::textPath(TextPath value)
 {
-    cgmb_tpath_p(&m_context, static_cast<int>(value));
+    cgm_context *ctx = &m_context;
+    cgmb_start_cmd(ctx, 5, (int) TPath);
+
+    cgmb_eint(ctx, static_cast<int>(value));
+
+    cgmb_flush_cmd(ctx, final_flush);
+    cgmb_fb(ctx);
 }
 
 void BinaryMetafileWriter::textAlignment(HorizAlign horiz, VertAlign vert, float contHoriz, float contVert)
