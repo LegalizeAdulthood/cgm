@@ -1021,17 +1021,6 @@ static void cgmb_cexpfac_p(cgm_context *ctx, double factor)
     cgmb_fb(ctx);
 }
 
-/* Character space */
-static void cgmb_cspace_p(cgm_context *ctx, double space)
-{
-    cgmb_start_cmd(ctx, 5, (int) CSpace);
-
-    cgmb_fixed(ctx, space);
-
-    cgmb_flush_cmd(ctx, final_flush);
-    cgmb_fb(ctx);
-}
-
 namespace cgm
 {
 
@@ -1290,7 +1279,13 @@ void BinaryMetafileWriter::charExpansion(float value)
 
 void BinaryMetafileWriter::charSpacing(float value)
 {
-    cgmb_cspace_p(&m_context, static_cast<double>(value));
+    cgm_context *ctx = &m_context;
+    cgmb_start_cmd(ctx, 5, (int) CSpace);
+
+    cgmb_fixed(ctx, static_cast<double>(value));
+
+    cgmb_flush_cmd(ctx, final_flush);
+    cgmb_fb(ctx);
 }
 
 void BinaryMetafileWriter::textColor(int index)
