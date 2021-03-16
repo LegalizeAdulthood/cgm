@@ -500,19 +500,6 @@ static void cgmt_pline_pt(cgm_context *ctx, int numPoints, const cgm::Point<int>
 
     cgmt_flush_cmd(ctx, final_flush);
 }
-static void cgmt_pline_p(cgm_context *ctx, int no_pairs, int *x1_ptr, int *y1_ptr)
-{
-    int i;
-
-    cgmt_start_cmd(ctx, 4, (int) PolyLine);
-
-    for (i = 0; i < no_pairs; ++i)
-    {
-        cgmt_ipoint(ctx, x1_ptr[i], y1_ptr[i]);
-    }
-
-    cgmt_flush_cmd(ctx, final_flush);
-}
 
 /* Polymarker */
 static void cgmt_pmarker_pt(cgm_context *ctx, int numPoints, const cgm::Point<int> *points)
@@ -524,19 +511,6 @@ static void cgmt_pmarker_pt(cgm_context *ctx, int numPoints, const cgm::Point<in
     for (i = 0; i < numPoints; ++i)
     {
         cgmt_ipoint(ctx, points[i].x, points[i].y);
-    }
-
-    cgmt_flush_cmd(ctx, final_flush);
-}
-static void cgmt_pmarker_p(cgm_context *ctx, int no_pairs, int *x1_ptr, int *y1_ptr)
-{
-    int i;
-
-    cgmt_start_cmd(ctx, 4, (int) PolyMarker);
-
-    for (i = 0; i < no_pairs; ++i)
-    {
-        cgmt_ipoint(ctx, x1_ptr[i], y1_ptr[i]);
     }
 
     cgmt_flush_cmd(ctx, final_flush);
@@ -566,19 +540,6 @@ static void cgmt_pgon_pt(cgm_context *ctx, int no_pairs, const cgm::Point<int> *
     for (i = 0; i < no_pairs; ++i)
     {
         cgmt_ipoint(ctx, points[i].x, points[i].y);
-    }
-
-    cgmt_flush_cmd(ctx, final_flush);
-}
-static void cgmt_pgon_p(cgm_context *ctx, int no_pairs, int *x1_ptr, int *y1_ptr)
-{
-    int i;
-
-    cgmt_start_cmd(ctx, 4, (int) C_Polygon);
-
-    for (i = 0; i < no_pairs; ++i)
-    {
-        cgmt_ipoint(ctx, x1_ptr[i], y1_ptr[i]);
     }
 
     cgmt_flush_cmd(ctx, final_flush);
@@ -892,23 +853,6 @@ static void cgmt_coltab_c(cgm_context *ctx, int startIndex, int numColors, const
         cgmt_int(ctx, (int) (colors[(i - startIndex)].red * (max_colors - 1)));
         cgmt_int(ctx, (int) (colors[(i - startIndex)].green * (max_colors - 1)));
         cgmt_int(ctx, (int) (colors[(i - startIndex)].blue * (max_colors - 1)));
-    }
-
-    cgmt_flush_cmd(ctx, final_flush);
-}
-static void cgmt_coltab_p(cgm_context *ctx, int beg_index, int no_entries, double *ctab)
-{
-    int i, j;
-
-    cgmt_start_cmd(ctx, 5, (int) ColTab);
-    cgmt_int(ctx, beg_index);
-
-    for (i = beg_index; i < (beg_index + no_entries); ++i)
-    {
-        for (j = 0; j < 3; ++j)
-        {
-            cgmt_int(ctx, (int) (ctab[(i - beg_index) * 3 + j] * (max_colors - 1)));
-        }
     }
 
     cgmt_flush_cmd(ctx, final_flush);
