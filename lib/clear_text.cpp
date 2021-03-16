@@ -22,20 +22,6 @@
 
 static char digits[10] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
 
-/* Flush output buffer */
-static void cgmt_fb(cgm_context *ctx)
-{
-    if (ctx->buffer_ind != 0)
-    {
-        ctx->buffer[ctx->buffer_ind++] = '\n';
-        ctx->buffer[ctx->buffer_ind] = '\0';
-        ctx->flush_buffer(ctx, ctx->flush_buffer_context);
-
-        ctx->buffer_ind = 0;
-        ctx->buffer[0] = '\0';
-    }
-}
-
 namespace cgm
 {
 
@@ -49,6 +35,20 @@ ClearTextMetafileWriter::ClearTextMetafileWriter(int fd)
     : MetafileStreamWriter(fd)
 {
     m_context.encode = cgm_clear_text;
+}
+
+/* Flush output buffer */
+void ClearTextMetafileWriter::cgmt_fb(cgm_context *ctx)
+{
+    if (ctx->buffer_ind != 0)
+    {
+        ctx->buffer[ctx->buffer_ind++] = '\n';
+        ctx->buffer[ctx->buffer_ind] = '\0';
+        ctx->flush_buffer(ctx, ctx->flush_buffer_context);
+
+        ctx->buffer_ind = 0;
+        ctx->buffer[0] = '\0';
+    }
 }
 
 /* Write a character to CGM clear text */
