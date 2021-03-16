@@ -193,14 +193,6 @@ static void cgmt_bp_p(cgm_context *ctx, const char *pic_name)
     cgmt_flush_cmd(ctx, final_flush);
 }
 
-/* Begin picture body */
-static void cgmt_bpage_p(cgm_context *ctx)
-{
-    cgmt_start_cmd(ctx, 0, (int) B_Pic_Body);
-
-    cgmt_flush_cmd(ctx, final_flush);
-}
-
 namespace cgm
 {
 
@@ -234,7 +226,10 @@ void ClearTextMetafileWriter::beginPicture(char const *identifier)
 
 void ClearTextMetafileWriter::beginPictureBody()
 {
-    cgmt_bpage_p(&m_context);
+    cgm_context *ctx = &m_context;
+    cgmt_start_cmd(ctx, 0, (int) B_Pic_Body);
+
+    cgmt_flush_cmd(ctx, final_flush);
 }
 
 void ClearTextMetafileWriter::endPicture()
