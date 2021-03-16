@@ -832,32 +832,6 @@ static void cgmt_hindex_p(cgm_context *ctx, int new_index)
     cgmt_flush_cmd(ctx, final_flush);
 }
 
-/* Pattern index */
-static void cgmt_pindex_p(cgm_context *ctx, int new_index)
-{
-    cgmt_start_cmd(ctx, 5, (int) PatIndex);
-    cgmt_int(ctx, new_index);
-    cgmt_flush_cmd(ctx, final_flush);
-}
-
-/* Colour table */
-static void cgmt_coltab_c(cgm_context *ctx, int startIndex, int numColors, const cgm::Color *colors)
-{
-    int i, j;
-
-    cgmt_start_cmd(ctx, 5, (int) ColTab);
-    cgmt_int(ctx, startIndex);
-
-    for (i = startIndex; i < (startIndex + numColors); ++i)
-    {
-        cgmt_int(ctx, (int) (colors[(i - startIndex)].red * (max_colors - 1)));
-        cgmt_int(ctx, (int) (colors[(i - startIndex)].green * (max_colors - 1)));
-        cgmt_int(ctx, (int) (colors[(i - startIndex)].blue * (max_colors - 1)));
-    }
-
-    cgmt_flush_cmd(ctx, final_flush);
-}
-
 /* Cell array */
 static void cgmt_carray_p(cgm_context *ctx, int c1x, int c1y, int c2x, int c2y, int c3x, int c3y, int colorPrecision, int nx, int ny, int dimx, const int *array)
 {
@@ -1193,12 +1167,27 @@ void ClearTextMetafileWriter::hatchIndex(int value)
 
 void ClearTextMetafileWriter::patternIndex(int value)
 {
-    cgmt_pindex_p(&m_context, value);
+    cgm_context *ctx = &m_context;
+    cgmt_start_cmd(ctx, 5, (int) PatIndex);
+    cgmt_int(ctx, value);
+    cgmt_flush_cmd(ctx, final_flush);
 }
 
-void ClearTextMetafileWriter::colorTable(int startIndex, std::vector<Color> const &colors)
+void ClearTextMetafileWriter::colorTable(int startIndex, std::vector<Color> const &colorTable)
 {
-    cgmt_coltab_c(&m_context, startIndex, static_cast<int>(colors.size()), colors.data());
+    cgm_context *ctx = &m_context;
+
+    cgmt_start_cmd(ctx, 5, (int) ColTab);
+    cgmt_int(ctx, startIndex);
+
+    for (int i = startIndex; i < (startIndex + static_cast<int>(colorTable.size())); ++i)
+    {
+        cgmt_int(ctx, (int) (colorTable[(i - startIndex)].red * (max_colors - 1)));
+        cgmt_int(ctx, (int) (colorTable[(i - startIndex)].green * (max_colors - 1)));
+        cgmt_int(ctx, (int) (colorTable[(i - startIndex)].blue * (max_colors - 1)));
+    }
+
+    cgmt_flush_cmd(ctx, final_flush);
 }
 
 }        // namespace cgm
