@@ -46,20 +46,6 @@ static void cgmt_outc(cgm_context *ctx, char chr)
     ctx->buffer[ctx->buffer_ind] = '\0';
 }
 
-/* Write string to CGM clear text */
-static void cgmt_out_string(cgm_context *ctx, const char *string)
-{
-    if ((int) (ctx->buffer_ind + strlen(string)) >= cgmt_recl)
-    {
-        cgmt_fb(ctx);
-        strcpy(ctx->buffer, "   ");
-        ctx->buffer_ind = 3;
-    }
-
-    strcat(ctx->buffer, string);
-    ctx->buffer_ind = ctx->buffer_ind + static_cast<int>(strlen(string));
-}
-
 namespace cgm
 {
 
@@ -73,6 +59,20 @@ ClearTextMetafileWriter::ClearTextMetafileWriter(int fd)
     : MetafileStreamWriter(fd)
 {
     m_context.encode = cgm_clear_text;
+}
+
+/* Write string to CGM clear text */
+void ClearTextMetafileWriter::cgmt_out_string(cgm_context *ctx, const char *string)
+{
+    if ((int) (ctx->buffer_ind + strlen(string)) >= cgmt_recl)
+    {
+        cgmt_fb(ctx);
+        strcpy(ctx->buffer, "   ");
+        ctx->buffer_ind = 3;
+    }
+
+    strcat(ctx->buffer, string);
+    ctx->buffer_ind = ctx->buffer_ind + static_cast<int>(strlen(string));
 }
 
 /* Start output command */
