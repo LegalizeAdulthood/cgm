@@ -347,25 +347,6 @@ static void cgmt_mfellist_p(cgm_context *ctx)
     cgmt_flush_cmd(ctx, final_flush);
 }
 
-/* Font List */
-static void cgmt_fontlist_p(cgm_context *ctx, int numFonts, const char **fonts)
-{
-    int i;
-    char s[max_str];
-
-    cgmt_start_cmd(ctx, 1, (int) FontList);
-
-    cgmt_outc(ctx, ' ');
-
-    for (i = 0; i < numFonts; i++)
-    {
-        sprintf(s, "'%s'%s", fonts[i], (i < numFonts - 1) ? ", " : "");
-        cgmt_out_string(ctx, s);
-    }
-
-    cgmt_flush_cmd(ctx, final_flush);
-}
-
 namespace cgm
 {
 
@@ -489,13 +470,21 @@ void ClearTextMetafileWriter::metafileElementList()
 
 void ClearTextMetafileWriter::fontList(std::vector<std::string> const &fonts)
 {
-    std::vector<const char *> fontNames;
-    fontNames.reserve(fonts.size());
-    for (const std::string &font : fonts)
+    cgm_context *ctx = &m_context;
+    char s[max_str];
+
+    cgmt_start_cmd(ctx, 1, (int) FontList);
+
+    cgmt_outc(ctx, ' ');
+
+    const int numFonts = static_cast<int>(fonts.size());
+    for (int i = 0; i < numFonts; i++)
     {
-        fontNames.push_back(font.c_str());
+        sprintf(s, "'%s'%s", fonts[i].c_str(), (i < numFonts - 1) ? ", " : "");
+        cgmt_out_string(ctx, s);
     }
-    cgmt_fontlist_p(&m_context, static_cast<int>(fonts.size()), fontNames.data());
+
+    cgmt_flush_cmd(ctx, final_flush);
 }
 
 void ClearTextMetafileWriter::characterCodingAnnouncer(CharCodeAnnouncer value)
