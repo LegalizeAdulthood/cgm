@@ -476,16 +476,6 @@ static void cgmt_cliprect_p(cgm_context *ctx, int llx, int lly, int urx, int ury
     cgmt_flush_cmd(ctx, final_flush);
 }
 
-/* Clip indicator */
-static void cgmt_clipindic_p(cgm_context *ctx, bool clip_ind)
-{
-    cgmt_start_cmd(ctx, 3, (int) ClipIndic);
-
-    cgmt_out_string(ctx, clip_ind ? " On" : " Off");
-
-    cgmt_flush_cmd(ctx, final_flush);
-}
-
 namespace cgm
 {
 
@@ -670,7 +660,12 @@ void ClearTextMetafileWriter::clipRectangle(int llx, int lly, int urx, int ury)
 
 void ClearTextMetafileWriter::clipIndicator(bool enabled)
 {
-    cgmt_clipindic_p(&m_context, enabled);
+    cgm_context *ctx = &m_context;
+    cgmt_start_cmd(ctx, 3, (int) ClipIndic);
+
+    cgmt_out_string(ctx, enabled ? " On" : " Off");
+
+    cgmt_flush_cmd(ctx, final_flush);
 }
 
 void ClearTextMetafileWriter::polyline(const std::vector<Point<int>> &points)
