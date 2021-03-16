@@ -501,21 +501,6 @@ static void cgmt_pline_pt(cgm_context *ctx, int numPoints, const cgm::Point<int>
     cgmt_flush_cmd(ctx, final_flush);
 }
 
-/* Polymarker */
-static void cgmt_pmarker_pt(cgm_context *ctx, int numPoints, const cgm::Point<int> *points)
-{
-    int i;
-
-    cgmt_start_cmd(ctx, 4, (int) PolyMarker);
-
-    for (i = 0; i < numPoints; ++i)
-    {
-        cgmt_ipoint(ctx, points[i].x, points[i].y);
-    }
-
-    cgmt_flush_cmd(ctx, final_flush);
-}
-
 namespace cgm
 {
 
@@ -710,7 +695,16 @@ void ClearTextMetafileWriter::polyline(const std::vector<Point<int>> &points)
 
 void ClearTextMetafileWriter::polymarker(const std::vector<Point<int>> &points)
 {
-    cgmt_pmarker_pt(&m_context, static_cast<int>(points.size()), points.data());
+    cgm_context *ctx = &m_context;
+
+    cgmt_start_cmd(ctx, 4, (int) PolyMarker);
+
+    for (const Point<int> &i : points)
+    {
+        cgmt_ipoint(ctx, i.x, i.y);
+    }
+
+    cgmt_flush_cmd(ctx, final_flush);
 }
 
 void ClearTextMetafileWriter::text(Point<int> point, TextFlag flag, const char *text)
