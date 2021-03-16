@@ -52,7 +52,7 @@ void ClearTextMetafileWriter::cgmt_fb()
 }
 
 /* Write a character to CGM clear text */
-void ClearTextMetafileWriter::cgmt_outc(cgm_context *ctx, char chr)
+void ClearTextMetafileWriter::cgmt_outc(char chr)
 {
     if (m_context.buffer_ind >= cgmt_recl)
         cgmt_fb();
@@ -84,7 +84,7 @@ void ClearTextMetafileWriter::cgmt_start_cmd(cgm_context *p, int cl, int el)
 /* Flush output command */
 void ClearTextMetafileWriter::cgmt_flush_cmd(cgm_context *ctx, int this_flush)
 {
-    cgmt_outc(ctx, term_char);
+    cgmt_outc(term_char);
     cgmt_fb();
 }
 
@@ -93,20 +93,20 @@ void ClearTextMetafileWriter::cgmt_string(cgm_context *ctx, const char *cptr, in
 {
     int i;
 
-    cgmt_outc(ctx, ' ');
-    cgmt_outc(ctx, quote_char);
+    cgmt_outc(' ');
+    cgmt_outc(quote_char);
 
     for (i = 0; i < slen; ++i)
     {
         if (cptr[i] == quote_char)
         {
-            cgmt_outc(ctx, quote_char);
+            cgmt_outc(quote_char);
         }
 
-        cgmt_outc(ctx, cptr[i]);
+        cgmt_outc(cptr[i]);
     }
 
-    cgmt_outc(ctx, quote_char);
+    cgmt_outc(quote_char);
 }
 
 /* Write a signed integer variable */
@@ -132,7 +132,7 @@ void ClearTextMetafileWriter::cgmt_int(cgm_context *ctx, int xin)
         *--cptr = digits[0];
 
         if ((int) (ctx->buffer_ind + strlen(cptr)) < cgmt_recl)
-            cgmt_outc(ctx, ' ');
+            cgmt_outc(' ');
 
         cgmt_out_string(ctx, cptr); /* all done */
         return;
@@ -149,7 +149,7 @@ void ClearTextMetafileWriter::cgmt_int(cgm_context *ctx, int xin)
         *--cptr = '-';
 
     if ((int) (ctx->buffer_ind + strlen(cptr)) < cgmt_recl)
-        cgmt_outc(ctx, ' ');
+        cgmt_outc(' ');
 
     cgmt_out_string(ctx, cptr);
 }
@@ -371,18 +371,18 @@ void ClearTextMetafileWriter::metafileElementList()
 
     cgmt_start_cmd(ctx, 1, (int) MfElList);
 
-    cgmt_outc(ctx, ' ');
-    cgmt_outc(ctx, quote_char);
+    cgmt_outc(' ');
+    cgmt_outc(quote_char);
 
     for (int i = 2; i < 2 * n_melements; i += 2)
     {
         cgmt_out_string(ctx, cgmt_cptr[element_list[i]][element_list[i + 1]]);
 
         if (i < 2 * (n_melements - 1))
-            cgmt_outc(ctx, ' ');
+            cgmt_outc(' ');
     }
 
-    cgmt_outc(ctx, quote_char);
+    cgmt_outc(quote_char);
     cgmt_flush_cmd(ctx, final_flush);
 }
 
@@ -393,7 +393,7 @@ void ClearTextMetafileWriter::fontList(std::vector<std::string> const &fonts)
 
     cgmt_start_cmd(ctx, 1, (int) FontList);
 
-    cgmt_outc(ctx, ' ');
+    cgmt_outc(' ');
 
     const int numFonts = static_cast<int>(fonts.size());
     for (int i = 0; i < numFonts; i++)
@@ -416,7 +416,7 @@ void ClearTextMetafileWriter::characterCodingAnnouncer(CharCodeAnnouncer value)
     };
     cgmt_start_cmd(ctx, 1, (int) CharAnnounce);
 
-    cgmt_outc(ctx, ' ');
+    cgmt_outc(' ');
     cgmt_out_string(ctx, announcerNames[static_cast<int>(value)]);
 
     cgmt_flush_cmd(ctx, final_flush);
@@ -602,7 +602,7 @@ void ClearTextMetafileWriter::cellArray(Point<int> c1, Point<int> c2, Point<int>
             cgmt_int(ctx, c);
 
             if (ix < nx - 1)
-                cgmt_outc(ctx, ',');
+                cgmt_outc(',');
         }
     }
 
