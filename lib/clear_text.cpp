@@ -163,7 +163,7 @@ void ClearTextMetafileWriter::cgmt_real(double xin)
 }
 
 /* Write an integer point */
-void ClearTextMetafileWriter::cgmt_ipoint(cgm_context *ctx, int x, int y)
+void ClearTextMetafileWriter::cgmt_ipoint(int x, int y)
 {
     char buffer[max_str];
 
@@ -467,8 +467,8 @@ void ClearTextMetafileWriter::vdcExtent(int llx, int lly, int urx, int ury)
     cgm_context *ctx = &m_context;
     cgmt_start_cmd(2, (int) cgm_class_2::vdcExtent);
 
-    cgmt_ipoint(ctx, llx, lly);
-    cgmt_ipoint(ctx, urx, ury);
+    cgmt_ipoint(llx, lly);
+    cgmt_ipoint(urx, ury);
 
     cgmt_flush_cmd();
 }
@@ -506,8 +506,8 @@ void ClearTextMetafileWriter::clipRectangle(int llx, int lly, int urx, int ury)
     cgm_context *ctx = &m_context;
     cgmt_start_cmd(3, (int) ClipRect);
 
-    cgmt_ipoint(ctx, llx, lly);
-    cgmt_ipoint(ctx, urx, ury);
+    cgmt_ipoint(llx, lly);
+    cgmt_ipoint(urx, ury);
 
     cgmt_flush_cmd();
 }
@@ -530,7 +530,7 @@ void ClearTextMetafileWriter::polyline(const std::vector<Point<int>> &points)
 
     for (const Point<int> &point : points)
     {
-        cgmt_ipoint(ctx, point.x, point.y);
+        cgmt_ipoint(point.x, point.y);
     }
 
     cgmt_flush_cmd();
@@ -544,7 +544,7 @@ void ClearTextMetafileWriter::polymarker(const std::vector<Point<int>> &points)
 
     for (const Point<int> &i : points)
     {
-        cgmt_ipoint(ctx, i.x, i.y);
+        cgmt_ipoint(i.x, i.y);
     }
 
     cgmt_flush_cmd();
@@ -555,7 +555,7 @@ void ClearTextMetafileWriter::text(Point<int> point, TextFlag flag, const char *
     cgm_context *ctx = &m_context;
     cgmt_start_cmd(4, (int) Text);
 
-    cgmt_ipoint(ctx, point.x, point.y);
+    cgmt_ipoint(point.x, point.y);
 
     cgmt_out_string(flag == TextFlag::Final ? " Final" : " NotFinal");
 
@@ -572,7 +572,7 @@ void ClearTextMetafileWriter::polygon(const std::vector<Point<int>> &points)
 
     for (const Point<int> &i : points)
     {
-        cgmt_ipoint(ctx, i.x, i.y);
+        cgmt_ipoint(i.x, i.y);
     }
 
     cgmt_flush_cmd();
@@ -584,9 +584,9 @@ void ClearTextMetafileWriter::cellArray(Point<int> c1, Point<int> c2, Point<int>
 
     cgmt_start_cmd(4, (int) Cell_Array);
 
-    cgmt_ipoint(ctx, c1.x, c1.y);
-    cgmt_ipoint(ctx, c2.x, c2.y);
-    cgmt_ipoint(ctx, c3.x, c3.y);
+    cgmt_ipoint(c1.x, c1.y);
+    cgmt_ipoint(c2.x, c2.y);
+    cgmt_ipoint(c3.x, c3.y);
     cgmt_int(nx);
     cgmt_int(ny);
     cgmt_int(colorPrecision);

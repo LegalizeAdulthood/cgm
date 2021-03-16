@@ -79,7 +79,7 @@ private:
     void cgmt_string(const char *cptr, int slen);
     void cgmt_int(int xin);
     void cgmt_real(double xin);
-    void cgmt_ipoint(cgm_context *ctx, int x, int y);
+    void cgmt_ipoint(int x, int y);
 };
 
 }        // namespace cgm
