@@ -516,20 +516,6 @@ static void cgmt_pmarker_pt(cgm_context *ctx, int numPoints, const cgm::Point<in
     cgmt_flush_cmd(ctx, final_flush);
 }
 
-/* Text */
-static void cgmt_text_p(cgm_context *ctx, int x, int y, bool final, const char *buffer)
-{
-    cgmt_start_cmd(ctx, 4, (int) Text);
-
-    cgmt_ipoint(ctx, x, y);
-
-    cgmt_out_string(ctx, final ? " Final" : " NotFinal");
-
-    cgmt_string(ctx, buffer, strlen(buffer));
-
-    cgmt_flush_cmd(ctx, final_flush);
-}
-
 namespace cgm
 {
 
@@ -729,7 +715,16 @@ void ClearTextMetafileWriter::polymarker(const std::vector<Point<int>> &points)
 
 void ClearTextMetafileWriter::text(Point<int> point, TextFlag flag, const char *text)
 {
-    cgmt_text_p(&m_context, point.x, point.y, static_cast<int>(flag), text);
+    cgm_context *ctx = &m_context;
+    cgmt_start_cmd(ctx, 4, (int) Text);
+
+    cgmt_ipoint(ctx, point.x, point.y);
+
+    cgmt_out_string(ctx, flag == TextFlag::Final ? " Final" : " NotFinal");
+
+    cgmt_string(ctx, text, strlen(text));
+
+    cgmt_flush_cmd(ctx, final_flush);
 }
 
 void ClearTextMetafileWriter::polygon(const std::vector<Point<int>> &points)
