@@ -545,16 +545,6 @@ static void cgmt_pgon_pt(cgm_context *ctx, int no_pairs, const cgm::Point<int> *
     cgmt_flush_cmd(ctx, final_flush);
 }
 
-/* Line type */
-static void cgmt_ltype_p(cgm_context *ctx, int line_type)
-{
-    cgmt_start_cmd(ctx, 5, (int) LType);
-
-    cgmt_int(ctx, (int) line_type);
-
-    cgmt_flush_cmd(ctx, final_flush);
-}
-
 /* Cell array */
 static void cgmt_carray_p(cgm_context *ctx, int c1x, int c1y, int c2x, int c2y, int c3x, int c3y, int colorPrecision, int nx, int ny, int dimx, const int *array)
 {
@@ -800,7 +790,12 @@ void ClearTextMetafileWriter::cellArray(Point<int> c1, Point<int> c2, Point<int>
 
 void ClearTextMetafileWriter::lineType(int value)
 {
-    cgmt_ltype_p(&m_context, value);
+    cgm_context *ctx = &m_context;
+    cgmt_start_cmd(ctx, 5, (int) LType);
+
+    cgmt_int(ctx, (int) value);
+
+    cgmt_flush_cmd(ctx, final_flush);
 }
 
 void ClearTextMetafileWriter::lineWidth(float value)
