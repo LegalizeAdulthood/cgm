@@ -89,7 +89,7 @@ void ClearTextMetafileWriter::cgmt_flush_cmd()
 }
 
 /* Write a CGM clear text string */
-void ClearTextMetafileWriter::cgmt_string(cgm_context *ctx, const char *cptr, int slen)
+void ClearTextMetafileWriter::cgmt_string(const char *cptr, int slen)
 {
     int i;
 
@@ -178,9 +178,9 @@ void ClearTextMetafileWriter::beginMetafile(const char *identifier)
     cgmt_start_cmd(0, (int) B_Mf);
 
     if (*identifier)
-        cgmt_string(ctx, identifier, static_cast<int>(strlen(identifier)));
+        cgmt_string(identifier, static_cast<int>(strlen(identifier)));
     else
-        cgmt_string(ctx, nullptr, 0);
+        cgmt_string(nullptr, 0);
 
     cgmt_flush_cmd();
 }
@@ -201,9 +201,9 @@ void ClearTextMetafileWriter::beginPicture(char const *identifier)
     cgmt_start_cmd(0, (int) B_Pic);
 
     if (*identifier)
-        cgmt_string(ctx, identifier, strlen(identifier));
+        cgmt_string(identifier, strlen(identifier));
     else
-        cgmt_string(ctx, NULL, 0);
+        cgmt_string(NULL, 0);
 
     cgmt_flush_cmd();
 }
@@ -239,7 +239,7 @@ void ClearTextMetafileWriter::metafileDescription(char const *value)
     cgm_context *ctx = &m_context;
     cgmt_start_cmd(1, MfDescrip);
 
-    cgmt_string(ctx, value, strlen(value));
+    cgmt_string(value, strlen(value));
 
     cgmt_flush_cmd();
 }
@@ -560,7 +560,7 @@ void ClearTextMetafileWriter::text(Point<int> point, TextFlag flag, const char *
 
     cgmt_out_string(flag == TextFlag::Final ? " Final" : " NotFinal");
 
-    cgmt_string(ctx, text, strlen(text));
+    cgmt_string(text, strlen(text));
 
     cgmt_flush_cmd();
 }
