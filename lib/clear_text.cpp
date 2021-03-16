@@ -442,18 +442,6 @@ static void cgmt_vdcextent_p(cgm_context *ctx, int llx, int lly, int urx, int ur
     cgmt_flush_cmd(ctx, final_flush);
 }
 
-/* Background colour */
-static void cgmt_backcol_p(cgm_context *ctx, int red, int green, int blue)
-{
-    cgmt_start_cmd(ctx, 2, (int) BackCol);
-
-    cgmt_int(ctx, red);
-    cgmt_int(ctx, green);
-    cgmt_int(ctx, blue);
-
-    cgmt_flush_cmd(ctx, final_flush);
-}
-
 namespace cgm
 {
 
@@ -618,7 +606,14 @@ void ClearTextMetafileWriter::vdcExtent(int llx, int lly, int urx, int ury)
 
 void ClearTextMetafileWriter::backgroundColor(int red, int green, int blue)
 {
-    cgmt_backcol_p(&m_context, red, green, blue);
+    cgm_context *ctx = &m_context;
+    cgmt_start_cmd(ctx, 2, (int) BackCol);
+
+    cgmt_int(ctx, red);
+    cgmt_int(ctx, green);
+    cgmt_int(ctx, blue);
+
+    cgmt_flush_cmd(ctx, final_flush);
 }
 
 void ClearTextMetafileWriter::vdcIntegerPrecisionClearText(int min, int max)
