@@ -668,16 +668,6 @@ static void cgmt_tcolor_p(cgm_context *ctx, int index)
     cgmt_flush_cmd(ctx, final_flush);
 }
 
-/* Character height */
-static void cgmt_cheight_p(cgm_context *ctx, int height)
-{
-    cgmt_start_cmd(ctx, 5, (int) CHeight);
-
-    cgmt_int(ctx, height);
-
-    cgmt_flush_cmd(ctx, final_flush);
-}
-
 /* Cell array */
 static void cgmt_carray_p(cgm_context *ctx, int c1x, int c1y, int c2x, int c2y, int c3x, int c3y, int colorPrecision, int nx, int ny, int dimx, const int *array)
 {
@@ -978,7 +968,12 @@ void ClearTextMetafileWriter::textColor(int index)
 
 void ClearTextMetafileWriter::charHeight(int value)
 {
-    cgmt_cheight_p(&m_context, value);
+    cgm_context *ctx = &m_context;
+    cgmt_start_cmd(ctx, 5, (int) CHeight);
+
+    cgmt_int(ctx, value);
+
+    cgmt_flush_cmd(ctx, final_flush);
 }
 
 void ClearTextMetafileWriter::charOrientation(int upX, int upY, int baseX, int baseY)
