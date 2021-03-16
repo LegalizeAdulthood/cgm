@@ -54,11 +54,11 @@ void ClearTextMetafileWriter::cgmt_fb()
 /* Write a character to CGM clear text */
 void ClearTextMetafileWriter::cgmt_outc(cgm_context *ctx, char chr)
 {
-    if (ctx->buffer_ind >= cgmt_recl)
+    if (m_context.buffer_ind >= cgmt_recl)
         cgmt_fb();
 
-    ctx->buffer[ctx->buffer_ind++] = chr;
-    ctx->buffer[ctx->buffer_ind] = '\0';
+    m_context.buffer[m_context.buffer_ind++] = chr;
+    m_context.buffer[m_context.buffer_ind] = '\0';
 }
 
 /* Write string to CGM clear text */
