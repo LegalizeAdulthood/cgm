@@ -157,19 +157,6 @@ static void cgmt_ipoint(cgm_context *ctx, int x, int y)
     cgmt_out_string(ctx, buffer);
 }
 
-/* Begin metafile */
-static void cgmt_begin_p(cgm_context *p, const char *comment)
-{
-    cgmt_start_cmd(p, 0, (int) B_Mf);
-
-    if (*comment)
-        cgmt_string(p, comment, static_cast<int>(strlen(comment)));
-    else
-        cgmt_string(p, nullptr, 0);
-
-    cgmt_flush_cmd(p, final_flush);
-}
-
 namespace cgm
 {
 
@@ -185,10 +172,17 @@ ClearTextMetafileWriter::ClearTextMetafileWriter(int fd)
     m_context.encode = cgm_clear_text;
 }
 
-
 void ClearTextMetafileWriter::beginMetafile(const char *identifier)
 {
-    cgmt_begin_p(&m_context, identifier);
+    cgm_context *ctx = &m_context;
+    cgmt_start_cmd(ctx, 0, (int) B_Mf);
+
+    if (*identifier)
+        cgmt_string(ctx, identifier, static_cast<int>(strlen(identifier)));
+    else
+        cgmt_string(ctx, nullptr, 0);
+
+    cgmt_flush_cmd(ctx, final_flush);
 }
 
 void ClearTextMetafileWriter::endMetafile()
