@@ -73,7 +73,7 @@ public:
 private:
     void cgmt_fb();
     void cgmt_outc( char chr );
-    void cgmt_out_string(cgm_context *ctx, const char *string);
+    void cgmt_out_string( const char *string );
     void cgmt_start_cmd(cgm_context *p, int cl, int el);
     void cgmt_flush_cmd(cgm_context *ctx, int this_flush);
     void cgmt_string(cgm_context *ctx, const char *cptr, int slen);

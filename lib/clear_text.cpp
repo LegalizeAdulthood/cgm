@@ -62,23 +62,23 @@ void ClearTextMetafileWriter::cgmt_outc(char chr)
 }
 
 /* Write string to CGM clear text */
-void ClearTextMetafileWriter::cgmt_out_string(cgm_context *ctx, const char *string)
+void ClearTextMetafileWriter::cgmt_out_string(const char *string)
 {
-    if ((int) (ctx->buffer_ind + strlen(string)) >= cgmt_recl)
+    if ((int) (m_context.buffer_ind + strlen(string)) >= cgmt_recl)
     {
         cgmt_fb();
-        strcpy(ctx->buffer, "   ");
-        ctx->buffer_ind = 3;
+        strcpy(m_context.buffer, "   ");
+        m_context.buffer_ind = 3;
     }
 
-    strcat(ctx->buffer, string);
-    ctx->buffer_ind = ctx->buffer_ind + static_cast<int>(strlen(string));
+    strcat(m_context.buffer, string);
+    m_context.buffer_ind = m_context.buffer_ind + static_cast<int>(strlen(string));
 }
 
 /* Start output command */
 void ClearTextMetafileWriter::cgmt_start_cmd(cgm_context *p, int cl, int el)
 {
-    cgmt_out_string(p, cgmt_cptr[cl][el]);
+    cgmt_out_string(cgmt_cptr[cl][el]);
 }
 
 /* Flush output command */
@@ -134,7 +134,7 @@ void ClearTextMetafileWriter::cgmt_int(cgm_context *ctx, int xin)
         if ((int) (ctx->buffer_ind + strlen(cptr)) < cgmt_recl)
             cgmt_outc(' ');
 
-        cgmt_out_string(ctx, cptr); /* all done */
+        cgmt_out_string(cptr); /* all done */
         return;
     }
 
@@ -151,7 +151,7 @@ void ClearTextMetafileWriter::cgmt_int(cgm_context *ctx, int xin)
     if ((int) (ctx->buffer_ind + strlen(cptr)) < cgmt_recl)
         cgmt_outc(' ');
 
-    cgmt_out_string(ctx, cptr);
+    cgmt_out_string(cptr);
 }
 
 /* Write a real variable */
@@ -160,7 +160,7 @@ void ClearTextMetafileWriter::cgmt_real(cgm_context *ctx, double xin)
     char buffer[max_str];
 
     sprintf(buffer, " %.6f", xin);
-    cgmt_out_string(ctx, buffer);
+    cgmt_out_string(buffer);
 }
 
 /* Write an integer point */
@@ -169,7 +169,7 @@ void ClearTextMetafileWriter::cgmt_ipoint(cgm_context *ctx, int x, int y)
     char buffer[max_str];
 
     sprintf(buffer, " %d,%d", x, y);
-    cgmt_out_string(ctx, buffer);
+    cgmt_out_string(buffer);
 }
 
 void ClearTextMetafileWriter::beginMetafile(const char *identifier)
@@ -251,11 +251,11 @@ void ClearTextMetafileWriter::vdcType(VdcType type)
 
     if (type == VdcType::Integer)
     {
-        cgmt_out_string(ctx, " Integer");
+        cgmt_out_string(" Integer");
     }
     else if (type == VdcType::Real)
     {
-        cgmt_out_string(ctx, " Real");
+        cgmt_out_string(" Real");
     }
 
     cgmt_flush_cmd(ctx, final_flush);
@@ -376,7 +376,7 @@ void ClearTextMetafileWriter::metafileElementList()
 
     for (int i = 2; i < 2 * n_melements; i += 2)
     {
-        cgmt_out_string(ctx, cgmt_cptr[element_list[i]][element_list[i + 1]]);
+        cgmt_out_string(cgmt_cptr[element_list[i]][element_list[i + 1]]);
 
         if (i < 2 * (n_melements - 1))
             cgmt_outc(' ');
@@ -399,7 +399,7 @@ void ClearTextMetafileWriter::fontList(std::vector<std::string> const &fonts)
     for (int i = 0; i < numFonts; i++)
     {
         sprintf(s, "'%s'%s", fonts[i].c_str(), (i < numFonts - 1) ? ", " : "");
-        cgmt_out_string(ctx, s);
+        cgmt_out_string(s);
     }
 
     cgmt_flush_cmd(ctx, final_flush);
@@ -417,7 +417,7 @@ void ClearTextMetafileWriter::characterCodingAnnouncer(CharCodeAnnouncer value)
     cgmt_start_cmd(ctx, 1, (int) CharAnnounce);
 
     cgmt_outc(' ');
-    cgmt_out_string(ctx, announcerNames[static_cast<int>(value)]);
+    cgmt_out_string(announcerNames[static_cast<int>(value)]);
 
     cgmt_flush_cmd(ctx, final_flush);
 }
@@ -427,7 +427,7 @@ void ClearTextMetafileWriter::scalingMode(ScalingMode mode, float value)
     cgm_context *ctx = &m_context;
     cgmt_start_cmd(ctx, 2, (int) ScalMode);
 
-    cgmt_out_string(ctx, mode == ScalingMode::Metric ? " Metric" : " Abstract");
+    cgmt_out_string(mode == ScalingMode::Metric ? " Metric" : " Abstract");
     cgmt_real(ctx, static_cast<double>(value));
 
     cgmt_flush_cmd(ctx, final_flush);
@@ -438,7 +438,7 @@ void ClearTextMetafileWriter::colorSelectionMode(ColorMode mode)
     cgm_context *ctx = &m_context;
     cgmt_start_cmd(ctx, 2, (int) ColSelMode);
 
-    cgmt_out_string(ctx, mode == ColorMode::Indexed ? " Indexed" : " Direct");
+    cgmt_out_string(mode == ColorMode::Indexed ? " Indexed" : " Direct");
 
     cgmt_flush_cmd(ctx, final_flush);
 }
@@ -448,7 +448,7 @@ void ClearTextMetafileWriter::lineWidthSpecificationMode(SpecificationMode mode)
     cgm_context *ctx = &m_context;
     cgmt_start_cmd(ctx, 2, (int) LWidSpecMode);
 
-    cgmt_out_string(ctx, mode == SpecificationMode::Absolute ? " Absolute" : " Scaled");
+    cgmt_out_string(mode == SpecificationMode::Absolute ? " Absolute" : " Scaled");
 
     cgmt_flush_cmd(ctx, final_flush);
 }
@@ -458,7 +458,7 @@ void ClearTextMetafileWriter::markerSizeSpecificationMode(SpecificationMode mode
     cgm_context *ctx = &m_context;
     cgmt_start_cmd(ctx, 2, (int) MarkSizSpecMode);
 
-    cgmt_out_string(ctx, mode == SpecificationMode::Absolute ? " Absolute" : " Scaled");
+    cgmt_out_string(mode == SpecificationMode::Absolute ? " Absolute" : " Scaled");
 
     cgmt_flush_cmd(ctx, final_flush);
 }
@@ -518,7 +518,7 @@ void ClearTextMetafileWriter::clipIndicator(bool enabled)
     cgm_context *ctx = &m_context;
     cgmt_start_cmd(ctx, 3, (int) ClipIndic);
 
-    cgmt_out_string(ctx, enabled ? " On" : " Off");
+    cgmt_out_string(enabled ? " On" : " Off");
 
     cgmt_flush_cmd(ctx, final_flush);
 }
@@ -558,7 +558,7 @@ void ClearTextMetafileWriter::text(Point<int> point, TextFlag flag, const char *
 
     cgmt_ipoint(ctx, point.x, point.y);
 
-    cgmt_out_string(ctx, flag == TextFlag::Final ? " Final" : " NotFinal");
+    cgmt_out_string(flag == TextFlag::Final ? " Final" : " NotFinal");
 
     cgmt_string(ctx, text, strlen(text));
 
@@ -687,15 +687,15 @@ void ClearTextMetafileWriter::textPrecision(TextPrecision value)
     switch (static_cast<int>(value))
     {
     case string:
-        cgmt_out_string(ctx, " String");
+        cgmt_out_string(" String");
         break;
 
     case character:
-        cgmt_out_string(ctx, " Character");
+        cgmt_out_string(" Character");
         break;
 
     case stroke:
-        cgmt_out_string(ctx, " Stroke");
+        cgmt_out_string(" Stroke");
         break;
     }
 
@@ -763,19 +763,19 @@ void ClearTextMetafileWriter::textPath(TextPath value)
     switch (static_cast<int>(value))
     {
     case right:
-        cgmt_out_string(ctx, " Right");
+        cgmt_out_string(" Right");
         break;
 
     case left:
-        cgmt_out_string(ctx, " Left");
+        cgmt_out_string(" Left");
         break;
 
     case up:
-        cgmt_out_string(ctx, " Up");
+        cgmt_out_string(" Up");
         break;
 
     case down:
-        cgmt_out_string(ctx, " Down");
+        cgmt_out_string(" Down");
         break;
     }
 
@@ -790,54 +790,54 @@ void ClearTextMetafileWriter::textAlignment(HorizAlign horiz, VertAlign vert, fl
     switch (static_cast<int>(horiz))
     {
     case normal_h:
-        cgmt_out_string(ctx, " NormHoriz");
+        cgmt_out_string(" NormHoriz");
         break;
 
     case left_h:
-        cgmt_out_string(ctx, " Left");
+        cgmt_out_string(" Left");
         break;
 
     case center_h:
-        cgmt_out_string(ctx, " Ctr");
+        cgmt_out_string(" Ctr");
         break;
 
     case right_h:
-        cgmt_out_string(ctx, " Right");
+        cgmt_out_string(" Right");
         break;
 
     case cont_h:
-        cgmt_out_string(ctx, " ContHoriz");
+        cgmt_out_string(" ContHoriz");
         break;
     }
 
     switch (static_cast<int>(vert))
     {
     case normal_v:
-        cgmt_out_string(ctx, " NormVert");
+        cgmt_out_string(" NormVert");
         break;
 
     case top_v:
-        cgmt_out_string(ctx, " Top");
+        cgmt_out_string(" Top");
         break;
 
     case cap_v:
-        cgmt_out_string(ctx, " Cap");
+        cgmt_out_string(" Cap");
         break;
 
     case half_v:
-        cgmt_out_string(ctx, " Half");
+        cgmt_out_string(" Half");
         break;
 
     case base_v:
-        cgmt_out_string(ctx, " Base");
+        cgmt_out_string(" Base");
         break;
 
     case bottom_v:
-        cgmt_out_string(ctx, " Bottom");
+        cgmt_out_string(" Bottom");
         break;
 
     case cont_v:
-        cgmt_out_string(ctx, " ContVert");
+        cgmt_out_string(" ContVert");
         break;
     }
 
@@ -855,23 +855,23 @@ void ClearTextMetafileWriter::interiorStyle(InteriorStyle value)
     switch (static_cast<int>(value))
     {
     case hollow:
-        cgmt_out_string(ctx, " Hollow");
+        cgmt_out_string(" Hollow");
         break;
 
     case solid_i:
-        cgmt_out_string(ctx, " Solid");
+        cgmt_out_string(" Solid");
         break;
 
     case pattern:
-        cgmt_out_string(ctx, " Pat");
+        cgmt_out_string(" Pat");
         break;
 
     case hatch:
-        cgmt_out_string(ctx, " Hatch");
+        cgmt_out_string(" Hatch");
         break;
 
     case empty:
-        cgmt_out_string(ctx, " Empty");
+        cgmt_out_string(" Empty");
         break;
     }
 
