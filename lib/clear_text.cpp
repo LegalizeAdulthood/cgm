@@ -219,16 +219,6 @@ static void cgmt_mfversion_p(cgm_context *ctx, int version)
     cgmt_flush_cmd(ctx, final_flush);
 }
 
-/* Metafile description */
-static void cgmt_mfdescrip_p(cgm_context *ctx, const char *descrip)
-{
-    cgmt_start_cmd(ctx, 1, MfDescrip);
-
-    cgmt_string(ctx, descrip, strlen(descrip));
-
-    cgmt_flush_cmd(ctx, final_flush);
-}
-
 namespace cgm
 {
 
@@ -277,7 +267,12 @@ void ClearTextMetafileWriter::metafileVersion(int value)
 
 void ClearTextMetafileWriter::metafileDescription(char const *value)
 {
-    cgmt_mfdescrip_p(&m_context, value);
+    cgm_context *ctx = &m_context;
+    cgmt_start_cmd(ctx, 1, MfDescrip);
+
+    cgmt_string(ctx, value, strlen(value));
+
+    cgmt_flush_cmd(ctx, final_flush);
 }
 
 void ClearTextMetafileWriter::vdcType(VdcType type)
