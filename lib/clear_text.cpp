@@ -139,15 +139,6 @@ static void cgmt_int(cgm_context *ctx, int xin)
     cgmt_out_string(ctx, cptr);
 }
 
-/* Write a real variable */
-static void cgmt_real(cgm_context *ctx, double xin)
-{
-    char buffer[max_str];
-
-    sprintf(buffer, " %.6f", xin);
-    cgmt_out_string(ctx, buffer);
-}
-
 namespace cgm
 {
 
@@ -161,6 +152,15 @@ ClearTextMetafileWriter::ClearTextMetafileWriter(int fd)
     : MetafileStreamWriter(fd)
 {
     m_context.encode = cgm_clear_text;
+}
+
+/* Write a real variable */
+void ClearTextMetafileWriter::cgmt_real(cgm_context *ctx, double xin)
+{
+    char buffer[max_str];
+
+    sprintf(buffer, " %.6f", xin);
+    cgmt_out_string(ctx, buffer);
 }
 
 /* Write an integer point */
