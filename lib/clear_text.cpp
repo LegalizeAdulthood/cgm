@@ -246,17 +246,6 @@ static void cgmt_vdctype_p(cgm_context *ctx, cgm::VdcType value)
     cgmt_flush_cmd(ctx, final_flush);
 }
 
-/* Integer precision */
-static void cgmt_intprec_p(cgm_context *ctx, int min, int max)
-{
-    cgmt_start_cmd(ctx, 1, (int) IntPrec);
-
-    cgmt_int(ctx, min);
-    cgmt_int(ctx, max);
-
-    cgmt_flush_cmd(ctx, final_flush);
-}
-
 namespace cgm
 {
 
@@ -315,7 +304,13 @@ void ClearTextMetafileWriter::vdcType(VdcType type)
 
 void ClearTextMetafileWriter::intPrecisionClearText(int min, int max)
 {
-    cgmt_intprec_p(&m_context, min, max);
+    cgm_context *ctx = &m_context;
+    cgmt_start_cmd(ctx, 1, (int) IntPrec);
+
+    cgmt_int(ctx, min);
+    cgmt_int(ctx, max);
+
+    cgmt_flush_cmd(ctx, final_flush);
 }
 
 void ClearTextMetafileWriter::intPrecisionBinary(int value)
