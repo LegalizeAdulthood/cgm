@@ -300,16 +300,6 @@ static void cgmt_cindprec_p(cgm_context *ctx, int max)
     cgmt_flush_cmd(ctx, final_flush);
 }
 
-/* Maximum colour index */
-static void cgmt_maxcind_p(cgm_context *ctx, int max)
-{
-    cgmt_start_cmd(ctx, 1, (int) MaxCInd);
-
-    cgmt_int(ctx, max);
-
-    cgmt_flush_cmd(ctx, final_flush);
-}
-
 namespace cgm
 {
 
@@ -418,7 +408,12 @@ void ClearTextMetafileWriter::colorIndexPrecisionBinary(int value)
 
 void ClearTextMetafileWriter::maximumColorIndex(int max)
 {
-    cgmt_maxcind_p(&m_context, max);
+    cgm_context *ctx = &m_context;
+    cgmt_start_cmd(ctx, 1, (int) MaxCInd);
+
+    cgmt_int(ctx, max);
+
+    cgmt_flush_cmd(ctx, final_flush);
 }
 
 void ClearTextMetafileWriter::colorValueExtent(int redMin, int redMax, int greenMin, int greenMax, int blueMin, int blueMax)
