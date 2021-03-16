@@ -170,16 +170,6 @@ static void cgmt_begin_p(cgm_context *p, const char *comment)
     cgmt_flush_cmd(p, final_flush);
 }
 
-/* End metafile */
-static void cgmt_end_p(cgm_context *ctx)
-{
-    cgmt_start_cmd(ctx, 0, (int) E_Mf);
-
-    cgmt_flush_cmd(ctx, final_flush);
-
-    cgmt_fb(ctx);
-}
-
 namespace cgm
 {
 
@@ -203,7 +193,12 @@ void ClearTextMetafileWriter::beginMetafile(const char *identifier)
 
 void ClearTextMetafileWriter::endMetafile()
 {
-    cgmt_end_p(&m_context);
+    cgm_context *ctx = &m_context;
+    cgmt_start_cmd(ctx, 0, (int) E_Mf);
+
+    cgmt_flush_cmd(ctx, final_flush);
+
+    cgmt_fb(ctx);
 }
 
 void ClearTextMetafileWriter::beginPicture(char const *identifier)
