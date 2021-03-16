@@ -615,39 +615,6 @@ static void cgmt_tfindex_p(cgm_context *ctx, int index)
     cgmt_flush_cmd(ctx, final_flush);
 }
 
-/* Text precision */
-static void cgmt_tprec_p(cgm_context *ctx, int precision)
-{
-    cgmt_start_cmd(ctx, 5, (int) TPrec);
-
-    switch (precision)
-    {
-    case string:
-        cgmt_out_string(ctx, " String");
-        break;
-
-    case character:
-        cgmt_out_string(ctx, " Character");
-        break;
-
-    case stroke:
-        cgmt_out_string(ctx, " Stroke");
-        break;
-    }
-
-    cgmt_flush_cmd(ctx, final_flush);
-}
-
-/* Character expansion factor */
-static void cgmt_cexpfac_p(cgm_context *ctx, double factor)
-{
-    cgmt_start_cmd(ctx, 5, (int) CExpFac);
-
-    cgmt_real(ctx, factor);
-
-    cgmt_flush_cmd(ctx, final_flush);
-}
-
 /* Cell array */
 static void cgmt_carray_p(cgm_context *ctx, int c1x, int c1y, int c2x, int c2y, int c3x, int c3y, int colorPrecision, int nx, int ny, int dimx, const int *array)
 {
@@ -928,12 +895,35 @@ void ClearTextMetafileWriter::textFontIndex(int value)
 
 void ClearTextMetafileWriter::textPrecision(TextPrecision value)
 {
-    cgmt_tprec_p(&m_context, static_cast<int>(value));
+    cgm_context *ctx = &m_context;
+    cgmt_start_cmd(ctx, 5, (int) TPrec);
+
+    switch (static_cast<int>(value))
+    {
+    case string:
+        cgmt_out_string(ctx, " String");
+        break;
+
+    case character:
+        cgmt_out_string(ctx, " Character");
+        break;
+
+    case stroke:
+        cgmt_out_string(ctx, " Stroke");
+        break;
+    }
+
+    cgmt_flush_cmd(ctx, final_flush);
 }
 
 void ClearTextMetafileWriter::charExpansion(float value)
 {
-    cgmt_cexpfac_p(&m_context, static_cast<double>(value));
+    cgm_context *ctx = &m_context;
+    cgmt_start_cmd(ctx, 5, (int) CExpFac);
+
+    cgmt_real(ctx, static_cast<double>(value));
+
+    cgmt_flush_cmd(ctx, final_flush);
 }
 
 void ClearTextMetafileWriter::charSpacing(float value)
