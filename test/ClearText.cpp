@@ -27,6 +27,12 @@ TEST_CASE("clear text encoding")
 
         REQUIRE(stream.str() == "BegMF \"cgm unit test\";\n");
     }
+    SECTION("double-quoted string with double-quotes")
+    {
+        writer->beginMetafile(R"(cgm "unit" test)");
+
+        REQUIRE(stream.str() == R"(BegMF "cgm ""unit"" test";)""\n");
+    }
     SECTION("end metafile")
     {
         writer->endMetafile();
@@ -136,7 +142,14 @@ TEST_CASE("clear text encoding")
         std::vector<std::string> fonts{"Hershey Simplex", "Hershey Roman"};
         writer->fontList(fonts);
 
-        REQUIRE(stream.str() == "FontList 'Hershey Simplex', 'Hershey Roman';\n");
+        REQUIRE(stream.str() == R"(FontList "Hershey Simplex", "Hershey Roman";)" "\n");
+    }
+    SECTION("single quoted string with single quotes")
+    {
+        std::vector<std::string> fonts{R"(Hershey "Simplex")", "Hershey Roman"};
+        writer->fontList(fonts);
+
+        REQUIRE(stream.str() == R"(FontList "Hershey ""Simplex""", "Hershey Roman";)" "\n");
     }
     // character set list
     SECTION("character coding announcer")

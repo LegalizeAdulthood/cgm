@@ -374,13 +374,14 @@ void ClearTextMetafileWriter::fontList(std::vector<std::string> const &fonts)
 
     cgmt_start_cmd(1, (int) FontList);
 
-    cgmt_outc(' ');
-
     const int numFonts = static_cast<int>(fonts.size());
     for (int i = 0; i < numFonts; i++)
     {
-        sprintf(s, "'%s'%s", fonts[i].c_str(), (i < numFonts - 1) ? ", " : "");
-        cgmt_out_string(s);
+        cgmt_string(fonts[i].c_str(), static_cast<int>(fonts[i].size()));
+        if (i < numFonts - 1)
+        {
+            cgmt_outc(',');
+        }
     }
 
     cgmt_flush_cmd();
