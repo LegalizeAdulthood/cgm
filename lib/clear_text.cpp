@@ -454,17 +454,6 @@ static void cgmt_backcol_p(cgm_context *ctx, int red, int green, int blue)
     cgmt_flush_cmd(ctx, final_flush);
 }
 
-/* VDC integer precision */
-static void cgmt_vdcintprec_p(cgm_context *ctx, int min, int max)
-{
-    cgmt_start_cmd(ctx, 3, (int) vdcIntPrec);
-
-    cgmt_int(ctx, min);
-    cgmt_int(ctx, max);
-
-    cgmt_flush_cmd(ctx, final_flush);
-}
-
 namespace cgm
 {
 
@@ -634,7 +623,13 @@ void ClearTextMetafileWriter::backgroundColor(int red, int green, int blue)
 
 void ClearTextMetafileWriter::vdcIntegerPrecisionClearText(int min, int max)
 {
-    cgmt_vdcintprec_p(&m_context, min, max);
+    cgm_context *ctx = &m_context;
+    cgmt_start_cmd(ctx, 3, (int) vdcIntPrec);
+
+    cgmt_int(ctx, min);
+    cgmt_int(ctx, max);
+
+    cgmt_flush_cmd(ctx, final_flush);
 }
 
 void ClearTextMetafileWriter::vdcIntegerPrecisionBinary(int value)
