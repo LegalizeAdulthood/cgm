@@ -595,16 +595,6 @@ static void cgmt_msize_p(cgm_context *ctx, double rmul)
     cgmt_flush_cmd(ctx, final_flush);
 }
 
-/* Marker colour */
-static void cgmt_mcolor_p(cgm_context *ctx, int index)
-{
-    cgmt_start_cmd(ctx, 5, (int) MColour);
-
-    cgmt_int(ctx, index);
-
-    cgmt_flush_cmd(ctx, final_flush);
-}
-
 /* Cell array */
 static void cgmt_carray_p(cgm_context *ctx, int c1x, int c1y, int c2x, int c2y, int c3x, int c3y, int colorPrecision, int nx, int ny, int dimx, const int *array)
 {
@@ -875,7 +865,12 @@ void ClearTextMetafileWriter::markerSize(float value)
 
 void ClearTextMetafileWriter::markerColor(int value)
 {
-    cgmt_mcolor_p(&m_context, value);
+    cgm_context *ctx = &m_context;
+    cgmt_start_cmd(ctx, 5, (int) MColour);
+
+    cgmt_int(ctx, value);
+
+    cgmt_flush_cmd(ctx, final_flush);
 }
 
 void ClearTextMetafileWriter::textFontIndex(int value)
