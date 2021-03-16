@@ -69,6 +69,9 @@ public:
     void hatchIndex(int value) override;
     void patternIndex(int value) override;
     void colorTable(int startIndex, std::vector<Color> const &colors) override;
+
+private:
+    void cgmt_ipoint(cgm_context *ctx, int x, int y);
 };
 
 }        // namespace cgm

@@ -148,15 +148,6 @@ static void cgmt_real(cgm_context *ctx, double xin)
     cgmt_out_string(ctx, buffer);
 }
 
-/* Write an integer point */
-static void cgmt_ipoint(cgm_context *ctx, int x, int y)
-{
-    char buffer[max_str];
-
-    sprintf(buffer, " %d,%d", x, y);
-    cgmt_out_string(ctx, buffer);
-}
-
 namespace cgm
 {
 
@@ -170,6 +161,15 @@ ClearTextMetafileWriter::ClearTextMetafileWriter(int fd)
     : MetafileStreamWriter(fd)
 {
     m_context.encode = cgm_clear_text;
+}
+
+/* Write an integer point */
+void ClearTextMetafileWriter::cgmt_ipoint(cgm_context *ctx, int x, int y)
+{
+    char buffer[max_str];
+
+    sprintf(buffer, " %d,%d", x, y);
+    cgmt_out_string(ctx, buffer);
 }
 
 void ClearTextMetafileWriter::beginMetafile(const char *identifier)
