@@ -411,16 +411,6 @@ static void cgmt_colselmode_p(cgm_context *ctx, int mode)
     cgmt_flush_cmd(ctx, final_flush);
 }
 
-/* Line width specification mode */
-static void cgmt_lwsmode_p(cgm_context *ctx, int mode)
-{
-    cgmt_start_cmd(ctx, 2, (int) LWidSpecMode);
-
-    cgmt_out_string(ctx, mode == 0 ? " Absolute" : " Scaled");
-
-    cgmt_flush_cmd(ctx, final_flush);
-}
-
 namespace cgm
 {
 
@@ -570,7 +560,12 @@ void ClearTextMetafileWriter::colorSelectionMode(ColorMode mode)
 
 void ClearTextMetafileWriter::lineWidthSpecificationMode(SpecificationMode mode)
 {
-    cgmt_lwsmode_p(&m_context, static_cast<int>(mode));
+    cgm_context *ctx = &m_context;
+    cgmt_start_cmd(ctx, 2, (int) LWidSpecMode);
+
+    cgmt_out_string(ctx, mode == SpecificationMode::Absolute ? " Absolute" : " Scaled");
+
+    cgmt_flush_cmd(ctx, final_flush);
 }
 
 void ClearTextMetafileWriter::markerSizeSpecificationMode(SpecificationMode mode)
