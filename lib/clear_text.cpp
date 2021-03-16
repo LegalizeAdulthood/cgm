@@ -575,26 +575,6 @@ static void cgmt_lcolor_p(cgm_context *ctx, int index)
     cgmt_flush_cmd(ctx, final_flush);
 }
 
-/* Marker type */
-static void cgmt_mtype_p(cgm_context *ctx, int marker)
-{
-    cgmt_start_cmd(ctx, 5, (int) MType);
-
-    cgmt_int(ctx, marker);
-
-    cgmt_flush_cmd(ctx, final_flush);
-}
-
-/* Marker size */
-static void cgmt_msize_p(cgm_context *ctx, double rmul)
-{
-    cgmt_start_cmd(ctx, 5, (int) MSize);
-
-    cgmt_real(ctx, rmul);
-
-    cgmt_flush_cmd(ctx, final_flush);
-}
-
 /* Cell array */
 static void cgmt_carray_p(cgm_context *ctx, int c1x, int c1y, int c2x, int c2y, int c3x, int c3y, int colorPrecision, int nx, int ny, int dimx, const int *array)
 {
@@ -855,12 +835,22 @@ void ClearTextMetafileWriter::lineColor(int value)
 
 void ClearTextMetafileWriter::markerType(int value)
 {
-    cgmt_mtype_p(&m_context, value);
+    cgm_context *ctx = &m_context;
+    cgmt_start_cmd(ctx, 5, (int) MType);
+
+    cgmt_int(ctx, value);
+
+    cgmt_flush_cmd(ctx, final_flush);
 }
 
 void ClearTextMetafileWriter::markerSize(float value)
 {
-    cgmt_msize_p(&m_context, static_cast<double>(value));
+    cgm_context *ctx = &m_context;
+    cgmt_start_cmd(ctx, 5, (int) MSize);
+
+    cgmt_real(ctx, static_cast<double>(value));
+
+    cgmt_flush_cmd(ctx, final_flush);
 }
 
 void ClearTextMetafileWriter::markerColor(int value)
