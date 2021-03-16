@@ -486,21 +486,6 @@ static void cgmt_clipindic_p(cgm_context *ctx, bool clip_ind)
     cgmt_flush_cmd(ctx, final_flush);
 }
 
-/* Polyline */
-static void cgmt_pline_pt(cgm_context *ctx, int numPoints, const cgm::Point<int> *points)
-{
-    int i;
-
-    cgmt_start_cmd(ctx, 4, (int) PolyLine);
-
-    for (i = 0; i < numPoints; ++i)
-    {
-        cgmt_ipoint(ctx, points[i].x, points[i].y);
-    }
-
-    cgmt_flush_cmd(ctx, final_flush);
-}
-
 namespace cgm
 {
 
@@ -690,7 +675,16 @@ void ClearTextMetafileWriter::clipIndicator(bool enabled)
 
 void ClearTextMetafileWriter::polyline(const std::vector<Point<int>> &points)
 {
-    cgmt_pline_pt(&m_context, static_cast<int>(points.size()), points.data());
+    cgm_context *ctx = &m_context;
+
+    cgmt_start_cmd(ctx, 4, (int) PolyLine);
+
+    for (const Point<int> &point : points)
+    {
+        cgmt_ipoint(ctx, point.x, point.y);
+    }
+
+    cgmt_flush_cmd(ctx, final_flush);
 }
 
 void ClearTextMetafileWriter::polymarker(const std::vector<Point<int>> &points)
