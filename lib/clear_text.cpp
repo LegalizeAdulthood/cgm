@@ -648,16 +648,6 @@ static void cgmt_cexpfac_p(cgm_context *ctx, double factor)
     cgmt_flush_cmd(ctx, final_flush);
 }
 
-/* Character space */
-static void cgmt_cspace_p(cgm_context *ctx, double space)
-{
-    cgmt_start_cmd(ctx, 5, (int) CSpace);
-
-    cgmt_real(ctx, space);
-
-    cgmt_flush_cmd(ctx, final_flush);
-}
-
 /* Cell array */
 static void cgmt_carray_p(cgm_context *ctx, int c1x, int c1y, int c2x, int c2y, int c3x, int c3y, int colorPrecision, int nx, int ny, int dimx, const int *array)
 {
@@ -948,7 +938,12 @@ void ClearTextMetafileWriter::charExpansion(float value)
 
 void ClearTextMetafileWriter::charSpacing(float value)
 {
-    cgmt_cspace_p(&m_context, static_cast<double>(value));
+    cgm_context *ctx = &m_context;
+    cgmt_start_cmd(ctx, 5, (int) CSpace);
+
+    cgmt_real(ctx, static_cast<double>(value));
+
+    cgmt_flush_cmd(ctx, final_flush);
 }
 
 void ClearTextMetafileWriter::textColor(int index)
