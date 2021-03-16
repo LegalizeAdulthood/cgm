@@ -209,16 +209,6 @@ static void cgmt_epage_p(cgm_context *ctx)
     cgmt_flush_cmd(ctx, final_flush);
 }
 
-/* Metafile version */
-static void cgmt_mfversion_p(cgm_context *ctx, int version)
-{
-    cgmt_start_cmd(ctx, 1, version);
-
-    cgmt_int(ctx, 1);
-
-    cgmt_flush_cmd(ctx, final_flush);
-}
-
 namespace cgm
 {
 
@@ -262,7 +252,12 @@ void ClearTextMetafileWriter::endPicture()
 
 void ClearTextMetafileWriter::metafileVersion(int value)
 {
-    cgmt_mfversion_p(&m_context, value);
+    cgm_context *ctx = &m_context;
+    cgmt_start_cmd(ctx, 1, MfVersion);
+
+    cgmt_int(ctx, value);
+
+    cgmt_flush_cmd(ctx, final_flush);
 }
 
 void ClearTextMetafileWriter::metafileDescription(char const *value)

@@ -55,7 +55,7 @@ TEST_CASE("clear text encoding")
     {
         writer->metafileVersion(2);
 
-        REQUIRE(stream.str() == "MFDesc 1;\n");
+        REQUIRE(stream.str() == "MFVersion 2;\n");
     }
     SECTION("metafile description")
     {
