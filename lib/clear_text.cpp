@@ -229,23 +229,6 @@ static void cgmt_mfdescrip_p(cgm_context *ctx, const char *descrip)
     cgmt_flush_cmd(ctx, final_flush);
 }
 
-/* VDC type */
-static void cgmt_vdctype_p(cgm_context *ctx, cgm::VdcType value)
-{
-    cgmt_start_cmd(ctx, 1, (int) vdcType);
-
-    if (value == cgm::VdcType::Integer)
-    {
-        cgmt_out_string(ctx, " Integer");
-    }
-    else if (value == cgm::VdcType::Real)
-    {
-        cgmt_out_string(ctx, " Real");
-    }
-
-    cgmt_flush_cmd(ctx, final_flush);
-}
-
 namespace cgm
 {
 
@@ -299,7 +282,19 @@ void ClearTextMetafileWriter::metafileDescription(char const *value)
 
 void ClearTextMetafileWriter::vdcType(VdcType type)
 {
-    cgmt_vdctype_p(&m_context, type);
+    cgm_context *ctx = &m_context;
+    cgmt_start_cmd(ctx, 1, (int) cgm_class_1::vdcType);
+
+    if (type == VdcType::Integer)
+    {
+        cgmt_out_string(ctx, " Integer");
+    }
+    else if (type == VdcType::Real)
+    {
+        cgmt_out_string(ctx, " Real");
+    }
+
+    cgmt_flush_cmd(ctx, final_flush);
 }
 
 void ClearTextMetafileWriter::intPrecisionClearText(int min, int max)
