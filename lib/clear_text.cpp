@@ -401,16 +401,6 @@ static void cgmt_scalmode_p(cgm_context *ctx, int mode, double value)
     cgmt_flush_cmd(ctx, final_flush);
 }
 
-/* Colour selection mode */
-static void cgmt_colselmode_p(cgm_context *ctx, int mode)
-{
-    cgmt_start_cmd(ctx, 2, (int) ColSelMode);
-
-    cgmt_out_string(ctx, mode == 0 ? " Indexed" : " Direct");
-
-    cgmt_flush_cmd(ctx, final_flush);
-}
-
 namespace cgm
 {
 
@@ -555,7 +545,12 @@ void ClearTextMetafileWriter::scalingMode(ScalingMode mode, float value)
 
 void ClearTextMetafileWriter::colorSelectionMode(ColorMode mode)
 {
-    cgmt_colselmode_p(&m_context, static_cast<int>(mode));
+    cgm_context *ctx = &m_context;
+    cgmt_start_cmd(ctx, 2, (int) ColSelMode);
+
+    cgmt_out_string(ctx, mode == ColorMode::Indexed ? " Indexed" : " Direct");
+
+    cgmt_flush_cmd(ctx, final_flush);
 }
 
 void ClearTextMetafileWriter::lineWidthSpecificationMode(SpecificationMode mode)
