@@ -38,16 +38,16 @@ ClearTextMetafileWriter::ClearTextMetafileWriter(int fd)
 }
 
 /* Flush output buffer */
-void ClearTextMetafileWriter::cgmt_fb(cgm_context *ctx)
+void ClearTextMetafileWriter::cgmt_fb()
 {
-    if (ctx->buffer_ind != 0)
+    if (m_context.buffer_ind != 0)
     {
-        ctx->buffer[ctx->buffer_ind++] = '\n';
-        ctx->buffer[ctx->buffer_ind] = '\0';
-        ctx->flush_buffer(ctx, ctx->flush_buffer_context);
+        m_context.buffer[m_context.buffer_ind++] = '\n';
+        m_context.buffer[m_context.buffer_ind] = '\0';
+        m_context.flush_buffer(&m_context, m_context.flush_buffer_context);
 
-        ctx->buffer_ind = 0;
-        ctx->buffer[0] = '\0';
+        m_context.buffer_ind = 0;
+        m_context.buffer[0] = '\0';
     }
 }
 
@@ -55,7 +55,7 @@ void ClearTextMetafileWriter::cgmt_fb(cgm_context *ctx)
 void ClearTextMetafileWriter::cgmt_outc(cgm_context *ctx, char chr)
 {
     if (ctx->buffer_ind >= cgmt_recl)
-        cgmt_fb(ctx);
+        cgmt_fb();
 
     ctx->buffer[ctx->buffer_ind++] = chr;
     ctx->buffer[ctx->buffer_ind] = '\0';
@@ -66,7 +66,7 @@ void ClearTextMetafileWriter::cgmt_out_string(cgm_context *ctx, const char *stri
 {
     if ((int) (ctx->buffer_ind + strlen(string)) >= cgmt_recl)
     {
-        cgmt_fb(ctx);
+        cgmt_fb();
         strcpy(ctx->buffer, "   ");
         ctx->buffer_ind = 3;
     }
@@ -85,7 +85,7 @@ void ClearTextMetafileWriter::cgmt_start_cmd(cgm_context *p, int cl, int el)
 void ClearTextMetafileWriter::cgmt_flush_cmd(cgm_context *ctx, int this_flush)
 {
     cgmt_outc(ctx, term_char);
-    cgmt_fb(ctx);
+    cgmt_fb();
 }
 
 /* Write a CGM clear text string */
@@ -192,7 +192,7 @@ void ClearTextMetafileWriter::endMetafile()
 
     cgmt_flush_cmd(ctx, final_flush);
 
-    cgmt_fb(ctx);
+    cgmt_fb();
 }
 
 void ClearTextMetafileWriter::beginPicture(char const *identifier)
@@ -594,7 +594,7 @@ void ClearTextMetafileWriter::cellArray(Point<int> c1, Point<int> c2, Point<int>
 
     for (int iy = 0; iy < ny; iy++)
     {
-        cgmt_fb(ctx);
+        cgmt_fb();
 
         for (int ix = 0; ix < nx; ix++)
         {
