@@ -300,21 +300,6 @@ static void cgmt_cindprec_p(cgm_context *ctx, int max)
     cgmt_flush_cmd(ctx, final_flush);
 }
 
-/* Colour value extent */
-static void cgmt_cvextent_p(cgm_context *ctx, int minRed, int maxRed, int minGreen, int maxGreen, int minBlue, int maxBlue)
-{
-    cgmt_start_cmd(ctx, 1, (int) CVExtent);
-
-    cgmt_int(ctx, minRed);
-    cgmt_int(ctx, minGreen);
-    cgmt_int(ctx, minBlue);
-    cgmt_int(ctx, maxRed);
-    cgmt_int(ctx, maxGreen);
-    cgmt_int(ctx, maxBlue);
-
-    cgmt_flush_cmd(ctx, final_flush);
-}
-
 /* Maximum colour index */
 static void cgmt_maxcind_p(cgm_context *ctx, int max)
 {
@@ -438,7 +423,17 @@ void ClearTextMetafileWriter::maximumColorIndex(int max)
 
 void ClearTextMetafileWriter::colorValueExtent(int redMin, int redMax, int greenMin, int greenMax, int blueMin, int blueMax)
 {
-    cgmt_cvextent_p(&m_context, redMin, redMax, greenMin, greenMax, blueMin, blueMax);
+    cgm_context *ctx = &m_context;
+    cgmt_start_cmd(ctx, 1, (int) CVExtent);
+
+    cgmt_int(ctx, redMin);
+    cgmt_int(ctx, greenMin);
+    cgmt_int(ctx, blueMin);
+    cgmt_int(ctx, redMax);
+    cgmt_int(ctx, greenMax);
+    cgmt_int(ctx, blueMax);
+
+    cgmt_flush_cmd(ctx, final_flush);
 }
 
 void ClearTextMetafileWriter::metafileElementList()
