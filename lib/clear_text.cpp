@@ -431,17 +431,6 @@ static void cgmt_msmode_p(cgm_context *ctx, int mode)
     cgmt_flush_cmd(ctx, final_flush);
 }
 
-/* VDC extent */
-static void cgmt_vdcextent_p(cgm_context *ctx, int llx, int lly, int urx, int ury)
-{
-    cgmt_start_cmd(ctx, 2, (int) vdcExtent);
-
-    cgmt_ipoint(ctx, llx, lly);
-    cgmt_ipoint(ctx, urx, ury);
-
-    cgmt_flush_cmd(ctx, final_flush);
-}
-
 namespace cgm
 {
 
@@ -601,7 +590,13 @@ void ClearTextMetafileWriter::markerSizeSpecificationMode(SpecificationMode mode
 
 void ClearTextMetafileWriter::vdcExtent(int llx, int lly, int urx, int ury)
 {
-    cgmt_vdcextent_p(&m_context, llx, lly, urx, ury);
+    cgm_context *ctx = &m_context;
+    cgmt_start_cmd(ctx, 2, (int) cgm_class_2::vdcExtent);
+
+    cgmt_ipoint(ctx, llx, lly);
+    cgmt_ipoint(ctx, urx, ury);
+
+    cgmt_flush_cmd(ctx, final_flush);
 }
 
 void ClearTextMetafileWriter::backgroundColor(int red, int green, int blue)
