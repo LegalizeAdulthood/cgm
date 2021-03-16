@@ -73,8 +73,23 @@ static void cgmt_flush_cmd(cgm_context *ctx, int this_flush)
     cgmt_fb(ctx);
 }
 
+namespace cgm
+{
+
+ClearTextMetafileWriter::ClearTextMetafileWriter(std::ostream &stream)
+    : MetafileStreamWriter(stream)
+{
+    m_context.encode = cgm_clear_text;
+}
+
+ClearTextMetafileWriter::ClearTextMetafileWriter(int fd)
+    : MetafileStreamWriter(fd)
+{
+    m_context.encode = cgm_clear_text;
+}
+
 /* Write a CGM clear text string */
-static void cgmt_string(cgm_context *ctx, const char *cptr, int slen)
+void ClearTextMetafileWriter::cgmt_string(cgm_context *ctx, const char *cptr, int slen)
 {
     int i;
 
@@ -92,21 +107,6 @@ static void cgmt_string(cgm_context *ctx, const char *cptr, int slen)
     }
 
     cgmt_outc(ctx, quote_char);
-}
-
-namespace cgm
-{
-
-ClearTextMetafileWriter::ClearTextMetafileWriter(std::ostream &stream)
-    : MetafileStreamWriter(stream)
-{
-    m_context.encode = cgm_clear_text;
-}
-
-ClearTextMetafileWriter::ClearTextMetafileWriter(int fd)
-    : MetafileStreamWriter(fd)
-{
-    m_context.encode = cgm_clear_text;
 }
 
 /* Write a signed integer variable */
