@@ -678,19 +678,6 @@ static void cgmt_cheight_p(cgm_context *ctx, int height)
     cgmt_flush_cmd(ctx, final_flush);
 }
 
-/* Character orientation */
-static void cgmt_corient_p(cgm_context *ctx, int x_up, int y_up, int x_base, int y_base)
-{
-    cgmt_start_cmd(ctx, 5, (int) COrient);
-
-    cgmt_int(ctx, x_up);
-    cgmt_int(ctx, y_up);
-    cgmt_int(ctx, x_base);
-    cgmt_int(ctx, y_base);
-
-    cgmt_flush_cmd(ctx, final_flush);
-}
-
 /* Cell array */
 static void cgmt_carray_p(cgm_context *ctx, int c1x, int c1y, int c2x, int c2y, int c3x, int c3y, int colorPrecision, int nx, int ny, int dimx, const int *array)
 {
@@ -996,7 +983,15 @@ void ClearTextMetafileWriter::charHeight(int value)
 
 void ClearTextMetafileWriter::charOrientation(int upX, int upY, int baseX, int baseY)
 {
-    cgmt_corient_p(&m_context, upX, upY, baseX, baseY);
+    cgm_context *ctx = &m_context;
+    cgmt_start_cmd(ctx, 5, (int) COrient);
+
+    cgmt_int(ctx, upX);
+    cgmt_int(ctx, upY);
+    cgmt_int(ctx, baseX);
+    cgmt_int(ctx, baseY);
+
+    cgmt_flush_cmd(ctx, final_flush);
 }
 
 void ClearTextMetafileWriter::textPath(TextPath value)
