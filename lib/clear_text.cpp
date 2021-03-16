@@ -421,16 +421,6 @@ static void cgmt_lwsmode_p(cgm_context *ctx, int mode)
     cgmt_flush_cmd(ctx, final_flush);
 }
 
-/* Marker size specification mode */
-static void cgmt_msmode_p(cgm_context *ctx, int mode)
-{
-    cgmt_start_cmd(ctx, 2, (int) MarkSizSpecMode);
-
-    cgmt_out_string(ctx, mode == 0 ? " Absolute" : " Scaled");
-
-    cgmt_flush_cmd(ctx, final_flush);
-}
-
 namespace cgm
 {
 
@@ -585,7 +575,12 @@ void ClearTextMetafileWriter::lineWidthSpecificationMode(SpecificationMode mode)
 
 void ClearTextMetafileWriter::markerSizeSpecificationMode(SpecificationMode mode)
 {
-    cgmt_msmode_p(&m_context, static_cast<int>(mode));
+    cgm_context *ctx = &m_context;
+    cgmt_start_cmd(ctx, 2, (int) MarkSizSpecMode);
+
+    cgmt_out_string(ctx, mode == SpecificationMode::Absolute ? " Absolute" : " Scaled");
+
+    cgmt_flush_cmd(ctx, final_flush);
 }
 
 void ClearTextMetafileWriter::vdcExtent(int llx, int lly, int urx, int ury)
