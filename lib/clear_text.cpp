@@ -383,24 +383,6 @@ static void cgmt_cannounce_p(cgm_context *ctx, int value)
     cgmt_flush_cmd(ctx, final_flush);
 }
 
-/* Scaling mode */
-static void cgmt_scalmode_p(cgm_context *ctx, int mode, double value)
-{
-    cgmt_start_cmd(ctx, 2, (int) ScalMode);
-
-    if (mode == 1)
-    {
-        cgmt_out_string(ctx, " Metric");
-    }
-    else
-    {
-        cgmt_out_string(ctx, " Abstract");
-    }
-    cgmt_real(ctx, value);
-
-    cgmt_flush_cmd(ctx, final_flush);
-}
-
 namespace cgm
 {
 
@@ -540,7 +522,13 @@ void ClearTextMetafileWriter::characterCodingAnnouncer(CharCodeAnnouncer value)
 
 void ClearTextMetafileWriter::scalingMode(ScalingMode mode, float value)
 {
-    cgmt_scalmode_p(&m_context, static_cast<int>(mode), static_cast<double>(value));
+    cgm_context *ctx = &m_context;
+    cgmt_start_cmd(ctx, 2, (int) ScalMode);
+
+    cgmt_out_string(ctx, mode == ScalingMode::Metric ? " Metric" : " Abstract");
+    cgmt_real(ctx, static_cast<double>(value));
+
+    cgmt_flush_cmd(ctx, final_flush);
 }
 
 void ClearTextMetafileWriter::colorSelectionMode(ColorMode mode)
