@@ -290,16 +290,6 @@ static void cgmt_colprec_p(cgm_context *ctx, int max)
     cgmt_flush_cmd(ctx, final_flush);
 }
 
-/* Colour index precision */
-static void cgmt_cindprec_p(cgm_context *ctx, int max)
-{
-    cgmt_start_cmd(ctx, 1, (int) CIndPrec);
-
-    cgmt_int(ctx, max);
-
-    cgmt_flush_cmd(ctx, final_flush);
-}
-
 namespace cgm
 {
 
@@ -398,7 +388,12 @@ void ClearTextMetafileWriter::colorPrecisionBinary(int value)
 
 void ClearTextMetafileWriter::colorIndexPrecisionClearText(int max)
 {
-    cgmt_cindprec_p(&m_context, max);
+    cgm_context *ctx = &m_context;
+    cgmt_start_cmd(ctx, 1, (int) CIndPrec);
+
+    cgmt_int(ctx, max);
+
+    cgmt_flush_cmd(ctx, final_flush);
 }
 
 void ClearTextMetafileWriter::colorIndexPrecisionBinary(int value)
