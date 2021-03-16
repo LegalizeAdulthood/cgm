@@ -530,21 +530,6 @@ static void cgmt_text_p(cgm_context *ctx, int x, int y, bool final, const char *
     cgmt_flush_cmd(ctx, final_flush);
 }
 
-/* Polygon */
-static void cgmt_pgon_pt(cgm_context *ctx, int no_pairs, const cgm::Point<int> *points)
-{
-    int i;
-
-    cgmt_start_cmd(ctx, 4, (int) C_Polygon);
-
-    for (i = 0; i < no_pairs; ++i)
-    {
-        cgmt_ipoint(ctx, points[i].x, points[i].y);
-    }
-
-    cgmt_flush_cmd(ctx, final_flush);
-}
-
 namespace cgm
 {
 
@@ -749,7 +734,16 @@ void ClearTextMetafileWriter::text(Point<int> point, TextFlag flag, const char *
 
 void ClearTextMetafileWriter::polygon(const std::vector<Point<int>> &points)
 {
-    cgmt_pgon_pt(&m_context, static_cast<int>(points.size()), points.data());
+    cgm_context *ctx = &m_context;
+
+    cgmt_start_cmd(ctx, 4, (int) C_Polygon);
+
+    for (const Point<int> &i : points)
+    {
+        cgmt_ipoint(ctx, i.x, i.y);
+    }
+
+    cgmt_flush_cmd(ctx, final_flush);
 }
 
 void ClearTextMetafileWriter::cellArray(Point<int> c1, Point<int> c2, Point<int> c3, int colorPrecision, int nx, int ny, const int *colors)
