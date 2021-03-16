@@ -77,7 +77,7 @@ private:
     void cgmt_start_cmd(int cl, int el);
     void cgmt_flush_cmd();
     void cgmt_string(const char *cptr, int slen);
-    void cgmt_int(cgm_context *ctx, int xin);
+    void cgmt_int(int xin);
     void cgmt_real(cgm_context *ctx, double xin);
     void cgmt_ipoint(cgm_context *ctx, int x, int y);
 };
