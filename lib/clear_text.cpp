@@ -36,16 +36,6 @@ static void cgmt_fb(cgm_context *ctx)
     }
 }
 
-/* Write a character to CGM clear text */
-static void cgmt_outc(cgm_context *ctx, char chr)
-{
-    if (ctx->buffer_ind >= cgmt_recl)
-        cgmt_fb(ctx);
-
-    ctx->buffer[ctx->buffer_ind++] = chr;
-    ctx->buffer[ctx->buffer_ind] = '\0';
-}
-
 namespace cgm
 {
 
@@ -59,6 +49,16 @@ ClearTextMetafileWriter::ClearTextMetafileWriter(int fd)
     : MetafileStreamWriter(fd)
 {
     m_context.encode = cgm_clear_text;
+}
+
+/* Write a character to CGM clear text */
+void ClearTextMetafileWriter::cgmt_outc(cgm_context *ctx, char chr)
+{
+    if (ctx->buffer_ind >= cgmt_recl)
+        cgmt_fb(ctx);
+
+    ctx->buffer[ctx->buffer_ind++] = chr;
+    ctx->buffer[ctx->buffer_ind] = '\0';
 }
 
 /* Write string to CGM clear text */
