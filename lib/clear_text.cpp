@@ -718,71 +718,6 @@ static void cgmt_tpath_p(cgm_context *ctx, int new_path)
     cgmt_flush_cmd(ctx, final_flush);
 }
 
-/* Text alignment */
-static void cgmt_talign_p(cgm_context *ctx, int hor, int ver, double contHoriz, double contVert)
-{
-    cgmt_start_cmd(ctx, 5, (int) TAlign);
-
-    switch (hor)
-    {
-    case normal_h:
-        cgmt_out_string(ctx, " NormHoriz");
-        break;
-
-    case left_h:
-        cgmt_out_string(ctx, " Left");
-        break;
-
-    case center_h:
-        cgmt_out_string(ctx, " Ctr");
-        break;
-
-    case right_h:
-        cgmt_out_string(ctx, " Right");
-        break;
-
-    case cont_h:
-        cgmt_out_string(ctx, " ContHoriz");
-        break;
-    }
-
-    switch (ver)
-    {
-    case normal_v:
-        cgmt_out_string(ctx, " NormVert");
-        break;
-
-    case top_v:
-        cgmt_out_string(ctx, " Top");
-        break;
-
-    case cap_v:
-        cgmt_out_string(ctx, " Cap");
-        break;
-
-    case half_v:
-        cgmt_out_string(ctx, " Half");
-        break;
-
-    case base_v:
-        cgmt_out_string(ctx, " Base");
-        break;
-
-    case bottom_v:
-        cgmt_out_string(ctx, " Bottom");
-        break;
-
-    case cont_v:
-        cgmt_out_string(ctx, " ContVert");
-        break;
-    }
-
-    cgmt_real(ctx, contHoriz);
-    cgmt_real(ctx, contVert);
-
-    cgmt_flush_cmd(ctx, final_flush);
-}
-
 /* Cell array */
 static void cgmt_carray_p(cgm_context *ctx, int c1x, int c1y, int c2x, int c2y, int c3x, int c3y, int colorPrecision, int nx, int ny, int dimx, const int *array)
 {
@@ -1098,7 +1033,67 @@ void ClearTextMetafileWriter::textPath(TextPath value)
 
 void ClearTextMetafileWriter::textAlignment(HorizAlign horiz, VertAlign vert, float contHoriz, float contVert)
 {
-    cgmt_talign_p(&m_context, static_cast<int>(horiz), static_cast<int>(vert), static_cast<double>(contHoriz), static_cast<double>(contVert));
+    cgm_context *ctx = &m_context;
+    cgmt_start_cmd(ctx, 5, (int) TAlign);
+
+    switch (static_cast<int>(horiz))
+    {
+    case normal_h:
+        cgmt_out_string(ctx, " NormHoriz");
+        break;
+
+    case left_h:
+        cgmt_out_string(ctx, " Left");
+        break;
+
+    case center_h:
+        cgmt_out_string(ctx, " Ctr");
+        break;
+
+    case right_h:
+        cgmt_out_string(ctx, " Right");
+        break;
+
+    case cont_h:
+        cgmt_out_string(ctx, " ContHoriz");
+        break;
+    }
+
+    switch (static_cast<int>(vert))
+    {
+    case normal_v:
+        cgmt_out_string(ctx, " NormVert");
+        break;
+
+    case top_v:
+        cgmt_out_string(ctx, " Top");
+        break;
+
+    case cap_v:
+        cgmt_out_string(ctx, " Cap");
+        break;
+
+    case half_v:
+        cgmt_out_string(ctx, " Half");
+        break;
+
+    case base_v:
+        cgmt_out_string(ctx, " Base");
+        break;
+
+    case bottom_v:
+        cgmt_out_string(ctx, " Bottom");
+        break;
+
+    case cont_v:
+        cgmt_out_string(ctx, " ContVert");
+        break;
+    }
+
+    cgmt_real(ctx, static_cast<double>(contHoriz));
+    cgmt_real(ctx, static_cast<double>(contVert));
+
+    cgmt_flush_cmd(ctx, final_flush);
 }
 
 void ClearTextMetafileWriter::interiorStyle(InteriorStyle value)
