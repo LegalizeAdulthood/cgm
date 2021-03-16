@@ -783,37 +783,6 @@ static void cgmt_talign_p(cgm_context *ctx, int hor, int ver, double contHoriz, 
     cgmt_flush_cmd(ctx, final_flush);
 }
 
-/* Interior style */
-static void cgmt_intstyle_p(cgm_context *ctx, int style)
-{
-    cgmt_start_cmd(ctx, 5, (int) IntStyle);
-
-    switch (style)
-    {
-    case hollow:
-        cgmt_out_string(ctx, " Hollow");
-        break;
-
-    case solid_i:
-        cgmt_out_string(ctx, " Solid");
-        break;
-
-    case pattern:
-        cgmt_out_string(ctx, " Pat");
-        break;
-
-    case hatch:
-        cgmt_out_string(ctx, " Hatch");
-        break;
-
-    case empty:
-        cgmt_out_string(ctx, " Empty");
-        break;
-    }
-
-    cgmt_flush_cmd(ctx, final_flush);
-}
-
 /* Cell array */
 static void cgmt_carray_p(cgm_context *ctx, int c1x, int c1y, int c2x, int c2y, int c3x, int c3y, int colorPrecision, int nx, int ny, int dimx, const int *array)
 {
@@ -1134,7 +1103,33 @@ void ClearTextMetafileWriter::textAlignment(HorizAlign horiz, VertAlign vert, fl
 
 void ClearTextMetafileWriter::interiorStyle(InteriorStyle value)
 {
-    cgmt_intstyle_p(&m_context, static_cast<int>(value));
+    cgm_context *ctx = &m_context;
+    cgmt_start_cmd(ctx, 5, (int) IntStyle);
+
+    switch (static_cast<int>(value))
+    {
+    case hollow:
+        cgmt_out_string(ctx, " Hollow");
+        break;
+
+    case solid_i:
+        cgmt_out_string(ctx, " Solid");
+        break;
+
+    case pattern:
+        cgmt_out_string(ctx, " Pat");
+        break;
+
+    case hatch:
+        cgmt_out_string(ctx, " Hatch");
+        break;
+
+    case empty:
+        cgmt_out_string(ctx, " Empty");
+        break;
+    }
+
+    cgmt_flush_cmd(ctx, final_flush);
 }
 
 void ClearTextMetafileWriter::fillColor(int value)
