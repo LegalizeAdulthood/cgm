@@ -66,13 +66,6 @@ static void cgmt_start_cmd(cgm_context *p, int cl, int el)
     cgmt_out_string(p, cgmt_cptr[cl][el]);
 }
 
-/* Flush output command */
-static void cgmt_flush_cmd(cgm_context *ctx, int this_flush)
-{
-    cgmt_outc(ctx, term_char);
-    cgmt_fb(ctx);
-}
-
 namespace cgm
 {
 
@@ -86,6 +79,13 @@ ClearTextMetafileWriter::ClearTextMetafileWriter(int fd)
     : MetafileStreamWriter(fd)
 {
     m_context.encode = cgm_clear_text;
+}
+
+/* Flush output command */
+void ClearTextMetafileWriter::cgmt_flush_cmd(cgm_context *ctx, int this_flush)
+{
+    cgmt_outc(ctx, term_char);
+    cgmt_fb(ctx);
 }
 
 /* Write a CGM clear text string */
