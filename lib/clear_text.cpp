@@ -257,18 +257,6 @@ static void cgmt_intprec_p(cgm_context *ctx, int min, int max)
     cgmt_flush_cmd(ctx, final_flush);
 }
 
-/* Real precision */
-static void cgmt_realprec_p(cgm_context *ctx, double minReal, double maxReal, int digits)
-{
-    cgmt_start_cmd(ctx, 1, (int) RealPrec);
-
-    cgmt_real(ctx, minReal);
-    cgmt_real(ctx, maxReal);
-    cgmt_int(ctx, digits);
-
-    cgmt_flush_cmd(ctx, final_flush);
-}
-
 namespace cgm
 {
 
@@ -337,7 +325,14 @@ void ClearTextMetafileWriter::intPrecisionBinary(int value)
 
 void ClearTextMetafileWriter::realPrecisionClearText(float minReal, float maxReal, int digits)
 {
-    cgmt_realprec_p(&m_context, static_cast<double>(minReal), static_cast<double>(maxReal), digits);
+    cgm_context *ctx = &m_context;
+    cgmt_start_cmd(ctx, 1, (int) RealPrec);
+
+    cgmt_real(ctx, static_cast<double>(minReal));
+    cgmt_real(ctx, static_cast<double>(maxReal));
+    cgmt_int(ctx, digits);
+
+    cgmt_flush_cmd(ctx, final_flush);
 }
 
 void ClearTextMetafileWriter::realPrecisionBinary(RealPrecision prec, int expWidth, int mantWidth)
