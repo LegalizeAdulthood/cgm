@@ -545,37 +545,6 @@ static void cgmt_pgon_pt(cgm_context *ctx, int no_pairs, const cgm::Point<int> *
     cgmt_flush_cmd(ctx, final_flush);
 }
 
-/* Cell array */
-static void cgmt_carray_p(cgm_context *ctx, int c1x, int c1y, int c2x, int c2y, int c3x, int c3y, int colorPrecision, int nx, int ny, int dimx, const int *array)
-{
-    int ix, iy, c;
-
-    cgmt_start_cmd(ctx, 4, (int) Cell_Array);
-
-    cgmt_ipoint(ctx, c1x, c1y);
-    cgmt_ipoint(ctx, c2x, c2y);
-    cgmt_ipoint(ctx, c3x, c3y);
-    cgmt_int(ctx, nx);
-    cgmt_int(ctx, ny);
-    cgmt_int(ctx, colorPrecision);
-
-    for (iy = 0; iy < ny; iy++)
-    {
-        cgmt_fb(ctx);
-
-        for (ix = 0; ix < nx; ix++)
-        {
-            c = array[dimx * iy + ix];
-            cgmt_int(ctx, c);
-
-            if (ix < nx - 1)
-                cgmt_outc(ctx, ',');
-        }
-    }
-
-    cgmt_flush_cmd(ctx, final_flush);
-}
-
 namespace cgm
 {
 
@@ -785,7 +754,32 @@ void ClearTextMetafileWriter::polygon(const std::vector<Point<int>> &points)
 
 void ClearTextMetafileWriter::cellArray(Point<int> c1, Point<int> c2, Point<int> c3, int colorPrecision, int nx, int ny, const int *colors)
 {
-    cgmt_carray_p(&m_context, c1.x, c1.y, c2.x, c2.y, c3.x, c3.y, colorPrecision, nx, ny, nx, colors);
+    cgm_context *ctx = &m_context;
+
+    cgmt_start_cmd(ctx, 4, (int) Cell_Array);
+
+    cgmt_ipoint(ctx, c1.x, c1.y);
+    cgmt_ipoint(ctx, c2.x, c2.y);
+    cgmt_ipoint(ctx, c3.x, c3.y);
+    cgmt_int(ctx, nx);
+    cgmt_int(ctx, ny);
+    cgmt_int(ctx, colorPrecision);
+
+    for (int iy = 0; iy < ny; iy++)
+    {
+        cgmt_fb(ctx);
+
+        for (int ix = 0; ix < nx; ix++)
+        {
+            const int c = colors[nx * iy + ix];
+            cgmt_int(ctx, c);
+
+            if (ix < nx - 1)
+                cgmt_outc(ctx, ',');
+        }
+    }
+
+    cgmt_flush_cmd(ctx, final_flush);
 }
 
 void ClearTextMetafileWriter::lineType(int value)
