@@ -824,14 +824,6 @@ static void cgmt_fillcolor_p(cgm_context *ctx, int index)
     cgmt_flush_cmd(ctx, final_flush);
 }
 
-/* Hatch index */
-static void cgmt_hindex_p(cgm_context *ctx, int new_index)
-{
-    cgmt_start_cmd(ctx, 5, (int) HatchIndex);
-    cgmt_int(ctx, new_index);
-    cgmt_flush_cmd(ctx, final_flush);
-}
-
 /* Cell array */
 static void cgmt_carray_p(cgm_context *ctx, int c1x, int c1y, int c2x, int c2y, int c3x, int c3y, int colorPrecision, int nx, int ny, int dimx, const int *array)
 {
@@ -1162,7 +1154,10 @@ void ClearTextMetafileWriter::fillColor(int value)
 
 void ClearTextMetafileWriter::hatchIndex(int value)
 {
-    cgmt_hindex_p(&m_context, value);
+    cgm_context *ctx = &m_context;
+    cgmt_start_cmd(ctx, 5, (int) HatchIndex);
+    cgmt_int(ctx, value);
+    cgmt_flush_cmd(ctx, final_flush);
 }
 
 void ClearTextMetafileWriter::patternIndex(int value)
