@@ -94,8 +94,23 @@ static void cgmt_string(cgm_context *ctx, const char *cptr, int slen)
     cgmt_outc(ctx, quote_char);
 }
 
+namespace cgm
+{
+
+ClearTextMetafileWriter::ClearTextMetafileWriter(std::ostream &stream)
+    : MetafileStreamWriter(stream)
+{
+    m_context.encode = cgm_clear_text;
+}
+
+ClearTextMetafileWriter::ClearTextMetafileWriter(int fd)
+    : MetafileStreamWriter(fd)
+{
+    m_context.encode = cgm_clear_text;
+}
+
 /* Write a signed integer variable */
-static void cgmt_int(cgm_context *ctx, int xin)
+void ClearTextMetafileWriter::cgmt_int(cgm_context *ctx, int xin)
 {
     static char buf[max_pwrs + 2];
     register char *cptr;
@@ -137,21 +152,6 @@ static void cgmt_int(cgm_context *ctx, int xin)
         cgmt_outc(ctx, ' ');
 
     cgmt_out_string(ctx, cptr);
-}
-
-namespace cgm
-{
-
-ClearTextMetafileWriter::ClearTextMetafileWriter(std::ostream &stream)
-    : MetafileStreamWriter(stream)
-{
-    m_context.encode = cgm_clear_text;
-}
-
-ClearTextMetafileWriter::ClearTextMetafileWriter(int fd)
-    : MetafileStreamWriter(fd)
-{
-    m_context.encode = cgm_clear_text;
 }
 
 /* Write a real variable */

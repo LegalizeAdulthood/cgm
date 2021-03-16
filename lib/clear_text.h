@@ -71,6 +71,7 @@ public:
     void colorTable(int startIndex, std::vector<Color> const &colors) override;
 
 private:
+    void cgmt_int(cgm_context *ctx, int xin);
     void cgmt_real(cgm_context *ctx, double xin);
     void cgmt_ipoint(cgm_context *ctx, int x, int y);
 };
