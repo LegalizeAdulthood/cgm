@@ -366,23 +366,6 @@ static void cgmt_fontlist_p(cgm_context *ctx, int numFonts, const char **fonts)
     cgmt_flush_cmd(ctx, final_flush);
 }
 
-/* Character announcer */
-static void cgmt_cannounce_p(cgm_context *ctx, int value)
-{
-    const char *announcerNames[] = {
-        "Basic7Bit",
-        "Basic8Bit",
-        "Extd7Bit",
-        "Extd8Bit"
-    };
-    cgmt_start_cmd(ctx, 1, (int) CharAnnounce);
-
-    cgmt_outc(ctx, ' ');
-    cgmt_out_string(ctx, announcerNames[value]);
-
-    cgmt_flush_cmd(ctx, final_flush);
-}
-
 namespace cgm
 {
 
@@ -517,7 +500,19 @@ void ClearTextMetafileWriter::fontList(std::vector<std::string> const &fonts)
 
 void ClearTextMetafileWriter::characterCodingAnnouncer(CharCodeAnnouncer value)
 {
-    cgmt_cannounce_p(&m_context, static_cast<int>(value));
+    cgm_context *ctx = &m_context;
+    static const char *const announcerNames[] = {
+        "Basic7Bit",
+        "Basic8Bit",
+        "Extd7Bit",
+        "Extd8Bit"
+    };
+    cgmt_start_cmd(ctx, 1, (int) CharAnnounce);
+
+    cgmt_outc(ctx, ' ');
+    cgmt_out_string(ctx, announcerNames[static_cast<int>(value)]);
+
+    cgmt_flush_cmd(ctx, final_flush);
 }
 
 void ClearTextMetafileWriter::scalingMode(ScalingMode mode, float value)
