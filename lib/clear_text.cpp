@@ -325,28 +325,6 @@ static void cgmt_maxcind_p(cgm_context *ctx, int max)
     cgmt_flush_cmd(ctx, final_flush);
 }
 
-/* Metafile element list */
-static void cgmt_mfellist_p(cgm_context *ctx)
-{
-    int i;
-
-    cgmt_start_cmd(ctx, 1, (int) MfElList);
-
-    cgmt_outc(ctx, ' ');
-    cgmt_outc(ctx, quote_char);
-
-    for (i = 2; i < 2 * n_melements; i += 2)
-    {
-        cgmt_out_string(ctx, cgmt_cptr[element_list[i]][element_list[i + 1]]);
-
-        if (i < 2 * (n_melements - 1))
-            cgmt_outc(ctx, ' ');
-    }
-
-    cgmt_outc(ctx, quote_char);
-    cgmt_flush_cmd(ctx, final_flush);
-}
-
 namespace cgm
 {
 
@@ -465,7 +443,23 @@ void ClearTextMetafileWriter::colorValueExtent(int redMin, int redMax, int green
 
 void ClearTextMetafileWriter::metafileElementList()
 {
-    cgmt_mfellist_p(&m_context);
+    cgm_context *ctx = &m_context;
+
+    cgmt_start_cmd(ctx, 1, (int) MfElList);
+
+    cgmt_outc(ctx, ' ');
+    cgmt_outc(ctx, quote_char);
+
+    for (int i = 2; i < 2 * n_melements; i += 2)
+    {
+        cgmt_out_string(ctx, cgmt_cptr[element_list[i]][element_list[i + 1]]);
+
+        if (i < 2 * (n_melements - 1))
+            cgmt_outc(ctx, ' ');
+    }
+
+    cgmt_outc(ctx, quote_char);
+    cgmt_flush_cmd(ctx, final_flush);
 }
 
 void ClearTextMetafileWriter::fontList(std::vector<std::string> const &fonts)
