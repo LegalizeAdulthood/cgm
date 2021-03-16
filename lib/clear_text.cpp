@@ -82,7 +82,7 @@ void ClearTextMetafileWriter::cgmt_start_cmd(int cl, int el)
 }
 
 /* Flush output command */
-void ClearTextMetafileWriter::cgmt_flush_cmd(cgm_context *ctx, int this_flush)
+void ClearTextMetafileWriter::cgmt_flush_cmd()
 {
     cgmt_outc(term_char);
     cgmt_fb();
@@ -182,7 +182,7 @@ void ClearTextMetafileWriter::beginMetafile(const char *identifier)
     else
         cgmt_string(ctx, nullptr, 0);
 
-    cgmt_flush_cmd(ctx, final_flush);
+    cgmt_flush_cmd();
 }
 
 void ClearTextMetafileWriter::endMetafile()
@@ -190,7 +190,7 @@ void ClearTextMetafileWriter::endMetafile()
     cgm_context *ctx = &m_context;
     cgmt_start_cmd(0, (int) E_Mf);
 
-    cgmt_flush_cmd(ctx, final_flush);
+    cgmt_flush_cmd();
 
     cgmt_fb();
 }
@@ -205,7 +205,7 @@ void ClearTextMetafileWriter::beginPicture(char const *identifier)
     else
         cgmt_string(ctx, NULL, 0);
 
-    cgmt_flush_cmd(ctx, final_flush);
+    cgmt_flush_cmd();
 }
 
 void ClearTextMetafileWriter::beginPictureBody()
@@ -213,7 +213,7 @@ void ClearTextMetafileWriter::beginPictureBody()
     cgm_context *ctx = &m_context;
     cgmt_start_cmd(0, (int) B_Pic_Body);
 
-    cgmt_flush_cmd(ctx, final_flush);
+    cgmt_flush_cmd();
 }
 
 void ClearTextMetafileWriter::endPicture()
@@ -221,7 +221,7 @@ void ClearTextMetafileWriter::endPicture()
     cgm_context *ctx = &m_context;
     cgmt_start_cmd(0, (int) E_Pic);
 
-    cgmt_flush_cmd(ctx, final_flush);
+    cgmt_flush_cmd();
 }
 
 void ClearTextMetafileWriter::metafileVersion(int value)
@@ -231,7 +231,7 @@ void ClearTextMetafileWriter::metafileVersion(int value)
 
     cgmt_int(ctx, value);
 
-    cgmt_flush_cmd(ctx, final_flush);
+    cgmt_flush_cmd();
 }
 
 void ClearTextMetafileWriter::metafileDescription(char const *value)
@@ -241,7 +241,7 @@ void ClearTextMetafileWriter::metafileDescription(char const *value)
 
     cgmt_string(ctx, value, strlen(value));
 
-    cgmt_flush_cmd(ctx, final_flush);
+    cgmt_flush_cmd();
 }
 
 void ClearTextMetafileWriter::vdcType(VdcType type)
@@ -258,7 +258,7 @@ void ClearTextMetafileWriter::vdcType(VdcType type)
         cgmt_out_string(" Real");
     }
 
-    cgmt_flush_cmd(ctx, final_flush);
+    cgmt_flush_cmd();
 }
 
 void ClearTextMetafileWriter::intPrecisionClearText(int min, int max)
@@ -269,7 +269,7 @@ void ClearTextMetafileWriter::intPrecisionClearText(int min, int max)
     cgmt_int(ctx, min);
     cgmt_int(ctx, max);
 
-    cgmt_flush_cmd(ctx, final_flush);
+    cgmt_flush_cmd();
 }
 
 void ClearTextMetafileWriter::intPrecisionBinary(int value)
@@ -286,7 +286,7 @@ void ClearTextMetafileWriter::realPrecisionClearText(float minReal, float maxRea
     cgmt_real(ctx, static_cast<double>(maxReal));
     cgmt_int(ctx, digits);
 
-    cgmt_flush_cmd(ctx, final_flush);
+    cgmt_flush_cmd();
 }
 
 void ClearTextMetafileWriter::realPrecisionBinary(RealPrecision prec, int expWidth, int mantWidth)
@@ -302,7 +302,7 @@ void ClearTextMetafileWriter::indexPrecisionClearText(int min, int max)
     cgmt_int(ctx, min);
     cgmt_int(ctx, max);
 
-    cgmt_flush_cmd(ctx, final_flush);
+    cgmt_flush_cmd();
 }
 
 void ClearTextMetafileWriter::indexPrecisionBinary(int value)
@@ -317,7 +317,7 @@ void ClearTextMetafileWriter::colorPrecisionClearText(int max)
 
     cgmt_int(ctx, max);
 
-    cgmt_flush_cmd(ctx, final_flush);
+    cgmt_flush_cmd();
 }
 
 void ClearTextMetafileWriter::colorPrecisionBinary(int value)
@@ -332,7 +332,7 @@ void ClearTextMetafileWriter::colorIndexPrecisionClearText(int max)
 
     cgmt_int(ctx, max);
 
-    cgmt_flush_cmd(ctx, final_flush);
+    cgmt_flush_cmd();
 }
 
 void ClearTextMetafileWriter::colorIndexPrecisionBinary(int value)
@@ -347,7 +347,7 @@ void ClearTextMetafileWriter::maximumColorIndex(int max)
 
     cgmt_int(ctx, max);
 
-    cgmt_flush_cmd(ctx, final_flush);
+    cgmt_flush_cmd();
 }
 
 void ClearTextMetafileWriter::colorValueExtent(int redMin, int redMax, int greenMin, int greenMax, int blueMin, int blueMax)
@@ -362,7 +362,7 @@ void ClearTextMetafileWriter::colorValueExtent(int redMin, int redMax, int green
     cgmt_int(ctx, greenMax);
     cgmt_int(ctx, blueMax);
 
-    cgmt_flush_cmd(ctx, final_flush);
+    cgmt_flush_cmd();
 }
 
 void ClearTextMetafileWriter::metafileElementList()
@@ -383,7 +383,7 @@ void ClearTextMetafileWriter::metafileElementList()
     }
 
     cgmt_outc(quote_char);
-    cgmt_flush_cmd(ctx, final_flush);
+    cgmt_flush_cmd();
 }
 
 void ClearTextMetafileWriter::fontList(std::vector<std::string> const &fonts)
@@ -402,7 +402,7 @@ void ClearTextMetafileWriter::fontList(std::vector<std::string> const &fonts)
         cgmt_out_string(s);
     }
 
-    cgmt_flush_cmd(ctx, final_flush);
+    cgmt_flush_cmd();
 }
 
 void ClearTextMetafileWriter::characterCodingAnnouncer(CharCodeAnnouncer value)
@@ -419,7 +419,7 @@ void ClearTextMetafileWriter::characterCodingAnnouncer(CharCodeAnnouncer value)
     cgmt_outc(' ');
     cgmt_out_string(announcerNames[static_cast<int>(value)]);
 
-    cgmt_flush_cmd(ctx, final_flush);
+    cgmt_flush_cmd();
 }
 
 void ClearTextMetafileWriter::scalingMode(ScalingMode mode, float value)
@@ -430,7 +430,7 @@ void ClearTextMetafileWriter::scalingMode(ScalingMode mode, float value)
     cgmt_out_string(mode == ScalingMode::Metric ? " Metric" : " Abstract");
     cgmt_real(ctx, static_cast<double>(value));
 
-    cgmt_flush_cmd(ctx, final_flush);
+    cgmt_flush_cmd();
 }
 
 void ClearTextMetafileWriter::colorSelectionMode(ColorMode mode)
@@ -440,7 +440,7 @@ void ClearTextMetafileWriter::colorSelectionMode(ColorMode mode)
 
     cgmt_out_string(mode == ColorMode::Indexed ? " Indexed" : " Direct");
 
-    cgmt_flush_cmd(ctx, final_flush);
+    cgmt_flush_cmd();
 }
 
 void ClearTextMetafileWriter::lineWidthSpecificationMode(SpecificationMode mode)
@@ -450,7 +450,7 @@ void ClearTextMetafileWriter::lineWidthSpecificationMode(SpecificationMode mode)
 
     cgmt_out_string(mode == SpecificationMode::Absolute ? " Absolute" : " Scaled");
 
-    cgmt_flush_cmd(ctx, final_flush);
+    cgmt_flush_cmd();
 }
 
 void ClearTextMetafileWriter::markerSizeSpecificationMode(SpecificationMode mode)
@@ -460,7 +460,7 @@ void ClearTextMetafileWriter::markerSizeSpecificationMode(SpecificationMode mode
 
     cgmt_out_string(mode == SpecificationMode::Absolute ? " Absolute" : " Scaled");
 
-    cgmt_flush_cmd(ctx, final_flush);
+    cgmt_flush_cmd();
 }
 
 void ClearTextMetafileWriter::vdcExtent(int llx, int lly, int urx, int ury)
@@ -471,7 +471,7 @@ void ClearTextMetafileWriter::vdcExtent(int llx, int lly, int urx, int ury)
     cgmt_ipoint(ctx, llx, lly);
     cgmt_ipoint(ctx, urx, ury);
 
-    cgmt_flush_cmd(ctx, final_flush);
+    cgmt_flush_cmd();
 }
 
 void ClearTextMetafileWriter::backgroundColor(int red, int green, int blue)
@@ -483,7 +483,7 @@ void ClearTextMetafileWriter::backgroundColor(int red, int green, int blue)
     cgmt_int(ctx, green);
     cgmt_int(ctx, blue);
 
-    cgmt_flush_cmd(ctx, final_flush);
+    cgmt_flush_cmd();
 }
 
 void ClearTextMetafileWriter::vdcIntegerPrecisionClearText(int min, int max)
@@ -494,7 +494,7 @@ void ClearTextMetafileWriter::vdcIntegerPrecisionClearText(int min, int max)
     cgmt_int(ctx, min);
     cgmt_int(ctx, max);
 
-    cgmt_flush_cmd(ctx, final_flush);
+    cgmt_flush_cmd();
 }
 
 void ClearTextMetafileWriter::vdcIntegerPrecisionBinary(int value)
@@ -510,7 +510,7 @@ void ClearTextMetafileWriter::clipRectangle(int llx, int lly, int urx, int ury)
     cgmt_ipoint(ctx, llx, lly);
     cgmt_ipoint(ctx, urx, ury);
 
-    cgmt_flush_cmd(ctx, final_flush);
+    cgmt_flush_cmd();
 }
 
 void ClearTextMetafileWriter::clipIndicator(bool enabled)
@@ -520,7 +520,7 @@ void ClearTextMetafileWriter::clipIndicator(bool enabled)
 
     cgmt_out_string(enabled ? " On" : " Off");
 
-    cgmt_flush_cmd(ctx, final_flush);
+    cgmt_flush_cmd();
 }
 
 void ClearTextMetafileWriter::polyline(const std::vector<Point<int>> &points)
@@ -534,7 +534,7 @@ void ClearTextMetafileWriter::polyline(const std::vector<Point<int>> &points)
         cgmt_ipoint(ctx, point.x, point.y);
     }
 
-    cgmt_flush_cmd(ctx, final_flush);
+    cgmt_flush_cmd();
 }
 
 void ClearTextMetafileWriter::polymarker(const std::vector<Point<int>> &points)
@@ -548,7 +548,7 @@ void ClearTextMetafileWriter::polymarker(const std::vector<Point<int>> &points)
         cgmt_ipoint(ctx, i.x, i.y);
     }
 
-    cgmt_flush_cmd(ctx, final_flush);
+    cgmt_flush_cmd();
 }
 
 void ClearTextMetafileWriter::text(Point<int> point, TextFlag flag, const char *text)
@@ -562,7 +562,7 @@ void ClearTextMetafileWriter::text(Point<int> point, TextFlag flag, const char *
 
     cgmt_string(ctx, text, strlen(text));
 
-    cgmt_flush_cmd(ctx, final_flush);
+    cgmt_flush_cmd();
 }
 
 void ClearTextMetafileWriter::polygon(const std::vector<Point<int>> &points)
@@ -576,7 +576,7 @@ void ClearTextMetafileWriter::polygon(const std::vector<Point<int>> &points)
         cgmt_ipoint(ctx, i.x, i.y);
     }
 
-    cgmt_flush_cmd(ctx, final_flush);
+    cgmt_flush_cmd();
 }
 
 void ClearTextMetafileWriter::cellArray(Point<int> c1, Point<int> c2, Point<int> c3, int colorPrecision, int nx, int ny, const int *colors)
@@ -606,7 +606,7 @@ void ClearTextMetafileWriter::cellArray(Point<int> c1, Point<int> c2, Point<int>
         }
     }
 
-    cgmt_flush_cmd(ctx, final_flush);
+    cgmt_flush_cmd();
 }
 
 void ClearTextMetafileWriter::lineType(int value)
@@ -616,7 +616,7 @@ void ClearTextMetafileWriter::lineType(int value)
 
     cgmt_int(ctx, (int) value);
 
-    cgmt_flush_cmd(ctx, final_flush);
+    cgmt_flush_cmd();
 }
 
 void ClearTextMetafileWriter::lineWidth(float value)
@@ -626,7 +626,7 @@ void ClearTextMetafileWriter::lineWidth(float value)
 
     cgmt_real(ctx, static_cast<double>(value));
 
-    cgmt_flush_cmd(ctx, final_flush);
+    cgmt_flush_cmd();
 }
 
 void ClearTextMetafileWriter::lineColor(int value)
@@ -636,7 +636,7 @@ void ClearTextMetafileWriter::lineColor(int value)
 
     cgmt_int(ctx, value);
 
-    cgmt_flush_cmd(ctx, final_flush);
+    cgmt_flush_cmd();
 }
 
 void ClearTextMetafileWriter::markerType(int value)
@@ -646,7 +646,7 @@ void ClearTextMetafileWriter::markerType(int value)
 
     cgmt_int(ctx, value);
 
-    cgmt_flush_cmd(ctx, final_flush);
+    cgmt_flush_cmd();
 }
 
 void ClearTextMetafileWriter::markerSize(float value)
@@ -656,7 +656,7 @@ void ClearTextMetafileWriter::markerSize(float value)
 
     cgmt_real(ctx, static_cast<double>(value));
 
-    cgmt_flush_cmd(ctx, final_flush);
+    cgmt_flush_cmd();
 }
 
 void ClearTextMetafileWriter::markerColor(int value)
@@ -666,7 +666,7 @@ void ClearTextMetafileWriter::markerColor(int value)
 
     cgmt_int(ctx, value);
 
-    cgmt_flush_cmd(ctx, final_flush);
+    cgmt_flush_cmd();
 }
 
 void ClearTextMetafileWriter::textFontIndex(int value)
@@ -676,7 +676,7 @@ void ClearTextMetafileWriter::textFontIndex(int value)
 
     cgmt_int(ctx, value);
 
-    cgmt_flush_cmd(ctx, final_flush);
+    cgmt_flush_cmd();
 }
 
 void ClearTextMetafileWriter::textPrecision(TextPrecision value)
@@ -699,7 +699,7 @@ void ClearTextMetafileWriter::textPrecision(TextPrecision value)
         break;
     }
 
-    cgmt_flush_cmd(ctx, final_flush);
+    cgmt_flush_cmd();
 }
 
 void ClearTextMetafileWriter::charExpansion(float value)
@@ -709,7 +709,7 @@ void ClearTextMetafileWriter::charExpansion(float value)
 
     cgmt_real(ctx, static_cast<double>(value));
 
-    cgmt_flush_cmd(ctx, final_flush);
+    cgmt_flush_cmd();
 }
 
 void ClearTextMetafileWriter::charSpacing(float value)
@@ -719,7 +719,7 @@ void ClearTextMetafileWriter::charSpacing(float value)
 
     cgmt_real(ctx, static_cast<double>(value));
 
-    cgmt_flush_cmd(ctx, final_flush);
+    cgmt_flush_cmd();
 }
 
 void ClearTextMetafileWriter::textColor(int index)
@@ -729,7 +729,7 @@ void ClearTextMetafileWriter::textColor(int index)
 
     cgmt_int(ctx, index);
 
-    cgmt_flush_cmd(ctx, final_flush);
+    cgmt_flush_cmd();
 }
 
 void ClearTextMetafileWriter::charHeight(int value)
@@ -739,7 +739,7 @@ void ClearTextMetafileWriter::charHeight(int value)
 
     cgmt_int(ctx, value);
 
-    cgmt_flush_cmd(ctx, final_flush);
+    cgmt_flush_cmd();
 }
 
 void ClearTextMetafileWriter::charOrientation(int upX, int upY, int baseX, int baseY)
@@ -752,7 +752,7 @@ void ClearTextMetafileWriter::charOrientation(int upX, int upY, int baseX, int b
     cgmt_int(ctx, baseX);
     cgmt_int(ctx, baseY);
 
-    cgmt_flush_cmd(ctx, final_flush);
+    cgmt_flush_cmd();
 }
 
 void ClearTextMetafileWriter::textPath(TextPath value)
@@ -779,7 +779,7 @@ void ClearTextMetafileWriter::textPath(TextPath value)
         break;
     }
 
-    cgmt_flush_cmd(ctx, final_flush);
+    cgmt_flush_cmd();
 }
 
 void ClearTextMetafileWriter::textAlignment(HorizAlign horiz, VertAlign vert, float contHoriz, float contVert)
@@ -844,7 +844,7 @@ void ClearTextMetafileWriter::textAlignment(HorizAlign horiz, VertAlign vert, fl
     cgmt_real(ctx, static_cast<double>(contHoriz));
     cgmt_real(ctx, static_cast<double>(contVert));
 
-    cgmt_flush_cmd(ctx, final_flush);
+    cgmt_flush_cmd();
 }
 
 void ClearTextMetafileWriter::interiorStyle(InteriorStyle value)
@@ -875,7 +875,7 @@ void ClearTextMetafileWriter::interiorStyle(InteriorStyle value)
         break;
     }
 
-    cgmt_flush_cmd(ctx, final_flush);
+    cgmt_flush_cmd();
 }
 
 void ClearTextMetafileWriter::fillColor(int value)
@@ -885,7 +885,7 @@ void ClearTextMetafileWriter::fillColor(int value)
 
     cgmt_int(ctx, value);
 
-    cgmt_flush_cmd(ctx, final_flush);
+    cgmt_flush_cmd();
 }
 
 void ClearTextMetafileWriter::hatchIndex(int value)
@@ -893,7 +893,7 @@ void ClearTextMetafileWriter::hatchIndex(int value)
     cgm_context *ctx = &m_context;
     cgmt_start_cmd(5, (int) HatchIndex);
     cgmt_int(ctx, value);
-    cgmt_flush_cmd(ctx, final_flush);
+    cgmt_flush_cmd();
 }
 
 void ClearTextMetafileWriter::patternIndex(int value)
@@ -901,7 +901,7 @@ void ClearTextMetafileWriter::patternIndex(int value)
     cgm_context *ctx = &m_context;
     cgmt_start_cmd(5, (int) PatIndex);
     cgmt_int(ctx, value);
-    cgmt_flush_cmd(ctx, final_flush);
+    cgmt_flush_cmd();
 }
 
 void ClearTextMetafileWriter::colorTable(int startIndex, std::vector<Color> const &colorTable)
@@ -918,7 +918,7 @@ void ClearTextMetafileWriter::colorTable(int startIndex, std::vector<Color> cons
         cgmt_int(ctx, (int) (colorTable[(i - startIndex)].blue * (max_colors - 1)));
     }
 
-    cgmt_flush_cmd(ctx, final_flush);
+    cgmt_flush_cmd();
 }
 
 }        // namespace cgm
