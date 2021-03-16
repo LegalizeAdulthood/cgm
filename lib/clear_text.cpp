@@ -465,17 +465,6 @@ static void cgmt_vdcintprec_p(cgm_context *ctx, int min, int max)
     cgmt_flush_cmd(ctx, final_flush);
 }
 
-/* Clip rectangle */
-static void cgmt_cliprect_p(cgm_context *ctx, int llx, int lly, int urx, int ury)
-{
-    cgmt_start_cmd(ctx, 3, (int) ClipRect);
-
-    cgmt_ipoint(ctx, llx, lly);
-    cgmt_ipoint(ctx, urx, ury);
-
-    cgmt_flush_cmd(ctx, final_flush);
-}
-
 namespace cgm
 {
 
@@ -655,7 +644,13 @@ void ClearTextMetafileWriter::vdcIntegerPrecisionBinary(int value)
 
 void ClearTextMetafileWriter::clipRectangle(int llx, int lly, int urx, int ury)
 {
-    cgmt_cliprect_p(&m_context, llx, lly, urx, ury);
+    cgm_context *ctx = &m_context;
+    cgmt_start_cmd(ctx, 3, (int) ClipRect);
+
+    cgmt_ipoint(ctx, llx, lly);
+    cgmt_ipoint(ctx, urx, ury);
+
+    cgmt_flush_cmd(ctx, final_flush);
 }
 
 void ClearTextMetafileWriter::clipIndicator(bool enabled)
