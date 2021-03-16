@@ -4,6 +4,7 @@
 
 #include <array>
 #include <cstdint>
+#include <numeric>
 #include <sstream>
 
 namespace
@@ -510,11 +511,12 @@ TEST_CASE("binary encoding")
         writer->fontList(fonts);
 
         const std::string str = stream.str();
-        const int paramLength = 30;
+        const int paramLength = static_cast<int>(fonts.size()) +
+            std::accumulate(fonts.begin(), fonts.end(), 0, [](int sum, const std::string &str) { return sum + static_cast<int>(str.size()); });
         REQUIRE(str.size() == headerLen + paramLength);
         REQUIRE(header(str) == OpCode{MetafileDescriptor, FontList, paramLength});
-        // TODO: is this right?  Shouldn't it be 2 length encoded strings?
-        REQUIRE(unpack(str, 2) == "Hershey Simplex Hershey Roman");
+        REQUIRE(unpack(str, 2) == "Hershey Simplex");
+        REQUIRE(unpack(str, 2 + 1 + fonts[0].size()) == "Hershey Roman");
     }
     // character set list
     SECTION("character coding announcer")

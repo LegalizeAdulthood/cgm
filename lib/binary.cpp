@@ -650,17 +650,12 @@ void BinaryMetafileWriter::metafileElementList()
 
 void BinaryMetafileWriter::fontList(std::vector<std::string> const &fonts)
 {
-    std::string s;
-    for (const std::string &font : fonts)
-    {
-        s += font;
-        s += ' ';
-    }
-    s.pop_back();
-
     cgmb_start_cmd(1, (int) FontList);
 
-    cgmb_string(s.c_str(), static_cast<int>(s.length()));
+    for (const std::string &s : fonts)
+    {
+        cgmb_string(s.c_str(), static_cast<int>(s.length()));
+    }
 
     cgmb_flush_cmd(final_flush);
     cgmb_fb();
