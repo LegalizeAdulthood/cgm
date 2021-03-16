@@ -154,7 +154,7 @@ void ClearTextMetafileWriter::cgmt_int(int xin)
 }
 
 /* Write a real variable */
-void ClearTextMetafileWriter::cgmt_real(cgm_context *ctx, double xin)
+void ClearTextMetafileWriter::cgmt_real(double xin)
 {
     char buffer[max_str];
 
@@ -281,8 +281,8 @@ void ClearTextMetafileWriter::realPrecisionClearText(float minReal, float maxRea
     cgm_context *ctx = &m_context;
     cgmt_start_cmd(1, (int) RealPrec);
 
-    cgmt_real(ctx, static_cast<double>(minReal));
-    cgmt_real(ctx, static_cast<double>(maxReal));
+    cgmt_real(static_cast<double>(minReal));
+    cgmt_real(static_cast<double>(maxReal));
     cgmt_int(digits);
 
     cgmt_flush_cmd();
@@ -427,7 +427,7 @@ void ClearTextMetafileWriter::scalingMode(ScalingMode mode, float value)
     cgmt_start_cmd(2, (int) ScalMode);
 
     cgmt_out_string(mode == ScalingMode::Metric ? " Metric" : " Abstract");
-    cgmt_real(ctx, static_cast<double>(value));
+    cgmt_real(static_cast<double>(value));
 
     cgmt_flush_cmd();
 }
@@ -623,7 +623,7 @@ void ClearTextMetafileWriter::lineWidth(float value)
     cgm_context *ctx = &m_context;
     cgmt_start_cmd(5, (int) LWidth);
 
-    cgmt_real(ctx, static_cast<double>(value));
+    cgmt_real(static_cast<double>(value));
 
     cgmt_flush_cmd();
 }
@@ -653,7 +653,7 @@ void ClearTextMetafileWriter::markerSize(float value)
     cgm_context *ctx = &m_context;
     cgmt_start_cmd(5, (int) MSize);
 
-    cgmt_real(ctx, static_cast<double>(value));
+    cgmt_real(static_cast<double>(value));
 
     cgmt_flush_cmd();
 }
@@ -706,7 +706,7 @@ void ClearTextMetafileWriter::charExpansion(float value)
     cgm_context *ctx = &m_context;
     cgmt_start_cmd(5, (int) CExpFac);
 
-    cgmt_real(ctx, static_cast<double>(value));
+    cgmt_real(static_cast<double>(value));
 
     cgmt_flush_cmd();
 }
@@ -716,7 +716,7 @@ void ClearTextMetafileWriter::charSpacing(float value)
     cgm_context *ctx = &m_context;
     cgmt_start_cmd(5, (int) CSpace);
 
-    cgmt_real(ctx, static_cast<double>(value));
+    cgmt_real(static_cast<double>(value));
 
     cgmt_flush_cmd();
 }
@@ -840,8 +840,8 @@ void ClearTextMetafileWriter::textAlignment(HorizAlign horiz, VertAlign vert, fl
         break;
     }
 
-    cgmt_real(ctx, static_cast<double>(contHoriz));
-    cgmt_real(ctx, static_cast<double>(contVert));
+    cgmt_real(static_cast<double>(contHoriz));
+    cgmt_real(static_cast<double>(contVert));
 
     cgmt_flush_cmd();
 }
