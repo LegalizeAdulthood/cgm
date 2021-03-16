@@ -691,33 +691,6 @@ static void cgmt_corient_p(cgm_context *ctx, int x_up, int y_up, int x_base, int
     cgmt_flush_cmd(ctx, final_flush);
 }
 
-/* Text path */
-static void cgmt_tpath_p(cgm_context *ctx, int new_path)
-{
-    cgmt_start_cmd(ctx, 5, (int) TPath);
-
-    switch (new_path)
-    {
-    case right:
-        cgmt_out_string(ctx, " Right");
-        break;
-
-    case left:
-        cgmt_out_string(ctx, " Left");
-        break;
-
-    case up:
-        cgmt_out_string(ctx, " Up");
-        break;
-
-    case down:
-        cgmt_out_string(ctx, " Down");
-        break;
-    }
-
-    cgmt_flush_cmd(ctx, final_flush);
-}
-
 /* Cell array */
 static void cgmt_carray_p(cgm_context *ctx, int c1x, int c1y, int c2x, int c2y, int c3x, int c3y, int colorPrecision, int nx, int ny, int dimx, const int *array)
 {
@@ -1028,7 +1001,29 @@ void ClearTextMetafileWriter::charOrientation(int upX, int upY, int baseX, int b
 
 void ClearTextMetafileWriter::textPath(TextPath value)
 {
-    cgmt_tpath_p(&m_context, static_cast<int>(value));
+    cgm_context *ctx = &m_context;
+    cgmt_start_cmd(ctx, 5, (int) TPath);
+
+    switch (static_cast<int>(value))
+    {
+    case right:
+        cgmt_out_string(ctx, " Right");
+        break;
+
+    case left:
+        cgmt_out_string(ctx, " Left");
+        break;
+
+    case up:
+        cgmt_out_string(ctx, " Up");
+        break;
+
+    case down:
+        cgmt_out_string(ctx, " Down");
+        break;
+    }
+
+    cgmt_flush_cmd(ctx, final_flush);
 }
 
 void ClearTextMetafileWriter::textAlignment(HorizAlign horiz, VertAlign vert, float contHoriz, float contVert)
