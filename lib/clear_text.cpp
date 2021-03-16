@@ -269,17 +269,6 @@ static void cgmt_realprec_p(cgm_context *ctx, double minReal, double maxReal, in
     cgmt_flush_cmd(ctx, final_flush);
 }
 
-/* Index precision */
-static void cgmt_indexprec_p(cgm_context *ctx, int min, int max)
-{
-    cgmt_start_cmd(ctx, 1, (int) IndexPrec);
-
-    cgmt_int(ctx, min);
-    cgmt_int(ctx, max);
-
-    cgmt_flush_cmd(ctx, final_flush);
-}
-
 namespace cgm
 {
 
@@ -358,7 +347,13 @@ void ClearTextMetafileWriter::realPrecisionBinary(RealPrecision prec, int expWid
 
 void ClearTextMetafileWriter::indexPrecisionClearText(int min, int max)
 {
-    cgmt_indexprec_p(&m_context, min, max);
+    cgm_context *ctx = &m_context;
+    cgmt_start_cmd(ctx, 1, (int) IndexPrec);
+
+    cgmt_int(ctx, min);
+    cgmt_int(ctx, max);
+
+    cgmt_flush_cmd(ctx, final_flush);
 }
 
 void ClearTextMetafileWriter::indexPrecisionBinary(int value)
