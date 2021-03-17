@@ -16,9 +16,6 @@
 
 #define n_melements         54		    /* number of metafile elements */
 
-#define int_flush	    0		    /* intermediate flush */
-#define final_flush	    1		    /* final flush */
-
 #define real_prec_exp	    16		    
 #define real_prec_fract	    16
 

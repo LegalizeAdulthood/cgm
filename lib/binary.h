@@ -71,9 +71,15 @@ public:
     void colorTable(int startIndex, std::vector<Color> const &colors) override;
 
 private:
+    enum class Flush
+    {
+        Intermediate = 0,
+        Final = 1
+    };
+
     void outByte(char chr);
     void startElement(int elemClass, int elemCode);
-    void cgmb_flush_cmd(int this_flush);
+    void flushElement(Flush flag);
     void cgmb_out_bc(int c);
     void cgmb_out_bs(const char *cptr, int n);
     void cgmb_string(const char *cptr, int slen);
