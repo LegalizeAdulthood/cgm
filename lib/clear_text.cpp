@@ -77,7 +77,8 @@ void ClearTextMetafileWriter::cgmt_start_cmd(int cl, int el)
 /* Flush output command */
 void ClearTextMetafileWriter::cgmt_flush_cmd()
 {
-    outChar(term_char);
+    const char terminator = ';'; /* std. terminator character */
+    outChar(terminator);
     flushBuffer();
 }
 
