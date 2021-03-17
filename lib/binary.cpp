@@ -71,7 +71,7 @@ void BinaryMetafileWriter::cgmb_start_cmd(int cl, int el)
 
     m_cmdHdr[0] = static_cast<char>(cl << 4 | el >> 3);
     m_cmdHdr[1] = static_cast<char>(el << 5);
-    m_context.cmd_index = 0;
+    m_cmdIndex = 0;
     m_context.partition = 1;
 
 #undef cl_max
@@ -83,9 +83,9 @@ void BinaryMetafileWriter::cgmb_flush_cmd(int this_flush)
 {
     int i;
 
-    if ((this_flush == final_flush) && (m_context.partition == 1) && (m_context.cmd_index <= max_short))
+    if ((this_flush == final_flush) && (m_context.partition == 1) && (m_cmdIndex <= max_short))
     {
-        m_cmdHdr[1] |= m_context.cmd_index;
+        m_cmdHdr[1] |= m_cmdIndex;
 
         /* flush out the header */
 
@@ -110,8 +110,8 @@ void BinaryMetafileWriter::cgmb_flush_cmd(int this_flush)
             }
         }
 
-        m_cmdHdr[2] = m_context.cmd_index >> 8;
-        m_cmdHdr[3] = m_context.cmd_index & 255;
+        m_cmdHdr[2] = m_cmdIndex >> 8;
+        m_cmdHdr[3] = m_cmdIndex & 255;
 
         if (this_flush == int_flush)
         {
@@ -128,17 +128,17 @@ void BinaryMetafileWriter::cgmb_flush_cmd(int this_flush)
 
     /* now flush out the data */
 
-    for (i = 0; i < m_context.cmd_index; ++i)
+    for (i = 0; i < m_cmdIndex; ++i)
     {
         cgmb_outc(m_cmdData[i]);
     }
 
-    if (m_context.cmd_index % 2)
+    if (m_cmdIndex % 2)
     {
         cgmb_outc('\0');
     }
 
-    m_context.cmd_index = 0;
+    m_cmdIndex = 0;
     m_context.bfr_index = 0;
     ++m_context.partition;
 }
@@ -146,12 +146,12 @@ void BinaryMetafileWriter::cgmb_flush_cmd(int this_flush)
 /* Write one byte */
 void BinaryMetafileWriter::cgmb_out_bc(int c)
 {
-    if (m_context.cmd_index >= max_long)
+    if (m_cmdIndex >= max_long)
     {
         cgmb_flush_cmd(final_flush);
     }
 
-    m_cmdData[m_context.cmd_index++] = c;
+    m_cmdData[m_cmdIndex++] = c;
 }
 
 /* Write multiple bytes */
@@ -160,13 +160,13 @@ void BinaryMetafileWriter::cgmb_out_bs(const char *cptr, int n)
     int to_do, space_left, i;
 
     to_do = n;
-    space_left = max_long - m_context.cmd_index;
+    space_left = max_long - m_cmdIndex;
 
     while (to_do > space_left)
     {
         for (i = 0; i < space_left; ++i)
         {
-            m_cmdData[m_context.cmd_index++] = *cptr++;
+            m_cmdData[m_cmdIndex++] = *cptr++;
         }
 
         cgmb_flush_cmd(final_flush);
@@ -176,7 +176,7 @@ void BinaryMetafileWriter::cgmb_out_bs(const char *cptr, int n)
 
     for (i = 0; i < to_do; ++i)
     {
-        m_cmdData[m_context.cmd_index++] = *cptr++;
+        m_cmdData[m_cmdIndex++] = *cptr++;
     }
 }
 
