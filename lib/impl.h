@@ -2,8 +2,6 @@
 
 #define MAX_COLOR 1256  /* maximum number of predefined colors */
 
-#define stand_col	    8		    /* number of standard colors */
-#define shared_col	    120		    /* number of extended colors */
 #define cprec		    8		    /* bits used for color precision */
 #define cxprec  	    16		    /*     and color index precision */
 #define max_colors	    (01<<cprec)	    /* number of addressable colors */
