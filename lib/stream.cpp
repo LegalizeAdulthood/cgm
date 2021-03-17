@@ -42,14 +42,14 @@ void MetafileStreamWriter::flushBuffer()
 {
     if (m_useStream)
     {
-        m_stream.write(m_context.buffer, m_context.buffer_ind);
+        m_stream.write(m_context.m_output, m_context.buffer_ind);
     }
     else
     {
-        gks_write_file(m_fd, m_context.buffer, m_context.buffer_ind);
+        gks_write_file(m_fd, m_context.m_output, m_context.buffer_ind);
     }
     m_context.buffer_ind = 0;
-    m_context.buffer[0] = 0;
+    m_context.m_output[0] = 0;
 }
 
 void MetafileStreamWriter::flushBufferCb(cgm_context *ctx, void *data)

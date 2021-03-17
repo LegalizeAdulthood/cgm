@@ -40,11 +40,11 @@ void BinaryMetafileWriter::cgmb_fb()
 {
     if (m_context.buffer_ind != 0)
     {
-        m_context.buffer[m_context.buffer_ind] = '\0';
+        m_context.m_output[m_context.buffer_ind] = '\0';
         m_context.flush_buffer(&m_context, m_context.flush_buffer_context);
 
         m_context.buffer_ind = 0;
-        m_context.buffer[0] = '\0';
+        m_context.m_output[0] = '\0';
     }
 }
 
@@ -54,7 +54,7 @@ void BinaryMetafileWriter::cgmb_outc(char chr)
     if (m_context.buffer_ind >= max_buffer)
         cgmb_fb();
 
-    m_context.buffer[m_context.buffer_ind++] = chr;
+    m_context.m_output[m_context.buffer_ind++] = chr;
 }
 
 /* Start output command */
