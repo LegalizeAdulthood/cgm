@@ -90,6 +90,7 @@ private:
     void cgmb_eint(int xin);
 
     char cmd_buffer[hdr_long + max_long]{}; /* where we buffer output */
+    char *cmd_hdr{};                        /* the command header */
 };
 
 }        // namespace cgm
