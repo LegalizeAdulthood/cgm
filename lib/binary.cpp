@@ -72,7 +72,7 @@ void BinaryMetafileWriter::cgmb_start_cmd(int cl, int el)
     m_cmdHdr[0] = static_cast<char>(cl << 4 | el >> 3);
     m_cmdHdr[1] = static_cast<char>(el << 5);
     m_cmdIndex = 0;
-    m_context.partition = 1;
+    m_partition = 1;
 
 #undef cl_max
 #undef el_max
@@ -83,7 +83,7 @@ void BinaryMetafileWriter::cgmb_flush_cmd(int this_flush)
 {
     int i;
 
-    if ((this_flush == final_flush) && (m_context.partition == 1) && (m_cmdIndex <= max_short))
+    if ((this_flush == final_flush) && (m_partition == 1) && (m_cmdIndex <= max_short))
     {
         m_cmdHdr[1] |= m_cmdIndex;
 
@@ -98,7 +98,7 @@ void BinaryMetafileWriter::cgmb_flush_cmd(int this_flush)
     {
         /* need a long form */
 
-        if (m_context.partition == 1)
+        if (m_partition == 1)
         {
             /* first one */
 
@@ -140,7 +140,7 @@ void BinaryMetafileWriter::cgmb_flush_cmd(int this_flush)
 
     m_cmdIndex = 0;
     m_buffIndex = 0;
-    ++m_context.partition;
+    ++m_partition;
 }
 
 /* Write one byte */

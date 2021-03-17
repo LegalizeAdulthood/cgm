@@ -94,6 +94,7 @@ private:
     char *m_cmdData{};                       /* the command data */
     int m_cmdIndex{};                        /* index into the command data */
     int m_buffIndex{};                       /* index into the buffer */
+    int m_partition{};                       /* which partition in the output */
 };
 
 }        // namespace cgm
