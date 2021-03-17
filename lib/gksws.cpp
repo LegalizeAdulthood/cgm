@@ -39,6 +39,7 @@ public:
         text{},
         fill{},
         color_t{},
+        active{},
         cgm_ctx{}
     {
     }
@@ -53,6 +54,7 @@ public:
     text_attributes text;        /* current text attributes */
     fill_attributes fill;        /* current fill area attributes */
     double color_t[MAX_COLOR * 3];        /* color table */
+    bool active;                          /* indicates active workstation */
     cgm_context cgm_ctx;
 };
 
@@ -642,7 +644,7 @@ void gks_drv_cgm(Function fctid, int dx, int dy, int dimx, int *ia,
         init_color_table(g_context->color_t);
         g_context->cgm_ctx.xext = g_context->cgm_ctx.yext = max_coord;
         g_context->cgm_ctx.begin_page = true;
-        g_context->cgm_ctx.active = false;
+        g_context->active = false;
         break;
 
     case Function::CloseWorkstation:
@@ -653,11 +655,11 @@ void gks_drv_cgm(Function fctid, int dx, int dy, int dimx, int *ia,
         break;
 
     case Function::ActivateWorkstation:
-        g_context->cgm_ctx.active = true;
+        g_context->active = true;
         break;
 
     case Function::DeactivateWorkstation:
-        g_context->cgm_ctx.active = false;
+        g_context->active = false;
         break;
 
     case Function::ClearWorkstation:
@@ -669,7 +671,7 @@ void gks_drv_cgm(Function fctid, int dx, int dy, int dimx, int *ia,
         break;
 
     case Function::Polyline:
-        if (g_context->cgm_ctx.active)
+        if (g_context->active)
         {
             if (g_context->cgm_ctx.begin_page)
                 cgm_begin_page(g_context);
@@ -680,7 +682,7 @@ void gks_drv_cgm(Function fctid, int dx, int dy, int dimx, int *ia,
         break;
 
     case Function::Polymarker:
-        if (g_context->cgm_ctx.active)
+        if (g_context->active)
         {
             if (g_context->cgm_ctx.begin_page)
                 cgm_begin_page(g_context);
@@ -691,7 +693,7 @@ void gks_drv_cgm(Function fctid, int dx, int dy, int dimx, int *ia,
         break;
 
     case Function::Text:
-        if (g_context->cgm_ctx.active)
+        if (g_context->active)
         {
             int x, y;
 
@@ -707,7 +709,7 @@ void gks_drv_cgm(Function fctid, int dx, int dy, int dimx, int *ia,
         break;
 
     case Function::FillArea:
-        if (g_context->cgm_ctx.active)
+        if (g_context->active)
         {
             if (g_context->cgm_ctx.begin_page)
                 cgm_begin_page(g_context);
@@ -718,7 +720,7 @@ void gks_drv_cgm(Function fctid, int dx, int dy, int dimx, int *ia,
         break;
 
     case Function::CellArray:
-        if (g_context->cgm_ctx.active)
+        if (g_context->active)
         {
             int xmin, xmax, ymin, ymax;
 
