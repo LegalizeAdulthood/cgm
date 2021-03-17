@@ -35,6 +35,7 @@ public:
         encoding{},
         xform{},
         pline{},
+        pmark{},
         cgm_ctx{}
     {
     }
@@ -45,6 +46,7 @@ public:
     encode_enum encoding;
     norm_xform xform;            /* internal transformation */
     line_attributes pline;       /* current polyline attributes */
+    marker_attributes pmark;     /* current marker attributes */
     cgm_context cgm_ctx;
 };
 
@@ -313,9 +315,9 @@ static void setup_polymarker_attributes( WorkstationContext* ctx, bool init )
 
     if (init)
     {
-        ctx->cgm_ctx.pmark.type = 3;
-        ctx->cgm_ctx.pmark.width = 1.0;
-        ctx->cgm_ctx.pmark.color = 1;
+        ctx->pmark.type = 3;
+        ctx->pmark.width = 1.0;
+        ctx->pmark.color = 1;
     }
     else
     {
@@ -331,20 +333,20 @@ static void setup_polymarker_attributes( WorkstationContext* ctx, bool init )
                 newpmark.type = 3;
         }
 
-        if (newpmark.type != ctx->cgm_ctx.pmark.type)
+        if (newpmark.type != ctx->pmark.type)
         {
             ctx->writer->markerType(newpmark.type);
-            ctx->cgm_ctx.pmark.type = newpmark.type;
+            ctx->pmark.type = newpmark.type;
         }
-        if (newpmark.width != ctx->cgm_ctx.pmark.width)
+        if (newpmark.width != ctx->pmark.width)
         {
             ctx->writer->markerSize(newpmark.width);
-            ctx->cgm_ctx.pmark.width = newpmark.width;
+            ctx->pmark.width = newpmark.width;
         }
-        if (newpmark.color != ctx->cgm_ctx.pmark.color)
+        if (newpmark.color != ctx->pmark.color)
         {
             ctx->writer->markerColor(newpmark.color);
-            ctx->cgm_ctx.pmark.color = newpmark.color;
+            ctx->pmark.color = newpmark.color;
         }
     }
 }
