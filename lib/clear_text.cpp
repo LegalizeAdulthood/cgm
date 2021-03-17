@@ -41,12 +41,8 @@ void ClearTextMetafileWriter::cgmt_fb()
     if (m_outputIndex != 0)
     {
         m_output[m_outputIndex++] = '\n';
-        m_output[m_outputIndex] = '\0';
-        m_flushBuffer(&m_context, m_flushBufferCtx);
-
-        m_outputIndex = 0;
-        m_output[0] = '\0';
     }
+    flushBuffer();
 }
 
 /* Write a character to CGM clear text */

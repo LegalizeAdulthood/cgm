@@ -16,19 +16,15 @@ public:
     explicit MetafileStreamWriter(int fd);
 
 protected:
+    void flushBuffer();
+
     std::ostream &m_stream;
     std::ostringstream m_buffer;
     int m_fd;
     bool m_useStream;
     int m_outputIndex{};             /* output buffer index */
     char m_output[max_buffer + 2]{}; /* output buffer */
-    void *m_flushBufferCtx{};
-    void (*m_flushBuffer)(cgm_context *p, void *data){};
     cgm_context m_context;
-
-private:
-    void flushBuffer();
-    static void flushBufferCb(cgm_context *ctx, void *data);
 };
 
 }        // namespace cgm
