@@ -93,6 +93,7 @@ private:
     char *m_cmdHdr{};                        /* the command header */
     char *m_cmdData{};                       /* the command data */
     int m_cmdIndex{};                        /* index into the command data */
+    int m_buffIndex{};                       /* index into the buffer */
 };
 
 }        // namespace cgm

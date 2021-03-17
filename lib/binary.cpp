@@ -65,9 +65,9 @@ void BinaryMetafileWriter::cgmb_start_cmd(int cl, int el)
 #define cl_max 15
 #define el_max 127
 
-    m_cmdHdr = m_cmdBuffer + m_context.bfr_index;
+    m_cmdHdr = m_cmdBuffer + m_buffIndex;
     m_cmdData = m_cmdHdr + hdr_long;
-    m_context.bfr_index += hdr_long;
+    m_buffIndex += hdr_long;
 
     m_cmdHdr[0] = static_cast<char>(cl << 4 | el >> 3);
     m_cmdHdr[1] = static_cast<char>(el << 5);
@@ -139,7 +139,7 @@ void BinaryMetafileWriter::cgmb_flush_cmd(int this_flush)
     }
 
     m_cmdIndex = 0;
-    m_context.bfr_index = 0;
+    m_buffIndex = 0;
     ++m_context.partition;
 }
 
