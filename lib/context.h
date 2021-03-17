@@ -46,7 +46,6 @@ struct fill_attributes
 
 struct cgm_context
 {
-    int m_outputIndex;             /* output buffer index */
     void *flush_buffer_context;
     void (*flush_buffer)(cgm_context *p, void *data);
     double mm; /* metric size in mm */

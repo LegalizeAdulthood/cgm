@@ -20,6 +20,7 @@ protected:
     std::ostringstream m_buffer;
     int m_fd;
     bool m_useStream;
+    int m_outputIndex{};             /* output buffer index */
     char m_output[max_buffer + 2]{}; /* output buffer */
     cgm_context m_context;
 
