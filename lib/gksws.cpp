@@ -42,6 +42,7 @@ public:
         active{},
         begin_page{},
         vp{},
+        wn{},
         cgm_ctx{}
     {
     }
@@ -59,6 +60,7 @@ public:
     bool active;                          /* indicates active workstation */
     bool begin_page;                      /* indicates begin page */
     double vp[4];                         /* current GKS viewport */
+    double wn[4];                         /* current GKS window */
     cgm_context cgm_ctx;
 };
 
@@ -137,7 +139,7 @@ static void set_xform(WorkstationContext *ctx, bool init)
     if (init)
     {
         gks_inq_current_xformno(&errind, &tnr);
-        gks_inq_xform(tnr, &errind, ctx->cgm_ctx.wn, ctx->vp);
+        gks_inq_xform(tnr, &errind, ctx->wn, ctx->vp);
         gks_inq_clip(&errind, &clip_old, clprt);
     }
 
@@ -152,9 +154,9 @@ static void set_xform(WorkstationContext *ctx, bool init)
             ctx->vp[i] = vp_new[i];
             update = true;
         }
-        if (wn_new[i] != ctx->cgm_ctx.wn[i])
+        if (wn_new[i] != ctx->wn[i])
         {
-            ctx->cgm_ctx.wn[i] = wn_new[i];
+            ctx->wn[i] = wn_new[i];
             update = true;
         }
     }
