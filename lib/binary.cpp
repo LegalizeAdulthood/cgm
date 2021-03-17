@@ -36,7 +36,7 @@ BinaryMetafileWriter::BinaryMetafileWriter(int fd)
 }
 
 /* Write one byte to buffer */
-void BinaryMetafileWriter::cgmb_outc(char chr)
+void BinaryMetafileWriter::outByte(char chr)
 {
     if (m_outputIndex >= max_buffer)
         flushBuffer();
@@ -76,7 +76,7 @@ void BinaryMetafileWriter::cgmb_flush_cmd(int this_flush)
 
         for (i = 0; i < hdr_short; ++i)
         {
-            cgmb_outc(m_cmdHdr[i]);
+            outByte(m_cmdHdr[i]);
         }
     }
     else
@@ -91,7 +91,7 @@ void BinaryMetafileWriter::cgmb_flush_cmd(int this_flush)
 
             for (i = 0; i < hdr_short; ++i)
             {
-                cgmb_outc(m_cmdHdr[i]);
+                outByte(m_cmdHdr[i]);
             }
         }
 
@@ -107,7 +107,7 @@ void BinaryMetafileWriter::cgmb_flush_cmd(int this_flush)
 
         for (i = hdr_short; i < hdr_long; ++i)
         {
-            cgmb_outc(m_cmdHdr[i]);
+            outByte(m_cmdHdr[i]);
         }
     }
 
@@ -115,12 +115,12 @@ void BinaryMetafileWriter::cgmb_flush_cmd(int this_flush)
 
     for (i = 0; i < m_cmdIndex; ++i)
     {
-        cgmb_outc(m_cmdData[i]);
+        outByte(m_cmdData[i]);
     }
 
     if (m_cmdIndex % 2)
     {
-        cgmb_outc('\0');
+        outByte('\0');
     }
 
     m_cmdIndex = 0;
