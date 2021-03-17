@@ -65,7 +65,7 @@ void BinaryMetafileWriter::cgmb_start_cmd(int cl, int el)
 #define cl_max 15
 #define el_max 127
 
-    m_context.cmd_hdr = m_context.cmd_buffer + m_context.bfr_index;
+    m_context.cmd_hdr = cmd_buffer + m_context.bfr_index;
     m_context.cmd_data = m_context.cmd_hdr + hdr_long;
     m_context.bfr_index += hdr_long;
 
