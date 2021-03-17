@@ -40,12 +40,12 @@ void ClearTextMetafileWriter::cgmt_fb()
 {
     if (m_context.m_outputIndex != 0)
     {
-        m_context.m_output[m_context.m_outputIndex++] = '\n';
-        m_context.m_output[m_context.m_outputIndex] = '\0';
+        m_output[m_context.m_outputIndex++] = '\n';
+        m_output[m_context.m_outputIndex] = '\0';
         m_context.flush_buffer(&m_context, m_context.flush_buffer_context);
 
         m_context.m_outputIndex = 0;
-        m_context.m_output[0] = '\0';
+        m_output[0] = '\0';
     }
 }
 
@@ -55,8 +55,8 @@ void ClearTextMetafileWriter::cgmt_outc(char chr)
     if (m_context.m_outputIndex >= cgmt_recl)
         cgmt_fb();
 
-    m_context.m_output[m_context.m_outputIndex++] = chr;
-    m_context.m_output[m_context.m_outputIndex] = '\0';
+    m_output[m_context.m_outputIndex++] = chr;
+    m_output[m_context.m_outputIndex] = '\0';
 }
 
 /* Write string to CGM clear text */
@@ -65,11 +65,11 @@ void ClearTextMetafileWriter::cgmt_out_string(const char *string)
     if ((int) (m_context.m_outputIndex + strlen(string)) >= cgmt_recl)
     {
         cgmt_fb();
-        strcpy(m_context.m_output, "   ");
+        strcpy(m_output, "   ");
         m_context.m_outputIndex = 3;
     }
 
-    strcat(m_context.m_output, string);
+    strcat(m_output, string);
     m_context.m_outputIndex = m_context.m_outputIndex + static_cast<int>(strlen(string));
 }
 
