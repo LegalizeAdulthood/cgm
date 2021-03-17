@@ -43,8 +43,3 @@ struct fill_attributes
     int pattern_index;
     int color;
 };
-
-struct cgm_context
-{
-    double mm; /* metric size in mm */
-};

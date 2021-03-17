@@ -21,6 +21,7 @@
 
 #include "binary.h"
 #include "clear_text.h"
+#include "context.h"
 #include "gkscore.h"
 #include "impl.h"
 
@@ -43,9 +44,9 @@ public:
         begin_page{},
         vp{},
         wn{},
+        mm{},
         xext{},
-        yext{},
-        cgm_ctx{}
+        yext{}
     {
     }
 
@@ -63,9 +64,9 @@ public:
     bool begin_page;               /* indicates begin page */
     double vp[4];                  /* current GKS viewport */
     double wn[4];                  /* current GKS window */
+    double mm;                     /* metric size in mm */
     int xext;                      /* VDC extent */
     int yext;
-    cgm_context cgm_ctx;
 };
 
 static WorkstationContext *g_context{};
@@ -533,9 +534,9 @@ static void cgm_begin_page(WorkstationContext *ctx)
 
     if (g_context->encoding != cgm_grafkit)
     {
-        if (ctx->cgm_ctx.mm > 0)
+        if (ctx->mm > 0)
         {
-            ctx->writer->scalingMode(cgm::ScalingMode::Metric, ctx->cgm_ctx.mm);
+            ctx->writer->scalingMode(cgm::ScalingMode::Metric, ctx->mm);
         }
         else
         {
@@ -587,6 +588,11 @@ void gks_drv_cgm(Function fctid, int dx, int dy, int dimx, int *ia,
     case Function::OpenWorkstation:
         g_context = new WorkstationContext{};
         *cbContext = g_context;
+
+        if (getenv("CGM_SCALE_MODE_METRIC") != nullptr)
+            g_context->mm = 0.19685 / max_coord * 1000;
+        else
+            g_context->mm = 0;
 
         g_context->conId = ia[1];
         g_context->encoding = cgm_binary;
@@ -766,8 +772,8 @@ void gks_drv_cgm(Function fctid, int dx, int dy, int dimx, int *ia,
     case Function::SetWorkstationViewport:
         if (g_context->begin_page)
         {
-            if (g_context->cgm_ctx.mm > 0)
-                g_context->cgm_ctx.mm = (r1[1] - r1[0]) / max_coord * 1000;
+            if (g_context->mm > 0)
+                g_context->mm = (r1[1] - r1[0]) / max_coord * 1000;
         }
         break;
     }

@@ -2,7 +2,7 @@
 
 #include <cgm/cgm.h>
 
-#include "context.h"
+#include "impl.h"
 
 #include <iosfwd>
 #include <sstream>
@@ -24,7 +24,6 @@ protected:
     bool m_useStream;
     int m_outputIndex{};             /* output buffer index */
     char m_output[max_buffer + 2]{}; /* output buffer */
-    cgm_context m_context;
 };
 
 }        // namespace cgm
