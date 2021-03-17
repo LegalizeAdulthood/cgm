@@ -72,7 +72,7 @@ public:
 
 private:
     void flushBuffer() override;
-    void cgmt_outc(char chr);
+    void outChar(char chr);
     void cgmt_out_string(const char *string);
     void cgmt_start_cmd(int cl, int el);
     void cgmt_flush_cmd();
