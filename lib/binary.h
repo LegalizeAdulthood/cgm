@@ -89,8 +89,8 @@ private:
     void cgmb_cxint(int xin);
     void cgmb_eint(int xin);
 
-    char cmd_buffer[hdr_long + max_long]{}; /* where we buffer output */
-    char *cmd_hdr{};                        /* the command header */
+    char m_cmdBuffer[hdr_long + max_long]{}; /* where we buffer output */
+    char *m_cmdHdr{};                        /* the command header */
 };
 
 }        // namespace cgm

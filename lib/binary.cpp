@@ -65,12 +65,12 @@ void BinaryMetafileWriter::cgmb_start_cmd(int cl, int el)
 #define cl_max 15
 #define el_max 127
 
-    cmd_hdr = cmd_buffer + m_context.bfr_index;
-    m_context.cmd_data = cmd_hdr + hdr_long;
+    m_cmdHdr = m_cmdBuffer + m_context.bfr_index;
+    m_context.cmd_data = m_cmdHdr + hdr_long;
     m_context.bfr_index += hdr_long;
 
-    cmd_hdr[0] = static_cast<char>(cl << 4 | el >> 3);
-    cmd_hdr[1] = static_cast<char>(el << 5);
+    m_cmdHdr[0] = static_cast<char>(cl << 4 | el >> 3);
+    m_cmdHdr[1] = static_cast<char>(el << 5);
     m_context.cmd_index = 0;
     m_context.partition = 1;
 
@@ -85,13 +85,13 @@ void BinaryMetafileWriter::cgmb_flush_cmd(int this_flush)
 
     if ((this_flush == final_flush) && (m_context.partition == 1) && (m_context.cmd_index <= max_short))
     {
-        cmd_hdr[1] |= m_context.cmd_index;
+        m_cmdHdr[1] |= m_context.cmd_index;
 
         /* flush out the header */
 
         for (i = 0; i < hdr_short; ++i)
         {
-            cgmb_outc(cmd_hdr[i]);
+            cgmb_outc(m_cmdHdr[i]);
         }
     }
     else
@@ -102,27 +102,27 @@ void BinaryMetafileWriter::cgmb_flush_cmd(int this_flush)
         {
             /* first one */
 
-            cmd_hdr[1] |= 31;
+            m_cmdHdr[1] |= 31;
 
             for (i = 0; i < hdr_short; ++i)
             {
-                cgmb_outc(cmd_hdr[i]);
+                cgmb_outc(m_cmdHdr[i]);
             }
         }
 
-        cmd_hdr[2] = m_context.cmd_index >> 8;
-        cmd_hdr[3] = m_context.cmd_index & 255;
+        m_cmdHdr[2] = m_context.cmd_index >> 8;
+        m_cmdHdr[3] = m_context.cmd_index & 255;
 
         if (this_flush == int_flush)
         {
-            cmd_hdr[2] |= 1 << 7; /* more come */
+            m_cmdHdr[2] |= 1 << 7; /* more come */
         }
 
         /* flush out the header */
 
         for (i = hdr_short; i < hdr_long; ++i)
         {
-            cgmb_outc(cmd_hdr[i]);
+            cgmb_outc(m_cmdHdr[i]);
         }
     }
 
