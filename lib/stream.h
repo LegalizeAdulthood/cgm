@@ -22,6 +22,7 @@ protected:
     bool m_useStream;
     int m_outputIndex{};             /* output buffer index */
     char m_output[max_buffer + 2]{}; /* output buffer */
+    void *m_flushBufferCtx{};
     cgm_context m_context;
 
 private:

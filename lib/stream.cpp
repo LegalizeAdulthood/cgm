@@ -12,9 +12,9 @@ MetafileStreamWriter::MetafileStreamWriter(std::ostream &stream)
     : m_stream(stream),
     m_fd{},
     m_useStream(true),
+    m_flushBufferCtx(this),
     m_context{}
 {
-    m_context.flush_buffer_context = this;
     m_context.flush_buffer = flushBufferCb;
 
     if (getenv("CGM_SCALE_MODE_METRIC") != nullptr)
@@ -27,9 +27,9 @@ MetafileStreamWriter::MetafileStreamWriter(int fd)
     : m_stream(m_buffer),
     m_fd(fd),
     m_useStream(false),
+    m_flushBufferCtx(this),
     m_context{}
 {
-    m_context.flush_buffer_context = this;
     m_context.flush_buffer = flushBufferCb;
 
     if (getenv("CGM_SCALE_MODE_METRIC") != nullptr)
