@@ -18,6 +18,7 @@ public:
 protected:
     std::ostream &m_stream;
     std::ostringstream m_buffer;
+    int m_fd;
     bool m_useStream;
     cgm_context m_context;
 

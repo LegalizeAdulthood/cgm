@@ -10,6 +10,7 @@ namespace cgm
 {
 MetafileStreamWriter::MetafileStreamWriter(std::ostream &stream)
     : m_stream(stream),
+    m_fd{},
     m_useStream(true),
     m_context{}
 {
@@ -24,6 +25,7 @@ MetafileStreamWriter::MetafileStreamWriter(std::ostream &stream)
 
 MetafileStreamWriter::MetafileStreamWriter(int fd)
     : m_stream(m_buffer),
+    m_fd(fd),
     m_useStream(false),
     m_context{}
 {
@@ -44,7 +46,7 @@ void MetafileStreamWriter::flushBuffer()
     }
     else
     {
-        gks_write_file(m_context.conid, m_context.buffer, m_context.buffer_ind);
+        gks_write_file(m_fd, m_context.buffer, m_context.buffer_ind);
     }
     m_context.buffer_ind = 0;
     m_context.buffer[0] = 0;
