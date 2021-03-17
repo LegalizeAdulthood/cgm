@@ -2,8 +2,6 @@
 
 #define MAX_COLOR 1256  /* maximum number of predefined colors */
 
-#define max_str		    128		    /* max length of std. strings */
-
 #define stand_col	    8		    /* number of standard colors */
 #define shared_col	    120		    /* number of extended colors */
 #define cprec		    8		    /* bits used for color precision */

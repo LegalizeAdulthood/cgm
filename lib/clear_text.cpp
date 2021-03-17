@@ -23,6 +23,7 @@
 static char digits[10] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
 
 static const char quoteChar = '"'; /* std. quote character: ' or " */
+static const int maxStrLen = 128;  /* max length of std. strings */
 
 namespace cgm
 {
@@ -152,7 +153,7 @@ void ClearTextMetafileWriter::cgmt_int(int xin)
 /* Write a real variable */
 void ClearTextMetafileWriter::cgmt_real(double xin)
 {
-    char buffer[max_str];
+    char buffer[maxStrLen];
 
     sprintf(buffer, " %.6f", xin);
     cgmt_out_string(buffer);
@@ -161,7 +162,7 @@ void ClearTextMetafileWriter::cgmt_real(double xin)
 /* Write an integer point */
 void ClearTextMetafileWriter::cgmt_ipoint(int x, int y)
 {
-    char buffer[max_str];
+    char buffer[maxStrLen];
 
     sprintf(buffer, " %d,%d", x, y);
     cgmt_out_string(buffer);
@@ -366,7 +367,7 @@ void ClearTextMetafileWriter::metafileElementList()
 
 void ClearTextMetafileWriter::fontList(std::vector<std::string> const &fonts)
 {
-    char s[max_str];
+    char s[maxStrLen];
 
     cgmt_start_cmd(1, (int) FontList);
 
