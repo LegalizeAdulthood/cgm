@@ -53,17 +53,18 @@ public:
     std::ostringstream buffer;
     int conId;
     encode_enum encoding;
-    norm_xform xform;            /* internal transformation */
-    line_attributes pline;       /* current polyline attributes */
-    marker_attributes pmark;     /* current marker attributes */
-    text_attributes text;        /* current text attributes */
-    fill_attributes fill;        /* current fill area attributes */
-    double color_t[MAX_COLOR * 3];        /* color table */
-    bool active;                          /* indicates active workstation */
-    bool begin_page;                      /* indicates begin page */
-    double vp[4];                         /* current GKS viewport */
-    double wn[4];                         /* current GKS window */
-    int xext, yext;                       /* VDC extent */
+    norm_xform xform;              /* internal transformation */
+    line_attributes pline;         /* current polyline attributes */
+    marker_attributes pmark;       /* current marker attributes */
+    text_attributes text;          /* current text attributes */
+    fill_attributes fill;          /* current fill area attributes */
+    double color_t[MAX_COLOR * 3]; /* color table */
+    bool active;                   /* indicates active workstation */
+    bool begin_page;               /* indicates begin page */
+    double vp[4];                  /* current GKS viewport */
+    double wn[4];                  /* current GKS window */
+    int xext;                      /* VDC extent */
+    int yext;
     cgm_context cgm_ctx;
 };
 
