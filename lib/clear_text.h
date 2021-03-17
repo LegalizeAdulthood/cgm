@@ -74,7 +74,7 @@ private:
     void flushBuffer() override;
     void outChar(char chr);
     void cgmt_out_string(const char *string);
-    void cgmt_start_cmd(int cl, int el);
+    void startElement(int elemClass, int elemCode);
     void cgmt_flush_cmd();
     void cgmt_string(const char *cptr, int slen);
     void cgmt_int(int xin);

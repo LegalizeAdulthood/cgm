@@ -35,7 +35,6 @@ BinaryMetafileWriter::BinaryMetafileWriter(int fd)
 {
 }
 
-/* Write one byte to buffer */
 void BinaryMetafileWriter::outByte(char chr)
 {
     if (m_outputIndex >= max_buffer)
@@ -44,23 +43,16 @@ void BinaryMetafileWriter::outByte(char chr)
     m_output[m_outputIndex++] = chr;
 }
 
-/* Start output command */
-void BinaryMetafileWriter::cgmb_start_cmd(int cl, int el)
+void BinaryMetafileWriter::startElement(int elemClass, int elemCode)
 {
-#define cl_max 15
-#define el_max 127
-
     m_cmdHdr = m_cmdBuffer + m_buffIndex;
     m_cmdData = m_cmdHdr + hdr_long;
     m_buffIndex += hdr_long;
 
-    m_cmdHdr[0] = static_cast<char>(cl << 4 | el >> 3);
-    m_cmdHdr[1] = static_cast<char>(el << 5);
+    m_cmdHdr[0] = static_cast<char>(elemClass << 4 | elemCode >> 3);
+    m_cmdHdr[1] = static_cast<char>(elemCode << 5);
     m_cmdIndex = 0;
     m_partition = 1;
-
-#undef cl_max
-#undef el_max
 }
 
 /* Flush output command */
@@ -426,7 +418,7 @@ void BinaryMetafileWriter::cgmb_eint(int xin)
 
 void BinaryMetafileWriter::beginMetafile(const char *identifier)
 {
-    cgmb_start_cmd(0, (int) B_Mf);
+    startElement(0, (int) B_Mf);
 
     if (*identifier)
     {
@@ -446,7 +438,7 @@ void BinaryMetafileWriter::endMetafile()
 {
     /* put out the end metafile command */
 
-    cgmb_start_cmd(0, (int) E_Mf);
+    startElement(0, (int) E_Mf);
     cgmb_flush_cmd(final_flush);
 
     /* flush out the buffer */
@@ -456,7 +448,7 @@ void BinaryMetafileWriter::endMetafile()
 
 void BinaryMetafileWriter::beginPicture(char const *identifier)
 {
-    cgmb_start_cmd(0, (int) B_Pic);
+    startElement(0, (int) B_Pic);
 
     if (*identifier)
     {
@@ -473,7 +465,7 @@ void BinaryMetafileWriter::beginPicture(char const *identifier)
 
 void BinaryMetafileWriter::beginPictureBody()
 {
-    cgmb_start_cmd(0, (int) B_Pic_Body);
+    startElement(0, (int) B_Pic_Body);
 
     cgmb_flush_cmd(final_flush);
     flushBuffer();
@@ -481,7 +473,7 @@ void BinaryMetafileWriter::beginPictureBody()
 
 void BinaryMetafileWriter::endPicture()
 {
-    cgmb_start_cmd(0, (int) E_Pic);
+    startElement(0, (int) E_Pic);
 
     cgmb_flush_cmd(final_flush);
     flushBuffer();
@@ -489,7 +481,7 @@ void BinaryMetafileWriter::endPicture()
 
 void BinaryMetafileWriter::metafileVersion(int value)
 {
-    cgmb_start_cmd(1, (int) MfVersion);
+    startElement(1, (int) MfVersion);
 
     cgmb_sint(value);
 
@@ -499,7 +491,7 @@ void BinaryMetafileWriter::metafileVersion(int value)
 
 void BinaryMetafileWriter::metafileDescription(char const *value)
 {
-    cgmb_start_cmd(1, MfDescrip);
+    startElement(1, MfDescrip);
 
     cgmb_string(value, static_cast<int>(strlen(value)));
 
@@ -509,7 +501,7 @@ void BinaryMetafileWriter::metafileDescription(char const *value)
 
 void BinaryMetafileWriter::vdcType(VdcType type)
 {
-    cgmb_start_cmd(1, (int) cgm_class_1::vdcType);
+    startElement(1, (int) cgm_class_1::vdcType);
 
     cgmb_eint((int) type);
 
@@ -524,7 +516,7 @@ void BinaryMetafileWriter::intPrecisionClearText(int min, int max)
 
 void BinaryMetafileWriter::intPrecisionBinary(int value)
 {
-    cgmb_start_cmd(1, (int) IntPrec);
+    startElement(1, (int) IntPrec);
 
     cgmb_sint(value);
 
@@ -539,7 +531,7 @@ void BinaryMetafileWriter::realPrecisionClearText(float minReal, float maxReal, 
 
 void BinaryMetafileWriter::realPrecisionBinary(RealPrecision prec, int expWidth, int mantWidth)
 {
-    cgmb_start_cmd(1, (int) RealPrec);
+    startElement(1, (int) RealPrec);
 
     cgmb_sint(static_cast<int>(prec));
     cgmb_sint(expWidth);
@@ -556,7 +548,7 @@ void BinaryMetafileWriter::indexPrecisionClearText(int min, int max)
 
 void BinaryMetafileWriter::indexPrecisionBinary(int value)
 {
-    cgmb_start_cmd(1, (int) IndexPrec);
+    startElement(1, (int) IndexPrec);
 
     cgmb_sint(value);
 
@@ -571,7 +563,7 @@ void BinaryMetafileWriter::colorPrecisionClearText(int max)
 
 void BinaryMetafileWriter::colorPrecisionBinary(int value)
 {
-    cgmb_start_cmd(1, (int) ColPrec);
+    startElement(1, (int) ColPrec);
 
     cgmb_sint(value);
 
@@ -586,7 +578,7 @@ void BinaryMetafileWriter::colorIndexPrecisionClearText(int max)
 
 void BinaryMetafileWriter::colorIndexPrecisionBinary(int value)
 {
-    cgmb_start_cmd(1, (int) CIndPrec);
+    startElement(1, (int) CIndPrec);
 
     cgmb_sint(value);
 
@@ -596,7 +588,7 @@ void BinaryMetafileWriter::colorIndexPrecisionBinary(int value)
 
 void BinaryMetafileWriter::maximumColorIndex(int max)
 {
-    cgmb_start_cmd(1, (int) MaxCInd);
+    startElement(1, (int) MaxCInd);
 
     cgmb_cxint(max);
 
@@ -606,7 +598,7 @@ void BinaryMetafileWriter::maximumColorIndex(int max)
 
 void BinaryMetafileWriter::colorValueExtent(int redMin, int redMax, int greenMin, int greenMax, int blueMin, int blueMax)
 {
-    cgmb_start_cmd(1, (int) CVExtent);
+    startElement(1, (int) CVExtent);
 
     cgmb_dcint(redMin);
     cgmb_dcint(greenMin);
@@ -621,7 +613,7 @@ void BinaryMetafileWriter::colorValueExtent(int redMin, int redMax, int greenMin
 
 void BinaryMetafileWriter::metafileElementList()
 {
-    cgmb_start_cmd(1, (int) MfElList);
+    startElement(1, (int) MfElList);
     cgmb_sint(n_melements);
 
     for (int i = 2; i < 2 * n_melements; ++i)
@@ -635,7 +627,7 @@ void BinaryMetafileWriter::metafileElementList()
 
 void BinaryMetafileWriter::fontList(std::vector<std::string> const &fonts)
 {
-    cgmb_start_cmd(1, (int) FontList);
+    startElement(1, (int) FontList);
 
     for (const std::string &s : fonts)
     {
@@ -648,7 +640,7 @@ void BinaryMetafileWriter::fontList(std::vector<std::string> const &fonts)
 
 void BinaryMetafileWriter::characterCodingAnnouncer(CharCodeAnnouncer value)
 {
-    cgmb_start_cmd(1, (int) CharAnnounce);
+    startElement(1, (int) CharAnnounce);
 
     cgmb_eint(static_cast<int>(value));
 
@@ -658,7 +650,7 @@ void BinaryMetafileWriter::characterCodingAnnouncer(CharCodeAnnouncer value)
 
 void BinaryMetafileWriter::scalingMode(ScalingMode mode, float value)
 {
-    cgmb_start_cmd(2, (int) ScalMode);
+    startElement(2, (int) ScalMode);
 
     cgmb_eint(static_cast<int>(mode));
     cgmb_float(static_cast<double>(value));
@@ -669,7 +661,7 @@ void BinaryMetafileWriter::scalingMode(ScalingMode mode, float value)
 
 void BinaryMetafileWriter::colorSelectionMode(ColorMode mode)
 {
-    cgmb_start_cmd(2, (int) ColSelMode);
+    startElement(2, (int) ColSelMode);
 
     cgmb_eint(static_cast<int>(mode));
 
@@ -679,7 +671,7 @@ void BinaryMetafileWriter::colorSelectionMode(ColorMode mode)
 
 void BinaryMetafileWriter::lineWidthSpecificationMode(SpecificationMode mode)
 {
-    cgmb_start_cmd(2, (int) LWidSpecMode);
+    startElement(2, (int) LWidSpecMode);
 
     cgmb_eint(static_cast<int>(mode));
 
@@ -689,7 +681,7 @@ void BinaryMetafileWriter::lineWidthSpecificationMode(SpecificationMode mode)
 
 void BinaryMetafileWriter::markerSizeSpecificationMode(SpecificationMode mode)
 {
-    cgmb_start_cmd(2, (int) MarkSizSpecMode);
+    startElement(2, (int) MarkSizSpecMode);
 
     cgmb_eint(static_cast<int>(mode));
 
@@ -703,7 +695,7 @@ void BinaryMetafileWriter::vdcExtent(int llx, int lly, int urx, int ury)
     int ymin = lly;
     int xmax = urx;
     int ymax = ury;
-    cgmb_start_cmd(2, (int) cgm_class_2::vdcExtent);
+    startElement(2, (int) cgm_class_2::vdcExtent);
 
     cgmb_vint(xmin);
     cgmb_vint(ymin);
@@ -716,7 +708,7 @@ void BinaryMetafileWriter::vdcExtent(int llx, int lly, int urx, int ury)
 
 void BinaryMetafileWriter::backgroundColor(int red, int green, int blue)
 {
-    cgmb_start_cmd(2, (int) BackCol);
+    startElement(2, (int) BackCol);
 
     cgmb_dcint(red);
     cgmb_dcint(green);
@@ -733,7 +725,7 @@ void BinaryMetafileWriter::vdcIntegerPrecisionClearText(int min, int max)
 
 void BinaryMetafileWriter::vdcIntegerPrecisionBinary(int value)
 {
-    cgmb_start_cmd(3, (int) vdcIntPrec);
+    startElement(3, (int) vdcIntPrec);
 
     cgmb_sint(value);
 
@@ -743,7 +735,7 @@ void BinaryMetafileWriter::vdcIntegerPrecisionBinary(int value)
 
 void BinaryMetafileWriter::clipRectangle(int llx, int lly, int urx, int ury)
 {
-    cgmb_start_cmd(3, (int) ClipRect);
+    startElement(3, (int) ClipRect);
 
     cgmb_vint(llx);
     cgmb_vint(lly);
@@ -756,7 +748,7 @@ void BinaryMetafileWriter::clipRectangle(int llx, int lly, int urx, int ury)
 
 void BinaryMetafileWriter::clipIndicator(bool enabled)
 {
-    cgmb_start_cmd(3, (int) ClipIndic);
+    startElement(3, (int) ClipIndic);
 
     cgmb_eint(enabled ? 1 : 0);
 
@@ -766,7 +758,7 @@ void BinaryMetafileWriter::clipIndicator(bool enabled)
 
 void BinaryMetafileWriter::polyline(const std::vector<Point<int>> &points)
 {
-    cgmb_start_cmd(4, (int) PolyLine);
+    startElement(4, (int) PolyLine);
 
     for (const Point<int> &point : points)
     {
@@ -780,7 +772,7 @@ void BinaryMetafileWriter::polyline(const std::vector<Point<int>> &points)
 
 void BinaryMetafileWriter::polymarker(const std::vector<Point<int>> &points)
 {
-    cgmb_start_cmd(4, (int) PolyMarker);
+    startElement(4, (int) PolyMarker);
 
     for (const Point<int> &point : points)
     {
@@ -794,7 +786,7 @@ void BinaryMetafileWriter::polymarker(const std::vector<Point<int>> &points)
 
 void BinaryMetafileWriter::text(Point<int> point, TextFlag flag, const char *text)
 {
-    cgmb_start_cmd(4, (int) Text);
+    startElement(4, (int) Text);
 
     cgmb_vint(point.x);
     cgmb_vint(point.y);
@@ -808,7 +800,7 @@ void BinaryMetafileWriter::text(Point<int> point, TextFlag flag, const char *tex
 
 void BinaryMetafileWriter::polygon(const std::vector<Point<int>> &points)
 {
-    cgmb_start_cmd(4, (int) C_Polygon);
+    startElement(4, (int) C_Polygon);
 
     for (const Point<int> &point : points)
     {
@@ -822,7 +814,7 @@ void BinaryMetafileWriter::polygon(const std::vector<Point<int>> &points)
 
 void BinaryMetafileWriter::cellArray(Point<int> c1, Point<int> c2, Point<int> c3, int colorPrecision, int nx, int ny, const int *colors)
 {
-    cgmb_start_cmd(4, (int) Cell_Array);
+    startElement(4, (int) Cell_Array);
 
     cgmb_vint(c1.x);
     cgmb_vint(c1.y);
@@ -854,7 +846,7 @@ void BinaryMetafileWriter::cellArray(Point<int> c1, Point<int> c2, Point<int> c3
 
 void BinaryMetafileWriter::lineType(int value)
 {
-    cgmb_start_cmd(5, (int) LType);
+    startElement(5, (int) LType);
 
     cgmb_xint(value);
 
@@ -864,7 +856,7 @@ void BinaryMetafileWriter::lineType(int value)
 
 void BinaryMetafileWriter::lineWidth(float value)
 {
-    cgmb_start_cmd(5, (int) LWidth);
+    startElement(5, (int) LWidth);
 
     cgmb_fixed(static_cast<double>(value));
 
@@ -874,7 +866,7 @@ void BinaryMetafileWriter::lineWidth(float value)
 
 void BinaryMetafileWriter::lineColor(int value)
 {
-    cgmb_start_cmd(5, (int) LColour);
+    startElement(5, (int) LColour);
 
     cgmb_cxint(value);
 
@@ -884,7 +876,7 @@ void BinaryMetafileWriter::lineColor(int value)
 
 void BinaryMetafileWriter::markerType(int value)
 {
-    cgmb_start_cmd(5, (int) MType);
+    startElement(5, (int) MType);
 
     cgmb_xint(value);
 
@@ -894,7 +886,7 @@ void BinaryMetafileWriter::markerType(int value)
 
 void BinaryMetafileWriter::markerSize(float value)
 {
-    cgmb_start_cmd(5, (int) MSize);
+    startElement(5, (int) MSize);
 
     cgmb_fixed(static_cast<double>(value));
 
@@ -904,7 +896,7 @@ void BinaryMetafileWriter::markerSize(float value)
 
 void BinaryMetafileWriter::markerColor(int value)
 {
-    cgmb_start_cmd(5, (int) MColour);
+    startElement(5, (int) MColour);
 
     cgmb_cxint(value);
 
@@ -914,7 +906,7 @@ void BinaryMetafileWriter::markerColor(int value)
 
 void BinaryMetafileWriter::textFontIndex(int value)
 {
-    cgmb_start_cmd(5, (int) TFIndex);
+    startElement(5, (int) TFIndex);
 
     cgmb_xint(value);
 
@@ -924,7 +916,7 @@ void BinaryMetafileWriter::textFontIndex(int value)
 
 void BinaryMetafileWriter::textPrecision(TextPrecision value)
 {
-    cgmb_start_cmd(5, (int) TPrec);
+    startElement(5, (int) TPrec);
 
     cgmb_eint(static_cast<int>(value));
 
@@ -934,7 +926,7 @@ void BinaryMetafileWriter::textPrecision(TextPrecision value)
 
 void BinaryMetafileWriter::charExpansion(float value)
 {
-    cgmb_start_cmd(5, (int) CExpFac);
+    startElement(5, (int) CExpFac);
 
     cgmb_fixed(static_cast<double>(value));
 
@@ -944,7 +936,7 @@ void BinaryMetafileWriter::charExpansion(float value)
 
 void BinaryMetafileWriter::charSpacing(float value)
 {
-    cgmb_start_cmd(5, (int) CSpace);
+    startElement(5, (int) CSpace);
 
     cgmb_fixed(static_cast<double>(value));
 
@@ -954,7 +946,7 @@ void BinaryMetafileWriter::charSpacing(float value)
 
 void BinaryMetafileWriter::textColor(int index)
 {
-    cgmb_start_cmd(5, (int) TColour);
+    startElement(5, (int) TColour);
 
     cgmb_cxint(index);
 
@@ -964,7 +956,7 @@ void BinaryMetafileWriter::textColor(int index)
 
 void BinaryMetafileWriter::charHeight(int value)
 {
-    cgmb_start_cmd(5, (int) CHeight);
+    startElement(5, (int) CHeight);
 
     cgmb_vint(value);
 
@@ -974,7 +966,7 @@ void BinaryMetafileWriter::charHeight(int value)
 
 void BinaryMetafileWriter::charOrientation(int upX, int upY, int baseX, int baseY)
 {
-    cgmb_start_cmd(5, (int) COrient);
+    startElement(5, (int) COrient);
 
     cgmb_vint(upX);
     cgmb_vint(upY);
@@ -987,7 +979,7 @@ void BinaryMetafileWriter::charOrientation(int upX, int upY, int baseX, int base
 
 void BinaryMetafileWriter::textPath(TextPath value)
 {
-    cgmb_start_cmd(5, (int) TPath);
+    startElement(5, (int) TPath);
 
     cgmb_eint(static_cast<int>(value));
 
@@ -997,7 +989,7 @@ void BinaryMetafileWriter::textPath(TextPath value)
 
 void BinaryMetafileWriter::textAlignment(HorizAlign horiz, VertAlign vert, float contHoriz, float contVert)
 {
-    cgmb_start_cmd(5, (int) TAlign);
+    startElement(5, (int) TAlign);
 
     cgmb_eint(static_cast<int>(horiz));
     cgmb_eint(static_cast<int>(vert));
@@ -1010,7 +1002,7 @@ void BinaryMetafileWriter::textAlignment(HorizAlign horiz, VertAlign vert, float
 
 void BinaryMetafileWriter::interiorStyle(InteriorStyle value)
 {
-    cgmb_start_cmd(5, (int) IntStyle);
+    startElement(5, (int) IntStyle);
 
     cgmb_eint(static_cast<int>(value));
 
@@ -1020,7 +1012,7 @@ void BinaryMetafileWriter::interiorStyle(InteriorStyle value)
 
 void BinaryMetafileWriter::fillColor(int value)
 {
-    cgmb_start_cmd(5, (int) FillColour);
+    startElement(5, (int) FillColour);
 
     cgmb_cxint(value);
 
@@ -1030,7 +1022,7 @@ void BinaryMetafileWriter::fillColor(int value)
 
 void BinaryMetafileWriter::hatchIndex(int value)
 {
-    cgmb_start_cmd(5, (int) HatchIndex);
+    startElement(5, (int) HatchIndex);
 
     cgmb_xint(value);
 
@@ -1040,7 +1032,7 @@ void BinaryMetafileWriter::hatchIndex(int value)
 
 void BinaryMetafileWriter::patternIndex(int value)
 {
-    cgmb_start_cmd(5, (int) PatIndex);
+    startElement(5, (int) PatIndex);
 
     cgmb_xint(value);
 
@@ -1052,7 +1044,7 @@ void BinaryMetafileWriter::colorTable(int startIndex, std::vector<Color> const &
 {
     const int numColors = static_cast<int>(colors.size());
 
-    cgmb_start_cmd(5, (int) ColTab);
+    startElement(5, (int) ColTab);
     cgmb_cxint(startIndex);
 
     for (int i = startIndex; i < (startIndex + numColors); ++i)

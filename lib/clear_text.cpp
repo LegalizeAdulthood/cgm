@@ -72,9 +72,9 @@ void ClearTextMetafileWriter::cgmt_out_string(const char *string)
 }
 
 /* Start output command */
-void ClearTextMetafileWriter::cgmt_start_cmd(int cl, int el)
+void ClearTextMetafileWriter::startElement(int elemClass, int elemCode)
 {
-    cgmt_out_string(cgmt_cptr[cl][el]);
+    cgmt_out_string(cgmt_cptr[elemClass][elemCode]);
 }
 
 /* Flush output command */
@@ -170,7 +170,7 @@ void ClearTextMetafileWriter::cgmt_ipoint(int x, int y)
 
 void ClearTextMetafileWriter::beginMetafile(const char *identifier)
 {
-    cgmt_start_cmd(0, (int) B_Mf);
+    startElement(0, (int) B_Mf);
 
     if (*identifier)
         cgmt_string(identifier, static_cast<int>(strlen(identifier)));
@@ -182,7 +182,7 @@ void ClearTextMetafileWriter::beginMetafile(const char *identifier)
 
 void ClearTextMetafileWriter::endMetafile()
 {
-    cgmt_start_cmd(0, (int) E_Mf);
+    startElement(0, (int) E_Mf);
 
     cgmt_flush_cmd();
 
@@ -191,7 +191,7 @@ void ClearTextMetafileWriter::endMetafile()
 
 void ClearTextMetafileWriter::beginPicture(char const *identifier)
 {
-    cgmt_start_cmd(0, (int) B_Pic);
+    startElement(0, (int) B_Pic);
 
     if (*identifier)
         cgmt_string(identifier, strlen(identifier));
@@ -203,21 +203,21 @@ void ClearTextMetafileWriter::beginPicture(char const *identifier)
 
 void ClearTextMetafileWriter::beginPictureBody()
 {
-    cgmt_start_cmd(0, (int) B_Pic_Body);
+    startElement(0, (int) B_Pic_Body);
 
     cgmt_flush_cmd();
 }
 
 void ClearTextMetafileWriter::endPicture()
 {
-    cgmt_start_cmd(0, (int) E_Pic);
+    startElement(0, (int) E_Pic);
 
     cgmt_flush_cmd();
 }
 
 void ClearTextMetafileWriter::metafileVersion(int value)
 {
-    cgmt_start_cmd(1, MfVersion);
+    startElement(1, MfVersion);
 
     cgmt_int(value);
 
@@ -226,7 +226,7 @@ void ClearTextMetafileWriter::metafileVersion(int value)
 
 void ClearTextMetafileWriter::metafileDescription(char const *value)
 {
-    cgmt_start_cmd(1, MfDescrip);
+    startElement(1, MfDescrip);
 
     cgmt_string(value, strlen(value));
 
@@ -235,7 +235,7 @@ void ClearTextMetafileWriter::metafileDescription(char const *value)
 
 void ClearTextMetafileWriter::vdcType(VdcType type)
 {
-    cgmt_start_cmd(1, (int) cgm_class_1::vdcType);
+    startElement(1, (int) cgm_class_1::vdcType);
 
     if (type == VdcType::Integer)
     {
@@ -251,7 +251,7 @@ void ClearTextMetafileWriter::vdcType(VdcType type)
 
 void ClearTextMetafileWriter::intPrecisionClearText(int min, int max)
 {
-    cgmt_start_cmd(1, (int) IntPrec);
+    startElement(1, (int) IntPrec);
 
     cgmt_int(min);
     cgmt_int(max);
@@ -266,7 +266,7 @@ void ClearTextMetafileWriter::intPrecisionBinary(int value)
 
 void ClearTextMetafileWriter::realPrecisionClearText(float minReal, float maxReal, int digits)
 {
-    cgmt_start_cmd(1, (int) RealPrec);
+    startElement(1, (int) RealPrec);
 
     cgmt_real(static_cast<double>(minReal));
     cgmt_real(static_cast<double>(maxReal));
@@ -282,7 +282,7 @@ void ClearTextMetafileWriter::realPrecisionBinary(RealPrecision prec, int expWid
 
 void ClearTextMetafileWriter::indexPrecisionClearText(int min, int max)
 {
-    cgmt_start_cmd(1, (int) IndexPrec);
+    startElement(1, (int) IndexPrec);
 
     cgmt_int(min);
     cgmt_int(max);
@@ -297,7 +297,7 @@ void ClearTextMetafileWriter::indexPrecisionBinary(int value)
 
 void ClearTextMetafileWriter::colorPrecisionClearText(int max)
 {
-    cgmt_start_cmd(1, (int) ColPrec);
+    startElement(1, (int) ColPrec);
 
     cgmt_int(max);
 
@@ -311,7 +311,7 @@ void ClearTextMetafileWriter::colorPrecisionBinary(int value)
 
 void ClearTextMetafileWriter::colorIndexPrecisionClearText(int max)
 {
-    cgmt_start_cmd(1, (int) CIndPrec);
+    startElement(1, (int) CIndPrec);
 
     cgmt_int(max);
 
@@ -325,7 +325,7 @@ void ClearTextMetafileWriter::colorIndexPrecisionBinary(int value)
 
 void ClearTextMetafileWriter::maximumColorIndex(int max)
 {
-    cgmt_start_cmd(1, (int) MaxCInd);
+    startElement(1, (int) MaxCInd);
 
     cgmt_int(max);
 
@@ -334,7 +334,7 @@ void ClearTextMetafileWriter::maximumColorIndex(int max)
 
 void ClearTextMetafileWriter::colorValueExtent(int redMin, int redMax, int greenMin, int greenMax, int blueMin, int blueMax)
 {
-    cgmt_start_cmd(1, (int) CVExtent);
+    startElement(1, (int) CVExtent);
 
     cgmt_int(redMin);
     cgmt_int(greenMin);
@@ -348,7 +348,7 @@ void ClearTextMetafileWriter::colorValueExtent(int redMin, int redMax, int green
 
 void ClearTextMetafileWriter::metafileElementList()
 {
-    cgmt_start_cmd(1, (int) MfElList);
+    startElement(1, (int) MfElList);
 
     outChar(' ');
     outChar(quoteChar);
@@ -369,7 +369,7 @@ void ClearTextMetafileWriter::fontList(std::vector<std::string> const &fonts)
 {
     char s[maxStrLen];
 
-    cgmt_start_cmd(1, (int) FontList);
+    startElement(1, (int) FontList);
 
     const int numFonts = static_cast<int>(fonts.size());
     for (int i = 0; i < numFonts; i++)
@@ -392,7 +392,7 @@ void ClearTextMetafileWriter::characterCodingAnnouncer(CharCodeAnnouncer value)
         "Extd7Bit",
         "Extd8Bit"
     };
-    cgmt_start_cmd(1, (int) CharAnnounce);
+    startElement(1, (int) CharAnnounce);
 
     outChar(' ');
     cgmt_out_string(announcerNames[static_cast<int>(value)]);
@@ -402,7 +402,7 @@ void ClearTextMetafileWriter::characterCodingAnnouncer(CharCodeAnnouncer value)
 
 void ClearTextMetafileWriter::scalingMode(ScalingMode mode, float value)
 {
-    cgmt_start_cmd(2, (int) ScalMode);
+    startElement(2, (int) ScalMode);
 
     cgmt_out_string(mode == ScalingMode::Metric ? " Metric" : " Abstract");
     cgmt_real(static_cast<double>(value));
@@ -412,7 +412,7 @@ void ClearTextMetafileWriter::scalingMode(ScalingMode mode, float value)
 
 void ClearTextMetafileWriter::colorSelectionMode(ColorMode mode)
 {
-    cgmt_start_cmd(2, (int) ColSelMode);
+    startElement(2, (int) ColSelMode);
 
     cgmt_out_string(mode == ColorMode::Indexed ? " Indexed" : " Direct");
 
@@ -421,7 +421,7 @@ void ClearTextMetafileWriter::colorSelectionMode(ColorMode mode)
 
 void ClearTextMetafileWriter::lineWidthSpecificationMode(SpecificationMode mode)
 {
-    cgmt_start_cmd(2, (int) LWidSpecMode);
+    startElement(2, (int) LWidSpecMode);
 
     cgmt_out_string(mode == SpecificationMode::Absolute ? " Absolute" : " Scaled");
 
@@ -430,7 +430,7 @@ void ClearTextMetafileWriter::lineWidthSpecificationMode(SpecificationMode mode)
 
 void ClearTextMetafileWriter::markerSizeSpecificationMode(SpecificationMode mode)
 {
-    cgmt_start_cmd(2, (int) MarkSizSpecMode);
+    startElement(2, (int) MarkSizSpecMode);
 
     cgmt_out_string(mode == SpecificationMode::Absolute ? " Absolute" : " Scaled");
 
@@ -439,7 +439,7 @@ void ClearTextMetafileWriter::markerSizeSpecificationMode(SpecificationMode mode
 
 void ClearTextMetafileWriter::vdcExtent(int llx, int lly, int urx, int ury)
 {
-    cgmt_start_cmd(2, (int) cgm_class_2::vdcExtent);
+    startElement(2, (int) cgm_class_2::vdcExtent);
 
     cgmt_ipoint(llx, lly);
     cgmt_ipoint(urx, ury);
@@ -449,7 +449,7 @@ void ClearTextMetafileWriter::vdcExtent(int llx, int lly, int urx, int ury)
 
 void ClearTextMetafileWriter::backgroundColor(int red, int green, int blue)
 {
-    cgmt_start_cmd(2, (int) BackCol);
+    startElement(2, (int) BackCol);
 
     cgmt_int(red);
     cgmt_int(green);
@@ -460,7 +460,7 @@ void ClearTextMetafileWriter::backgroundColor(int red, int green, int blue)
 
 void ClearTextMetafileWriter::vdcIntegerPrecisionClearText(int min, int max)
 {
-    cgmt_start_cmd(3, (int) vdcIntPrec);
+    startElement(3, (int) vdcIntPrec);
 
     cgmt_int(min);
     cgmt_int(max);
@@ -475,7 +475,7 @@ void ClearTextMetafileWriter::vdcIntegerPrecisionBinary(int value)
 
 void ClearTextMetafileWriter::clipRectangle(int llx, int lly, int urx, int ury)
 {
-    cgmt_start_cmd(3, (int) ClipRect);
+    startElement(3, (int) ClipRect);
 
     cgmt_ipoint(llx, lly);
     cgmt_ipoint(urx, ury);
@@ -485,7 +485,7 @@ void ClearTextMetafileWriter::clipRectangle(int llx, int lly, int urx, int ury)
 
 void ClearTextMetafileWriter::clipIndicator(bool enabled)
 {
-    cgmt_start_cmd(3, (int) ClipIndic);
+    startElement(3, (int) ClipIndic);
 
     cgmt_out_string(enabled ? " On" : " Off");
 
@@ -494,7 +494,7 @@ void ClearTextMetafileWriter::clipIndicator(bool enabled)
 
 void ClearTextMetafileWriter::polyline(const std::vector<Point<int>> &points)
 {
-    cgmt_start_cmd(4, (int) PolyLine);
+    startElement(4, (int) PolyLine);
 
     for (const Point<int> &point : points)
     {
@@ -506,7 +506,7 @@ void ClearTextMetafileWriter::polyline(const std::vector<Point<int>> &points)
 
 void ClearTextMetafileWriter::polymarker(const std::vector<Point<int>> &points)
 {
-    cgmt_start_cmd(4, (int) PolyMarker);
+    startElement(4, (int) PolyMarker);
 
     for (const Point<int> &i : points)
     {
@@ -518,7 +518,7 @@ void ClearTextMetafileWriter::polymarker(const std::vector<Point<int>> &points)
 
 void ClearTextMetafileWriter::text(Point<int> point, TextFlag flag, const char *text)
 {
-    cgmt_start_cmd(4, (int) Text);
+    startElement(4, (int) Text);
 
     cgmt_ipoint(point.x, point.y);
 
@@ -531,7 +531,7 @@ void ClearTextMetafileWriter::text(Point<int> point, TextFlag flag, const char *
 
 void ClearTextMetafileWriter::polygon(const std::vector<Point<int>> &points)
 {
-    cgmt_start_cmd(4, (int) C_Polygon);
+    startElement(4, (int) C_Polygon);
 
     for (const Point<int> &i : points)
     {
@@ -543,7 +543,7 @@ void ClearTextMetafileWriter::polygon(const std::vector<Point<int>> &points)
 
 void ClearTextMetafileWriter::cellArray(Point<int> c1, Point<int> c2, Point<int> c3, int colorPrecision, int nx, int ny, const int *colors)
 {
-    cgmt_start_cmd(4, (int) Cell_Array);
+    startElement(4, (int) Cell_Array);
 
     cgmt_ipoint(c1.x, c1.y);
     cgmt_ipoint(c2.x, c2.y);
@@ -571,7 +571,7 @@ void ClearTextMetafileWriter::cellArray(Point<int> c1, Point<int> c2, Point<int>
 
 void ClearTextMetafileWriter::lineType(int value)
 {
-    cgmt_start_cmd(5, (int) LType);
+    startElement(5, (int) LType);
 
     cgmt_int((int) value);
 
@@ -580,7 +580,7 @@ void ClearTextMetafileWriter::lineType(int value)
 
 void ClearTextMetafileWriter::lineWidth(float value)
 {
-    cgmt_start_cmd(5, (int) LWidth);
+    startElement(5, (int) LWidth);
 
     cgmt_real(static_cast<double>(value));
 
@@ -589,7 +589,7 @@ void ClearTextMetafileWriter::lineWidth(float value)
 
 void ClearTextMetafileWriter::lineColor(int value)
 {
-    cgmt_start_cmd(5, (int) LColour);
+    startElement(5, (int) LColour);
 
     cgmt_int(value);
 
@@ -598,7 +598,7 @@ void ClearTextMetafileWriter::lineColor(int value)
 
 void ClearTextMetafileWriter::markerType(int value)
 {
-    cgmt_start_cmd(5, (int) MType);
+    startElement(5, (int) MType);
 
     cgmt_int(value);
 
@@ -607,7 +607,7 @@ void ClearTextMetafileWriter::markerType(int value)
 
 void ClearTextMetafileWriter::markerSize(float value)
 {
-    cgmt_start_cmd(5, (int) MSize);
+    startElement(5, (int) MSize);
 
     cgmt_real(static_cast<double>(value));
 
@@ -616,7 +616,7 @@ void ClearTextMetafileWriter::markerSize(float value)
 
 void ClearTextMetafileWriter::markerColor(int value)
 {
-    cgmt_start_cmd(5, (int) MColour);
+    startElement(5, (int) MColour);
 
     cgmt_int(value);
 
@@ -625,7 +625,7 @@ void ClearTextMetafileWriter::markerColor(int value)
 
 void ClearTextMetafileWriter::textFontIndex(int value)
 {
-    cgmt_start_cmd(5, (int) TFIndex);
+    startElement(5, (int) TFIndex);
 
     cgmt_int(value);
 
@@ -634,7 +634,7 @@ void ClearTextMetafileWriter::textFontIndex(int value)
 
 void ClearTextMetafileWriter::textPrecision(TextPrecision value)
 {
-    cgmt_start_cmd(5, (int) TPrec);
+    startElement(5, (int) TPrec);
 
     switch (static_cast<int>(value))
     {
@@ -656,7 +656,7 @@ void ClearTextMetafileWriter::textPrecision(TextPrecision value)
 
 void ClearTextMetafileWriter::charExpansion(float value)
 {
-    cgmt_start_cmd(5, (int) CExpFac);
+    startElement(5, (int) CExpFac);
 
     cgmt_real(static_cast<double>(value));
 
@@ -665,7 +665,7 @@ void ClearTextMetafileWriter::charExpansion(float value)
 
 void ClearTextMetafileWriter::charSpacing(float value)
 {
-    cgmt_start_cmd(5, (int) CSpace);
+    startElement(5, (int) CSpace);
 
     cgmt_real(static_cast<double>(value));
 
@@ -674,7 +674,7 @@ void ClearTextMetafileWriter::charSpacing(float value)
 
 void ClearTextMetafileWriter::textColor(int index)
 {
-    cgmt_start_cmd(5, (int) TColour);
+    startElement(5, (int) TColour);
 
     cgmt_int(index);
 
@@ -683,7 +683,7 @@ void ClearTextMetafileWriter::textColor(int index)
 
 void ClearTextMetafileWriter::charHeight(int value)
 {
-    cgmt_start_cmd(5, (int) CHeight);
+    startElement(5, (int) CHeight);
 
     cgmt_int(value);
 
@@ -692,7 +692,7 @@ void ClearTextMetafileWriter::charHeight(int value)
 
 void ClearTextMetafileWriter::charOrientation(int upX, int upY, int baseX, int baseY)
 {
-    cgmt_start_cmd(5, (int) COrient);
+    startElement(5, (int) COrient);
 
     cgmt_int(upX);
     cgmt_int(upY);
@@ -704,7 +704,7 @@ void ClearTextMetafileWriter::charOrientation(int upX, int upY, int baseX, int b
 
 void ClearTextMetafileWriter::textPath(TextPath value)
 {
-    cgmt_start_cmd(5, (int) TPath);
+    startElement(5, (int) TPath);
 
     switch (static_cast<int>(value))
     {
@@ -730,7 +730,7 @@ void ClearTextMetafileWriter::textPath(TextPath value)
 
 void ClearTextMetafileWriter::textAlignment(HorizAlign horiz, VertAlign vert, float contHoriz, float contVert)
 {
-    cgmt_start_cmd(5, (int) TAlign);
+    startElement(5, (int) TAlign);
 
     switch (static_cast<int>(horiz))
     {
@@ -794,7 +794,7 @@ void ClearTextMetafileWriter::textAlignment(HorizAlign horiz, VertAlign vert, fl
 
 void ClearTextMetafileWriter::interiorStyle(InteriorStyle value)
 {
-    cgmt_start_cmd(5, (int) IntStyle);
+    startElement(5, (int) IntStyle);
 
     switch (static_cast<int>(value))
     {
@@ -824,7 +824,7 @@ void ClearTextMetafileWriter::interiorStyle(InteriorStyle value)
 
 void ClearTextMetafileWriter::fillColor(int value)
 {
-    cgmt_start_cmd(5, (int) FillColour);
+    startElement(5, (int) FillColour);
 
     cgmt_int(value);
 
@@ -833,21 +833,21 @@ void ClearTextMetafileWriter::fillColor(int value)
 
 void ClearTextMetafileWriter::hatchIndex(int value)
 {
-    cgmt_start_cmd(5, (int) HatchIndex);
+    startElement(5, (int) HatchIndex);
     cgmt_int(value);
     cgmt_flush_cmd();
 }
 
 void ClearTextMetafileWriter::patternIndex(int value)
 {
-    cgmt_start_cmd(5, (int) PatIndex);
+    startElement(5, (int) PatIndex);
     cgmt_int(value);
     cgmt_flush_cmd();
 }
 
 void ClearTextMetafileWriter::colorTable(int startIndex, std::vector<Color> const &colorTable)
 {
-    cgmt_start_cmd(5, (int) ColTab);
+    startElement(5, (int) ColTab);
     cgmt_int(startIndex);
 
     for (int i = startIndex; i < (startIndex + static_cast<int>(colorTable.size())); ++i)

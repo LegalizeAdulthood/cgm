@@ -72,7 +72,7 @@ public:
 
 private:
     void outByte(char chr);
-    void cgmb_start_cmd(int cl, int el);
+    void startElement(int elemClass, int elemCode);
     void cgmb_flush_cmd(int this_flush);
     void cgmb_out_bc(int c);
     void cgmb_out_bs(const char *cptr, int n);
