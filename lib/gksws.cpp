@@ -43,6 +43,8 @@ public:
         begin_page{},
         vp{},
         wn{},
+        xext{},
+        yext{},
         cgm_ctx{}
     {
     }
@@ -61,6 +63,7 @@ public:
     bool begin_page;                      /* indicates begin page */
     double vp[4];                         /* current GKS viewport */
     double wn[4];                         /* current GKS window */
+    int xext, yext;                       /* VDC extent */
     cgm_context cgm_ctx;
 };
 
@@ -547,7 +550,7 @@ static void cgm_begin_page(WorkstationContext *ctx)
         ctx->writer->markerSizeSpecificationMode(cgm::SpecificationMode::Scaled);
     }
 
-    ctx->writer->vdcExtent(0, 0, ctx->cgm_ctx.xext, ctx->cgm_ctx.yext);
+    ctx->writer->vdcExtent(0, 0, ctx->xext, ctx->yext);
     ctx->writer->backgroundColor(255, 255, 255);
 
     ctx->writer->beginPictureBody();
@@ -648,7 +651,7 @@ void gks_drv_cgm(Function fctid, int dx, int dy, int dimx, int *ia,
             ctx->characterCodingAnnouncer(cgm::CharCodeAnnouncer::Extended8Bit);
 
         init_color_table(g_context->color_t);
-        g_context->cgm_ctx.xext = g_context->cgm_ctx.yext = max_coord;
+        g_context->xext = g_context->yext = max_coord;
         g_context->begin_page = true;
         g_context->active = false;
         break;
@@ -754,8 +757,8 @@ void gks_drv_cgm(Function fctid, int dx, int dy, int dimx, int *ia,
     case Function::SetWorkstationWindow:
         if (g_context->begin_page)
         {
-            g_context->cgm_ctx.xext = (int) (max_coord * (r1[1] - r1[0]));
-            g_context->cgm_ctx.yext = (int) (max_coord * (r2[1] - r2[0]));
+            g_context->xext = (int) (max_coord * (r1[1] - r1[0]));
+            g_context->yext = (int) (max_coord * (r2[1] - r2[0]));
         }
         break;
 

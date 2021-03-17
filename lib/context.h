@@ -50,7 +50,6 @@ struct cgm_context
     char buffer[max_buffer + 2]; /* output buffer */
     void *flush_buffer_context;
     void (*flush_buffer)(cgm_context *p, void *data);
-    int xext, yext;                       /* VDC extent */
     double mm;                            /* metric size in mm */
     char cmd_buffer[hdr_long + max_long]; /* where we buffer output */
     char *cmd_hdr;                        /* the command header */
