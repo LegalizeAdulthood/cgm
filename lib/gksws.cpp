@@ -37,6 +37,7 @@ public:
         pline{},
         pmark{},
         text{},
+        fill{},
         cgm_ctx{}
     {
     }
@@ -49,6 +50,7 @@ public:
     line_attributes pline;       /* current polyline attributes */
     marker_attributes pmark;     /* current marker attributes */
     text_attributes text;        /* current text attributes */
+    fill_attributes fill;        /* current fill area attributes */
     cgm_context cgm_ctx;
 };
 
@@ -455,10 +457,10 @@ static void setup_fill_attributes( WorkstationContext* ctx, bool init )
 
     if (init)
     {
-        ctx->cgm_ctx.fill.intstyle = 0;
-        ctx->cgm_ctx.fill.color = 1;
-        ctx->cgm_ctx.fill.pattern_index = 1;
-        ctx->cgm_ctx.fill.hatch_index = 1;
+        ctx->fill.intstyle = 0;
+        ctx->fill.color = 1;
+        ctx->fill.pattern_index = 1;
+        ctx->fill.hatch_index = 1;
     }
     else
     {
@@ -467,25 +469,25 @@ static void setup_fill_attributes( WorkstationContext* ctx, bool init )
         gks_inq_fill_style_index(&errind, &newfill.pattern_index);
         gks_inq_fill_style_index(&errind, &newfill.hatch_index);
 
-        if (newfill.intstyle != ctx->cgm_ctx.fill.intstyle)
+        if (newfill.intstyle != ctx->fill.intstyle)
         {
             ctx->writer->interiorStyle(static_cast<cgm::InteriorStyle>(newfill.intstyle));
-            ctx->cgm_ctx.fill.intstyle = newfill.intstyle;
+            ctx->fill.intstyle = newfill.intstyle;
         }
-        if (newfill.color != ctx->cgm_ctx.fill.color)
+        if (newfill.color != ctx->fill.color)
         {
             ctx->writer->fillColor(newfill.color);
-            ctx->cgm_ctx.fill.color = newfill.color;
+            ctx->fill.color = newfill.color;
         }
-        if (newfill.pattern_index != ctx->cgm_ctx.fill.pattern_index)
+        if (newfill.pattern_index != ctx->fill.pattern_index)
         {
             ctx->writer->patternIndex(newfill.pattern_index);
-            ctx->cgm_ctx.fill.pattern_index = newfill.pattern_index;
+            ctx->fill.pattern_index = newfill.pattern_index;
         }
-        if (newfill.hatch_index != ctx->cgm_ctx.fill.hatch_index)
+        if (newfill.hatch_index != ctx->fill.hatch_index)
         {
             ctx->writer->hatchIndex(newfill.hatch_index);
-            ctx->cgm_ctx.fill.hatch_index = newfill.hatch_index;
+            ctx->fill.hatch_index = newfill.hatch_index;
         }
     }
 }

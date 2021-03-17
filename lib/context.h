@@ -46,7 +46,6 @@ struct fill_attributes
 
 struct cgm_context
 {
-    fill_attributes fill;        /* current fill area attributes */
     int buffer_ind;              /* output buffer index */
     char buffer[max_buffer + 2]; /* output buffer */
     void *flush_buffer_context;
