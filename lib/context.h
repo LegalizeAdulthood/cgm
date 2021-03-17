@@ -50,7 +50,6 @@ struct cgm_context
     char buffer[max_buffer + 2]; /* output buffer */
     void *flush_buffer_context;
     void (*flush_buffer)(cgm_context *p, void *data);
-    bool begin_page;                      /* indicates begin page */
     double vp[4];                         /* current GKS viewport */
     double wn[4];                         /* current GKS window */
     int xext, yext;                       /* VDC extent */

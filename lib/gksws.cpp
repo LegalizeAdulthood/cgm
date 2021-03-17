@@ -40,6 +40,7 @@ public:
         fill{},
         color_t{},
         active{},
+        begin_page{},
         cgm_ctx{}
     {
     }
@@ -55,6 +56,7 @@ public:
     fill_attributes fill;        /* current fill area attributes */
     double color_t[MAX_COLOR * 3];        /* color table */
     bool active;                          /* indicates active workstation */
+    bool begin_page;                      /* indicates begin page */
     cgm_context cgm_ctx;
 };
 
@@ -561,7 +563,7 @@ static void cgm_begin_page(WorkstationContext *ctx)
     setup_text_attributes(ctx, true);
     setup_fill_attributes(ctx, true);
 
-    ctx->cgm_ctx.begin_page = false;
+    ctx->begin_page = false;
 }
 
 void gks_drv_cgm(Function fctid, int dx, int dy, int dimx, int *ia,
@@ -643,7 +645,7 @@ void gks_drv_cgm(Function fctid, int dx, int dy, int dimx, int *ia,
 
         init_color_table(g_context->color_t);
         g_context->cgm_ctx.xext = g_context->cgm_ctx.yext = max_coord;
-        g_context->cgm_ctx.begin_page = true;
+        g_context->begin_page = true;
         g_context->active = false;
         break;
 
@@ -663,17 +665,17 @@ void gks_drv_cgm(Function fctid, int dx, int dy, int dimx, int *ia,
         break;
 
     case Function::ClearWorkstation:
-        if (!g_context->cgm_ctx.begin_page)
+        if (!g_context->begin_page)
         {
             ctx->endPicture();
-            g_context->cgm_ctx.begin_page = true;
+            g_context->begin_page = true;
         }
         break;
 
     case Function::Polyline:
         if (g_context->active)
         {
-            if (g_context->cgm_ctx.begin_page)
+            if (g_context->begin_page)
                 cgm_begin_page(g_context);
 
             setup_polyline_attributes(g_context, false);
@@ -684,7 +686,7 @@ void gks_drv_cgm(Function fctid, int dx, int dy, int dimx, int *ia,
     case Function::Polymarker:
         if (g_context->active)
         {
-            if (g_context->cgm_ctx.begin_page)
+            if (g_context->begin_page)
                 cgm_begin_page(g_context);
 
             setup_polymarker_attributes(g_context, false);
@@ -697,7 +699,7 @@ void gks_drv_cgm(Function fctid, int dx, int dy, int dimx, int *ia,
         {
             int x, y;
 
-            if (g_context->cgm_ctx.begin_page)
+            if (g_context->begin_page)
                 cgm_begin_page(g_context);
 
             set_xform(g_context, false);
@@ -711,7 +713,7 @@ void gks_drv_cgm(Function fctid, int dx, int dy, int dimx, int *ia,
     case Function::FillArea:
         if (g_context->active)
         {
-            if (g_context->cgm_ctx.begin_page)
+            if (g_context->begin_page)
                 cgm_begin_page(g_context);
 
             setup_fill_attributes(g_context, false);
@@ -724,7 +726,7 @@ void gks_drv_cgm(Function fctid, int dx, int dy, int dimx, int *ia,
         {
             int xmin, xmax, ymin, ymax;
 
-            if (g_context->cgm_ctx.begin_page)
+            if (g_context->begin_page)
                 cgm_begin_page(g_context);
 
             set_xform(g_context, false);
@@ -737,7 +739,7 @@ void gks_drv_cgm(Function fctid, int dx, int dy, int dimx, int *ia,
         break;
 
     case Function::SetColorRep:
-        if (g_context->cgm_ctx.begin_page)
+        if (g_context->begin_page)
         {
             g_context->color_t[ia[1] * 3] = r1[0];
             g_context->color_t[ia[1] * 3 + 1] = r1[1];
@@ -746,7 +748,7 @@ void gks_drv_cgm(Function fctid, int dx, int dy, int dimx, int *ia,
         break;
 
     case Function::SetWorkstationWindow:
-        if (g_context->cgm_ctx.begin_page)
+        if (g_context->begin_page)
         {
             g_context->cgm_ctx.xext = (int) (max_coord * (r1[1] - r1[0]));
             g_context->cgm_ctx.yext = (int) (max_coord * (r2[1] - r2[0]));
@@ -754,7 +756,7 @@ void gks_drv_cgm(Function fctid, int dx, int dy, int dimx, int *ia,
         break;
 
     case Function::SetWorkstationViewport:
-        if (g_context->cgm_ctx.begin_page)
+        if (g_context->begin_page)
         {
             if (g_context->cgm_ctx.mm > 0)
                 g_context->cgm_ctx.mm = (r1[1] - r1[0]) / max_coord * 1000;
