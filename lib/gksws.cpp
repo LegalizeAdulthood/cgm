@@ -36,6 +36,7 @@ public:
         xform{},
         pline{},
         pmark{},
+        text{},
         cgm_ctx{}
     {
     }
@@ -47,6 +48,7 @@ public:
     norm_xform xform;            /* internal transformation */
     line_attributes pline;       /* current polyline attributes */
     marker_attributes pmark;     /* current marker attributes */
+    text_attributes text;        /* current text attributes */
     cgm_context cgm_ctx;
 };
 
@@ -359,17 +361,17 @@ static void setup_text_attributes( WorkstationContext* ctx, bool init )
 
     if (init)
     {
-        ctx->cgm_ctx.text.font = 1;
-        ctx->cgm_ctx.text.prec = 0;
-        ctx->cgm_ctx.text.expfac = 1.0;
-        ctx->cgm_ctx.text.spacing = 0.0;
-        ctx->cgm_ctx.text.color = 1;
-        ctx->cgm_ctx.text.height = 0.01;
-        ctx->cgm_ctx.text.upx = 0;
-        ctx->cgm_ctx.text.upy = max_coord;
-        ctx->cgm_ctx.text.path = 0;
-        ctx->cgm_ctx.text.halign = 0;
-        ctx->cgm_ctx.text.valign = 0;
+        ctx->text.font = 1;
+        ctx->text.prec = 0;
+        ctx->text.expfac = 1.0;
+        ctx->text.spacing = 0.0;
+        ctx->text.color = 1;
+        ctx->text.height = 0.01;
+        ctx->text.upx = 0;
+        ctx->text.upy = max_coord;
+        ctx->text.path = 0;
+        ctx->text.halign = 0;
+        ctx->text.valign = 0;
     }
     else
     {
@@ -396,52 +398,52 @@ static void setup_text_attributes( WorkstationContext* ctx, bool init )
             newtext.prec = 2;
         }
 
-        if (newtext.font != ctx->cgm_ctx.text.font)
+        if (newtext.font != ctx->text.font)
         {
             ctx->writer->textFontIndex(newtext.font);
-            ctx->cgm_ctx.text.font = newtext.font;
+            ctx->text.font = newtext.font;
         }
-        if (newtext.prec != ctx->cgm_ctx.text.prec)
+        if (newtext.prec != ctx->text.prec)
         {
             ctx->writer->textPrecision(static_cast<cgm::TextPrecision>(newtext.prec));
-            ctx->cgm_ctx.text.prec = newtext.prec;
+            ctx->text.prec = newtext.prec;
         }
-        if (newtext.expfac != ctx->cgm_ctx.text.expfac)
+        if (newtext.expfac != ctx->text.expfac)
         {
             ctx->writer->charExpansion(newtext.expfac);
-            ctx->cgm_ctx.text.expfac = newtext.expfac;
+            ctx->text.expfac = newtext.expfac;
         }
-        if (newtext.spacing != ctx->cgm_ctx.text.spacing)
+        if (newtext.spacing != ctx->text.spacing)
         {
             ctx->writer->charSpacing(newtext.spacing);
-            ctx->cgm_ctx.text.spacing = newtext.spacing;
+            ctx->text.spacing = newtext.spacing;
         }
-        if (newtext.color != ctx->cgm_ctx.text.color)
+        if (newtext.color != ctx->text.color)
         {
             ctx->writer->textColor(newtext.color);
-            ctx->cgm_ctx.text.color = newtext.color;
+            ctx->text.color = newtext.color;
         }
-        if (newtext.height != ctx->cgm_ctx.text.height)
+        if (newtext.height != ctx->text.height)
         {
             ctx->writer->charHeight((int) (newtext.height * max_coord));
-            ctx->cgm_ctx.text.height = newtext.height;
+            ctx->text.height = newtext.height;
         }
-        if ((newtext.upx != ctx->cgm_ctx.text.upx) || (newtext.upy != ctx->cgm_ctx.text.upy))
+        if ((newtext.upx != ctx->text.upx) || (newtext.upy != ctx->text.upy))
         {
             ctx->writer->charOrientation(newtext.upx, newtext.upy, newtext.upy, -newtext.upx);
-            ctx->cgm_ctx.text.upx = newtext.upx;
-            ctx->cgm_ctx.text.upy = newtext.upy;
+            ctx->text.upx = newtext.upx;
+            ctx->text.upy = newtext.upy;
         }
-        if (newtext.path != ctx->cgm_ctx.text.path)
+        if (newtext.path != ctx->text.path)
         {
             ctx->writer->textPath(static_cast<cgm::TextPath>(newtext.path));
-            ctx->cgm_ctx.text.path = newtext.path;
+            ctx->text.path = newtext.path;
         }
-        if ((newtext.halign != ctx->cgm_ctx.text.halign) || (newtext.valign != ctx->cgm_ctx.text.valign))
+        if ((newtext.halign != ctx->text.halign) || (newtext.valign != ctx->text.valign))
         {
             ctx->writer->textAlignment(static_cast<cgm::HorizAlign>(newtext.halign), static_cast<cgm::VertAlign>(newtext.valign), 0.0, 0.0);
-            ctx->cgm_ctx.text.halign = newtext.halign;
-            ctx->cgm_ctx.text.valign = newtext.valign;
+            ctx->text.halign = newtext.halign;
+            ctx->text.valign = newtext.valign;
         }
     }
 }
