@@ -50,7 +50,6 @@ struct cgm_context
     char buffer[max_buffer + 2]; /* output buffer */
     void *flush_buffer_context;
     void (*flush_buffer)(cgm_context *p, void *data);
-    double color_t[MAX_COLOR * 3];        /* color table */
     int conid;                            /* GKS connection id */
     bool active;                          /* indicates active workstation */
     bool begin_page;                      /* indicates begin page */

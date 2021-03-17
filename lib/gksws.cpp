@@ -38,6 +38,7 @@ public:
         pmark{},
         text{},
         fill{},
+        color_t{},
         cgm_ctx{}
     {
     }
@@ -51,6 +52,7 @@ public:
     marker_attributes pmark;     /* current marker attributes */
     text_attributes text;        /* current text attributes */
     fill_attributes fill;        /* current fill area attributes */
+    double color_t[MAX_COLOR * 3];        /* color table */
     cgm_context cgm_ctx;
 };
 
@@ -94,15 +96,11 @@ static void WC_to_VDC(WorkstationContext *ctx, double xin, double yin, int *xout
     *yout = (int) (y * max_coord);
 }
 
-static void init_color_table(cgm_context *ctx)
+static void init_color_table(double *colors)
 {
-    int i, j;
-
-    for (i = 0; i < MAX_COLOR; i++)
+    for (int i = 0; i < MAX_COLOR; i++)
     {
-        j = i;
-        gks_inq_rgb(j, &ctx->color_t[i * 3], &ctx->color_t[i * 3 + 1],
-            &ctx->color_t[i * 3 + 2]);
+        gks_inq_rgb(i, &colors[i * 3], &colors[i * 3 + 1], &colors[i * 3 + 2]);
     }
 }
 
@@ -112,9 +110,9 @@ static void setup_colors(WorkstationContext *ctx)
 
     for (int i = 0; i < MAX_COLOR; ++i)
     {
-        colorTable[i].red = ctx->cgm_ctx.color_t[3*i + 0];
-        colorTable[i].green = ctx->cgm_ctx.color_t[3*i + 1];
-        colorTable[i].blue = ctx->cgm_ctx.color_t[3*i + 2];
+        colorTable[i].red = ctx->color_t[3*i + 0];
+        colorTable[i].green = ctx->color_t[3*i + 1];
+        colorTable[i].blue = ctx->color_t[3*i + 2];
     }
 
     ctx->writer->colorTable(0, colorTable);
@@ -641,7 +639,7 @@ void gks_drv_cgm(Function fctid, int dx, int dy, int dimx, int *ia,
         if (g_context->encoding != cgm_grafkit)
             ctx->characterCodingAnnouncer(cgm::CharCodeAnnouncer::Extended8Bit);
 
-        init_color_table(&g_context->cgm_ctx);
+        init_color_table(g_context->color_t);
         g_context->cgm_ctx.xext = g_context->cgm_ctx.yext = max_coord;
         g_context->cgm_ctx.begin_page = true;
         g_context->cgm_ctx.active = false;
@@ -739,9 +737,9 @@ void gks_drv_cgm(Function fctid, int dx, int dy, int dimx, int *ia,
     case Function::SetColorRep:
         if (g_context->cgm_ctx.begin_page)
         {
-            g_context->cgm_ctx.color_t[ia[1] * 3] = r1[0];
-            g_context->cgm_ctx.color_t[ia[1] * 3 + 1] = r1[1];
-            g_context->cgm_ctx.color_t[ia[1] * 3 + 2] = r1[2];
+            g_context->color_t[ia[1] * 3] = r1[0];
+            g_context->color_t[ia[1] * 3 + 1] = r1[1];
+            g_context->color_t[ia[1] * 3 + 2] = r1[2];
         }
         break;
 
