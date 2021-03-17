@@ -22,6 +22,8 @@
 
 static char digits[10] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
 
+static const char quoteChar = '"'; /* std. quote character: ' or " */
+
 namespace cgm
 {
 
@@ -77,7 +79,7 @@ void ClearTextMetafileWriter::cgmt_start_cmd(int cl, int el)
 /* Flush output command */
 void ClearTextMetafileWriter::cgmt_flush_cmd()
 {
-    const char terminator = ';'; /* std. terminator character */
+    const char terminator = ';'; /* std. terminator character: ; or / */
     outChar(terminator);
     flushBuffer();
 }
@@ -88,19 +90,19 @@ void ClearTextMetafileWriter::cgmt_string(const char *cptr, int slen)
     int i;
 
     outChar(' ');
-    outChar(quote_char);
+    outChar(quoteChar);
 
     for (i = 0; i < slen; ++i)
     {
-        if (cptr[i] == quote_char)
+        if (cptr[i] == quoteChar)
         {
-            outChar(quote_char);
+            outChar(quoteChar);
         }
 
         outChar(cptr[i]);
     }
 
-    outChar(quote_char);
+    outChar(quoteChar);
 }
 
 /* Write a signed integer variable */
@@ -348,7 +350,7 @@ void ClearTextMetafileWriter::metafileElementList()
     cgmt_start_cmd(1, (int) MfElList);
 
     outChar(' ');
-    outChar(quote_char);
+    outChar(quoteChar);
 
     for (int i = 2; i < 2 * n_melements; i += 2)
     {
@@ -358,7 +360,7 @@ void ClearTextMetafileWriter::metafileElementList()
             outChar(' ');
     }
 
-    outChar(quote_char);
+    outChar(quoteChar);
     cgmt_flush_cmd();
 }
 

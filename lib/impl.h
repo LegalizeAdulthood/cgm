@@ -2,7 +2,6 @@
 
 #define MAX_COLOR 1256  /* maximum number of predefined colors */
 
-#define quote_char	    '\"'	    /* std. quote character */
 #define max_str		    128		    /* max length of std. strings */
 
 #define stand_col	    8		    /* number of standard colors */
