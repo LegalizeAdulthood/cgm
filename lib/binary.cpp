@@ -28,13 +28,11 @@ namespace cgm
 BinaryMetafileWriter::BinaryMetafileWriter(std::ostream &stream)
     : MetafileStreamWriter(stream)
 {
-    m_context.encode = cgm_binary;
 }
 
 BinaryMetafileWriter::BinaryMetafileWriter(int fd)
     : MetafileStreamWriter(fd)
 {
-    m_context.encode = cgm_binary;
 }
 
 /* Flush output buffer */

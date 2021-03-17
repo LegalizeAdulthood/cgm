@@ -28,13 +28,11 @@ namespace cgm
 ClearTextMetafileWriter::ClearTextMetafileWriter(std::ostream &stream)
     : MetafileStreamWriter(stream)
 {
-    m_context.encode = cgm_clear_text;
 }
 
 ClearTextMetafileWriter::ClearTextMetafileWriter(int fd)
     : MetafileStreamWriter(fd)
 {
-    m_context.encode = cgm_clear_text;
 }
 
 /* Flush output buffer */
