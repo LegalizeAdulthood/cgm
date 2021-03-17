@@ -16,7 +16,7 @@ public:
     explicit MetafileStreamWriter(int fd);
 
 protected:
-    void flushBuffer();
+    virtual void flushBuffer();
 
     std::ostream &m_stream;
     std::ostringstream m_buffer;

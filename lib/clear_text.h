@@ -71,7 +71,7 @@ public:
     void colorTable(int startIndex, std::vector<Color> const &colors) override;
 
 private:
-    void cgmt_fb();
+    void flushBuffer() override;
     void cgmt_outc(char chr);
     void cgmt_out_string(const char *string);
     void cgmt_start_cmd(int cl, int el);

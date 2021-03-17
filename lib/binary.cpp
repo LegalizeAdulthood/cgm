@@ -35,17 +35,11 @@ BinaryMetafileWriter::BinaryMetafileWriter(int fd)
 {
 }
 
-/* Flush output buffer */
-void BinaryMetafileWriter::cgmb_fb()
-{
-    flushBuffer();
-}
-
 /* Write one byte to buffer */
 void BinaryMetafileWriter::cgmb_outc(char chr)
 {
     if (m_outputIndex >= max_buffer)
-        cgmb_fb();
+        flushBuffer();
 
     m_output[m_outputIndex++] = chr;
 }
@@ -445,7 +439,7 @@ void BinaryMetafileWriter::beginMetafile(const char *identifier)
 
     cgmb_flush_cmd(final_flush);
 
-    cgmb_fb();
+    flushBuffer();
 }
 
 void BinaryMetafileWriter::endMetafile()
@@ -457,7 +451,7 @@ void BinaryMetafileWriter::endMetafile()
 
     /* flush out the buffer */
 
-    cgmb_fb();
+    flushBuffer();
 }
 
 void BinaryMetafileWriter::beginPicture(char const *identifier)
@@ -474,7 +468,7 @@ void BinaryMetafileWriter::beginPicture(char const *identifier)
     }
 
     cgmb_flush_cmd(final_flush);
-    cgmb_fb();
+    flushBuffer();
 }
 
 void BinaryMetafileWriter::beginPictureBody()
@@ -482,7 +476,7 @@ void BinaryMetafileWriter::beginPictureBody()
     cgmb_start_cmd(0, (int) B_Pic_Body);
 
     cgmb_flush_cmd(final_flush);
-    cgmb_fb();
+    flushBuffer();
 }
 
 void BinaryMetafileWriter::endPicture()
@@ -490,7 +484,7 @@ void BinaryMetafileWriter::endPicture()
     cgmb_start_cmd(0, (int) E_Pic);
 
     cgmb_flush_cmd(final_flush);
-    cgmb_fb();
+    flushBuffer();
 }
 
 void BinaryMetafileWriter::metafileVersion(int value)
@@ -500,7 +494,7 @@ void BinaryMetafileWriter::metafileVersion(int value)
     cgmb_sint(value);
 
     cgmb_flush_cmd(final_flush);
-    cgmb_fb();
+    flushBuffer();
 }
 
 void BinaryMetafileWriter::metafileDescription(char const *value)
@@ -510,7 +504,7 @@ void BinaryMetafileWriter::metafileDescription(char const *value)
     cgmb_string(value, static_cast<int>(strlen(value)));
 
     cgmb_flush_cmd(final_flush);
-    cgmb_fb();
+    flushBuffer();
 }
 
 void BinaryMetafileWriter::vdcType(VdcType type)
@@ -520,7 +514,7 @@ void BinaryMetafileWriter::vdcType(VdcType type)
     cgmb_eint((int) type);
 
     cgmb_flush_cmd(final_flush);
-    cgmb_fb();
+    flushBuffer();
 }
 
 void BinaryMetafileWriter::intPrecisionClearText(int min, int max)
@@ -535,7 +529,7 @@ void BinaryMetafileWriter::intPrecisionBinary(int value)
     cgmb_sint(value);
 
     cgmb_flush_cmd(final_flush);
-    cgmb_fb();
+    flushBuffer();
 }
 
 void BinaryMetafileWriter::realPrecisionClearText(float minReal, float maxReal, int digits)
@@ -552,7 +546,7 @@ void BinaryMetafileWriter::realPrecisionBinary(RealPrecision prec, int expWidth,
     cgmb_sint(mantWidth);
 
     cgmb_flush_cmd(final_flush);
-    cgmb_fb();
+    flushBuffer();
 }
 
 void BinaryMetafileWriter::indexPrecisionClearText(int min, int max)
@@ -567,7 +561,7 @@ void BinaryMetafileWriter::indexPrecisionBinary(int value)
     cgmb_sint(value);
 
     cgmb_flush_cmd(final_flush);
-    cgmb_fb();
+    flushBuffer();
 }
 
 void BinaryMetafileWriter::colorPrecisionClearText(int max)
@@ -582,7 +576,7 @@ void BinaryMetafileWriter::colorPrecisionBinary(int value)
     cgmb_sint(value);
 
     cgmb_flush_cmd(final_flush);
-    cgmb_fb();
+    flushBuffer();
 }
 
 void BinaryMetafileWriter::colorIndexPrecisionClearText(int max)
@@ -597,7 +591,7 @@ void BinaryMetafileWriter::colorIndexPrecisionBinary(int value)
     cgmb_sint(value);
 
     cgmb_flush_cmd(final_flush);
-    cgmb_fb();
+    flushBuffer();
 }
 
 void BinaryMetafileWriter::maximumColorIndex(int max)
@@ -607,7 +601,7 @@ void BinaryMetafileWriter::maximumColorIndex(int max)
     cgmb_cxint(max);
 
     cgmb_flush_cmd(final_flush);
-    cgmb_fb();
+    flushBuffer();
 }
 
 void BinaryMetafileWriter::colorValueExtent(int redMin, int redMax, int greenMin, int greenMax, int blueMin, int blueMax)
@@ -622,7 +616,7 @@ void BinaryMetafileWriter::colorValueExtent(int redMin, int redMax, int greenMin
     cgmb_dcint(blueMax);
 
     cgmb_flush_cmd(final_flush);
-    cgmb_fb();
+    flushBuffer();
 }
 
 void BinaryMetafileWriter::metafileElementList()
@@ -636,7 +630,7 @@ void BinaryMetafileWriter::metafileElementList()
     }
 
     cgmb_flush_cmd(final_flush);
-    cgmb_fb();
+    flushBuffer();
 }
 
 void BinaryMetafileWriter::fontList(std::vector<std::string> const &fonts)
@@ -649,7 +643,7 @@ void BinaryMetafileWriter::fontList(std::vector<std::string> const &fonts)
     }
 
     cgmb_flush_cmd(final_flush);
-    cgmb_fb();
+    flushBuffer();
 }
 
 void BinaryMetafileWriter::characterCodingAnnouncer(CharCodeAnnouncer value)
@@ -659,7 +653,7 @@ void BinaryMetafileWriter::characterCodingAnnouncer(CharCodeAnnouncer value)
     cgmb_eint(static_cast<int>(value));
 
     cgmb_flush_cmd(final_flush);
-    cgmb_fb();
+    flushBuffer();
 }
 
 void BinaryMetafileWriter::scalingMode(ScalingMode mode, float value)
@@ -670,7 +664,7 @@ void BinaryMetafileWriter::scalingMode(ScalingMode mode, float value)
     cgmb_float(static_cast<double>(value));
 
     cgmb_flush_cmd(final_flush);
-    cgmb_fb();
+    flushBuffer();
 }
 
 void BinaryMetafileWriter::colorSelectionMode(ColorMode mode)
@@ -680,7 +674,7 @@ void BinaryMetafileWriter::colorSelectionMode(ColorMode mode)
     cgmb_eint(static_cast<int>(mode));
 
     cgmb_flush_cmd(final_flush);
-    cgmb_fb();
+    flushBuffer();
 }
 
 void BinaryMetafileWriter::lineWidthSpecificationMode(SpecificationMode mode)
@@ -690,7 +684,7 @@ void BinaryMetafileWriter::lineWidthSpecificationMode(SpecificationMode mode)
     cgmb_eint(static_cast<int>(mode));
 
     cgmb_flush_cmd(final_flush);
-    cgmb_fb();
+    flushBuffer();
 }
 
 void BinaryMetafileWriter::markerSizeSpecificationMode(SpecificationMode mode)
@@ -700,7 +694,7 @@ void BinaryMetafileWriter::markerSizeSpecificationMode(SpecificationMode mode)
     cgmb_eint(static_cast<int>(mode));
 
     cgmb_flush_cmd(final_flush);
-    cgmb_fb();
+    flushBuffer();
 }
 
 void BinaryMetafileWriter::vdcExtent(int llx, int lly, int urx, int ury)
@@ -717,7 +711,7 @@ void BinaryMetafileWriter::vdcExtent(int llx, int lly, int urx, int ury)
     cgmb_vint(ymax);
 
     cgmb_flush_cmd(final_flush);
-    cgmb_fb();
+    flushBuffer();
 }
 
 void BinaryMetafileWriter::backgroundColor(int red, int green, int blue)
@@ -729,7 +723,7 @@ void BinaryMetafileWriter::backgroundColor(int red, int green, int blue)
     cgmb_dcint(blue);
 
     cgmb_flush_cmd(final_flush);
-    cgmb_fb();
+    flushBuffer();
 }
 
 void BinaryMetafileWriter::vdcIntegerPrecisionClearText(int min, int max)
@@ -744,7 +738,7 @@ void BinaryMetafileWriter::vdcIntegerPrecisionBinary(int value)
     cgmb_sint(value);
 
     cgmb_flush_cmd(final_flush);
-    cgmb_fb();
+    flushBuffer();
 }
 
 void BinaryMetafileWriter::clipRectangle(int llx, int lly, int urx, int ury)
@@ -757,7 +751,7 @@ void BinaryMetafileWriter::clipRectangle(int llx, int lly, int urx, int ury)
     cgmb_vint(ury);
 
     cgmb_flush_cmd(final_flush);
-    cgmb_fb();
+    flushBuffer();
 }
 
 void BinaryMetafileWriter::clipIndicator(bool enabled)
@@ -767,7 +761,7 @@ void BinaryMetafileWriter::clipIndicator(bool enabled)
     cgmb_eint(enabled ? 1 : 0);
 
     cgmb_flush_cmd(final_flush);
-    cgmb_fb();
+    flushBuffer();
 }
 
 void BinaryMetafileWriter::polyline(const std::vector<Point<int>> &points)
@@ -781,7 +775,7 @@ void BinaryMetafileWriter::polyline(const std::vector<Point<int>> &points)
     }
 
     cgmb_flush_cmd(final_flush);
-    cgmb_fb();
+    flushBuffer();
 }
 
 void BinaryMetafileWriter::polymarker(const std::vector<Point<int>> &points)
@@ -795,7 +789,7 @@ void BinaryMetafileWriter::polymarker(const std::vector<Point<int>> &points)
     }
 
     cgmb_flush_cmd(final_flush);
-    cgmb_fb();
+    flushBuffer();
 }
 
 void BinaryMetafileWriter::text(Point<int> point, TextFlag flag, const char *text)
@@ -809,7 +803,7 @@ void BinaryMetafileWriter::text(Point<int> point, TextFlag flag, const char *tex
     cgmb_string(text, strlen(text));
 
     cgmb_flush_cmd(final_flush);
-    cgmb_fb();
+    flushBuffer();
 }
 
 void BinaryMetafileWriter::polygon(const std::vector<Point<int>> &points)
@@ -823,7 +817,7 @@ void BinaryMetafileWriter::polygon(const std::vector<Point<int>> &points)
     }
 
     cgmb_flush_cmd(final_flush);
-    cgmb_fb();
+    flushBuffer();
 }
 
 void BinaryMetafileWriter::cellArray(Point<int> c1, Point<int> c2, Point<int> c3, int colorPrecision, int nx, int ny, const int *colors)
@@ -855,7 +849,7 @@ void BinaryMetafileWriter::cellArray(Point<int> c1, Point<int> c2, Point<int> c3
     }
 
     cgmb_flush_cmd(final_flush);
-    cgmb_fb();
+    flushBuffer();
 }
 
 void BinaryMetafileWriter::lineType(int value)
@@ -865,7 +859,7 @@ void BinaryMetafileWriter::lineType(int value)
     cgmb_xint(value);
 
     cgmb_flush_cmd(final_flush);
-    cgmb_fb();
+    flushBuffer();
 }
 
 void BinaryMetafileWriter::lineWidth(float value)
@@ -875,7 +869,7 @@ void BinaryMetafileWriter::lineWidth(float value)
     cgmb_fixed(static_cast<double>(value));
 
     cgmb_flush_cmd(final_flush);
-    cgmb_fb();
+    flushBuffer();
 }
 
 void BinaryMetafileWriter::lineColor(int value)
@@ -885,7 +879,7 @@ void BinaryMetafileWriter::lineColor(int value)
     cgmb_cxint(value);
 
     cgmb_flush_cmd(final_flush);
-    cgmb_fb();
+    flushBuffer();
 }
 
 void BinaryMetafileWriter::markerType(int value)
@@ -895,7 +889,7 @@ void BinaryMetafileWriter::markerType(int value)
     cgmb_xint(value);
 
     cgmb_flush_cmd(final_flush);
-    cgmb_fb();
+    flushBuffer();
 }
 
 void BinaryMetafileWriter::markerSize(float value)
@@ -905,7 +899,7 @@ void BinaryMetafileWriter::markerSize(float value)
     cgmb_fixed(static_cast<double>(value));
 
     cgmb_flush_cmd(final_flush);
-    cgmb_fb();
+    flushBuffer();
 }
 
 void BinaryMetafileWriter::markerColor(int value)
@@ -915,7 +909,7 @@ void BinaryMetafileWriter::markerColor(int value)
     cgmb_cxint(value);
 
     cgmb_flush_cmd(final_flush);
-    cgmb_fb();
+    flushBuffer();
 }
 
 void BinaryMetafileWriter::textFontIndex(int value)
@@ -925,7 +919,7 @@ void BinaryMetafileWriter::textFontIndex(int value)
     cgmb_xint(value);
 
     cgmb_flush_cmd(final_flush);
-    cgmb_fb();
+    flushBuffer();
 }
 
 void BinaryMetafileWriter::textPrecision(TextPrecision value)
@@ -935,7 +929,7 @@ void BinaryMetafileWriter::textPrecision(TextPrecision value)
     cgmb_eint(static_cast<int>(value));
 
     cgmb_flush_cmd(final_flush);
-    cgmb_fb();
+    flushBuffer();
 }
 
 void BinaryMetafileWriter::charExpansion(float value)
@@ -945,7 +939,7 @@ void BinaryMetafileWriter::charExpansion(float value)
     cgmb_fixed(static_cast<double>(value));
 
     cgmb_flush_cmd(final_flush);
-    cgmb_fb();
+    flushBuffer();
 }
 
 void BinaryMetafileWriter::charSpacing(float value)
@@ -955,7 +949,7 @@ void BinaryMetafileWriter::charSpacing(float value)
     cgmb_fixed(static_cast<double>(value));
 
     cgmb_flush_cmd(final_flush);
-    cgmb_fb();
+    flushBuffer();
 }
 
 void BinaryMetafileWriter::textColor(int index)
@@ -965,7 +959,7 @@ void BinaryMetafileWriter::textColor(int index)
     cgmb_cxint(index);
 
     cgmb_flush_cmd(final_flush);
-    cgmb_fb();
+    flushBuffer();
 }
 
 void BinaryMetafileWriter::charHeight(int value)
@@ -975,7 +969,7 @@ void BinaryMetafileWriter::charHeight(int value)
     cgmb_vint(value);
 
     cgmb_flush_cmd(final_flush);
-    cgmb_fb();
+    flushBuffer();
 }
 
 void BinaryMetafileWriter::charOrientation(int upX, int upY, int baseX, int baseY)
@@ -988,7 +982,7 @@ void BinaryMetafileWriter::charOrientation(int upX, int upY, int baseX, int base
     cgmb_vint(baseY);
 
     cgmb_flush_cmd(final_flush);
-    cgmb_fb();
+    flushBuffer();
 }
 
 void BinaryMetafileWriter::textPath(TextPath value)
@@ -998,7 +992,7 @@ void BinaryMetafileWriter::textPath(TextPath value)
     cgmb_eint(static_cast<int>(value));
 
     cgmb_flush_cmd(final_flush);
-    cgmb_fb();
+    flushBuffer();
 }
 
 void BinaryMetafileWriter::textAlignment(HorizAlign horiz, VertAlign vert, float contHoriz, float contVert)
@@ -1011,7 +1005,7 @@ void BinaryMetafileWriter::textAlignment(HorizAlign horiz, VertAlign vert, float
     cgmb_fixed(static_cast<double>(contVert));
 
     cgmb_flush_cmd(final_flush);
-    cgmb_fb();
+    flushBuffer();
 }
 
 void BinaryMetafileWriter::interiorStyle(InteriorStyle value)
@@ -1021,7 +1015,7 @@ void BinaryMetafileWriter::interiorStyle(InteriorStyle value)
     cgmb_eint(static_cast<int>(value));
 
     cgmb_flush_cmd(final_flush);
-    cgmb_fb();
+    flushBuffer();
 }
 
 void BinaryMetafileWriter::fillColor(int value)
@@ -1031,7 +1025,7 @@ void BinaryMetafileWriter::fillColor(int value)
     cgmb_cxint(value);
 
     cgmb_flush_cmd(final_flush);
-    cgmb_fb();
+    flushBuffer();
 }
 
 void BinaryMetafileWriter::hatchIndex(int value)
@@ -1041,7 +1035,7 @@ void BinaryMetafileWriter::hatchIndex(int value)
     cgmb_xint(value);
 
     cgmb_flush_cmd(final_flush);
-    cgmb_fb();
+    flushBuffer();
 }
 
 void BinaryMetafileWriter::patternIndex(int value)
@@ -1051,7 +1045,7 @@ void BinaryMetafileWriter::patternIndex(int value)
     cgmb_xint(value);
 
     cgmb_flush_cmd(final_flush);
-    cgmb_fb();
+    flushBuffer();
 }
 
 void BinaryMetafileWriter::colorTable(int startIndex, std::vector<Color> const &colors)
@@ -1069,7 +1063,7 @@ void BinaryMetafileWriter::colorTable(int startIndex, std::vector<Color> const &
     }
 
     cgmb_flush_cmd(final_flush);
-    cgmb_fb();
+    flushBuffer();
 }
 
 }        // namespace cgm

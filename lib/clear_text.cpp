@@ -35,21 +35,20 @@ ClearTextMetafileWriter::ClearTextMetafileWriter(int fd)
 {
 }
 
-/* Flush output buffer */
-void ClearTextMetafileWriter::cgmt_fb()
+void ClearTextMetafileWriter::flushBuffer()
 {
     if (m_outputIndex != 0)
     {
         m_output[m_outputIndex++] = '\n';
     }
-    flushBuffer();
+    MetafileStreamWriter::flushBuffer();
 }
 
 /* Write a character to CGM clear text */
 void ClearTextMetafileWriter::cgmt_outc(char chr)
 {
     if (m_outputIndex >= cgmt_recl)
-        cgmt_fb();
+        flushBuffer();
 
     m_output[m_outputIndex++] = chr;
     m_output[m_outputIndex] = '\0';
@@ -60,7 +59,7 @@ void ClearTextMetafileWriter::cgmt_out_string(const char *string)
 {
     if ((int) (m_outputIndex + strlen(string)) >= cgmt_recl)
     {
-        cgmt_fb();
+        flushBuffer();
         strcpy(m_output, "   ");
         m_outputIndex = 3;
     }
@@ -79,7 +78,7 @@ void ClearTextMetafileWriter::cgmt_start_cmd(int cl, int el)
 void ClearTextMetafileWriter::cgmt_flush_cmd()
 {
     cgmt_outc(term_char);
-    cgmt_fb();
+    flushBuffer();
 }
 
 /* Write a CGM clear text string */
@@ -183,7 +182,7 @@ void ClearTextMetafileWriter::endMetafile()
 
     cgmt_flush_cmd();
 
-    cgmt_fb();
+    flushBuffer();
 }
 
 void ClearTextMetafileWriter::beginPicture(char const *identifier)
@@ -551,7 +550,7 @@ void ClearTextMetafileWriter::cellArray(Point<int> c1, Point<int> c2, Point<int>
 
     for (int iy = 0; iy < ny; iy++)
     {
-        cgmt_fb();
+        flushBuffer();
 
         for (int ix = 0; ix < nx; ix++)
         {
