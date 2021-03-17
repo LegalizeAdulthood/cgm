@@ -42,13 +42,13 @@ void MetafileStreamWriter::flushBuffer()
 {
     if (m_useStream)
     {
-        m_stream.write(m_context.m_output, m_context.buffer_ind);
+        m_stream.write(m_context.m_output, m_context.m_outputIndex);
     }
     else
     {
-        gks_write_file(m_fd, m_context.m_output, m_context.buffer_ind);
+        gks_write_file(m_fd, m_context.m_output, m_context.m_outputIndex);
     }
-    m_context.buffer_ind = 0;
+    m_context.m_outputIndex = 0;
     m_context.m_output[0] = 0;
 }
 
