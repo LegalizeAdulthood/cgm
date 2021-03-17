@@ -41,6 +41,7 @@ public:
         color_t{},
         active{},
         begin_page{},
+        vp{},
         cgm_ctx{}
     {
     }
@@ -57,6 +58,7 @@ public:
     double color_t[MAX_COLOR * 3];        /* color table */
     bool active;                          /* indicates active workstation */
     bool begin_page;                      /* indicates begin page */
+    double vp[4];                         /* current GKS viewport */
     cgm_context cgm_ctx;
 };
 
@@ -135,7 +137,7 @@ static void set_xform(WorkstationContext *ctx, bool init)
     if (init)
     {
         gks_inq_current_xformno(&errind, &tnr);
-        gks_inq_xform(tnr, &errind, ctx->cgm_ctx.wn, ctx->cgm_ctx.vp);
+        gks_inq_xform(tnr, &errind, ctx->cgm_ctx.wn, ctx->vp);
         gks_inq_clip(&errind, &clip_old, clprt);
     }
 
@@ -145,9 +147,9 @@ static void set_xform(WorkstationContext *ctx, bool init)
 
     for (i = 0; i < 4; i++)
     {
-        if (vp_new[i] != ctx->cgm_ctx.vp[i])
+        if (vp_new[i] != ctx->vp[i])
         {
-            ctx->cgm_ctx.vp[i] = vp_new[i];
+            ctx->vp[i] = vp_new[i];
             update = true;
         }
         if (wn_new[i] != ctx->cgm_ctx.wn[i])
