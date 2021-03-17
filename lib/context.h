@@ -46,7 +46,6 @@ struct fill_attributes
 
 struct cgm_context
 {
-    norm_xform xform;            /* internal transformation */
     line_attributes pline;       /* current polyline attributes */
     marker_attributes pmark;     /* current marker attributes */
     text_attributes text;        /* current text attributes */

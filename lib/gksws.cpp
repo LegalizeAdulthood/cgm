@@ -33,6 +33,7 @@ public:
     WorkstationContext()
         : conId{},
         encoding{},
+        xform{},
         cgm_ctx{}
     {
     }
@@ -41,6 +42,7 @@ public:
     std::ostringstream buffer;
     int conId;
     encode_enum encoding;
+    norm_xform xform;            /* internal transformation */
     cgm_context cgm_ctx;
 };
 
@@ -71,8 +73,8 @@ static void WC_to_VDC(WorkstationContext *ctx, double xin, double yin, int *xout
 
     /* Normalization transformation */
 
-    x = ctx->cgm_ctx.xform.a * xin + ctx->cgm_ctx.xform.b;
-    y = ctx->cgm_ctx.xform.c * yin + ctx->cgm_ctx.xform.d;
+    x = ctx->xform.a * xin + ctx->xform.b;
+    y = ctx->xform.c * yin + ctx->xform.d;
 
     /* Segment transformation */
 
@@ -147,10 +149,10 @@ static void set_xform(WorkstationContext *ctx, bool init)
 
     if (init || update || (clip_old != clip_new))
     {
-        ctx->cgm_ctx.xform.a = (vp_new[1] - vp_new[0]) / (wn_new[1] - wn_new[0]);
-        ctx->cgm_ctx.xform.b = vp_new[0] - wn_new[0] * ctx->cgm_ctx.xform.a;
-        ctx->cgm_ctx.xform.c = (vp_new[3] - vp_new[2]) / (wn_new[3] - wn_new[2]);
-        ctx->cgm_ctx.xform.d = vp_new[2] - wn_new[2] * ctx->cgm_ctx.xform.c;
+        ctx->xform.a = (vp_new[1] - vp_new[0]) / (wn_new[1] - wn_new[0]);
+        ctx->xform.b = vp_new[0] - wn_new[0] * ctx->xform.a;
+        ctx->xform.c = (vp_new[3] - vp_new[2]) / (wn_new[3] - wn_new[2]);
+        ctx->xform.d = vp_new[2] - wn_new[2] * ctx->xform.c;
 
         if (init)
         {
@@ -374,8 +376,8 @@ static void setup_text_attributes( WorkstationContext* ctx, bool init )
         gks_set_chr_xform();
         gks_chr_height(&newtext.height);
         gks_inq_text_upvec(&errind, &upx, &upy);
-        upx *= ctx->cgm_ctx.xform.a;
-        upy *= ctx->cgm_ctx.xform.c;
+        upx *= ctx->xform.a;
+        upy *= ctx->xform.c;
         gks_seg_xform(&upx, &upy);
         norm = fabs(upx) > fabs(upy) ? fabs(upx) : fabs(upy);
         newtext.upx = (int) (upx / norm * max_coord);
