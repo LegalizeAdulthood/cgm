@@ -5,7 +5,6 @@ add_library(cgm
     binary.cpp
     clear_text.h
     clear_text.cpp
-    context.h
     impl.h
     impl.cpp
     cgm.cpp

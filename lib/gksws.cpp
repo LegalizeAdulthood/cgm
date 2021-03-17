@@ -21,12 +21,53 @@
 
 #include "binary.h"
 #include "clear_text.h"
-#include "context.h"
 #include "gkscore.h"
 #include "impl.h"
 
 #define odd(number) ((number) &01)
 #define nint(a) ((int) ((a) + 0.5))
+
+struct norm_xform
+{
+    double a, b, c, d;
+};
+
+struct line_attributes
+{
+    int type;
+    double width;
+    int color;
+};
+
+struct marker_attributes
+{
+    int type;
+    double width;
+    int color;
+};
+
+struct text_attributes
+{
+    int font;
+    int prec;
+    double expfac;
+    double spacing;
+    int color;
+    double height;
+    int upx;
+    int upy;
+    int path;
+    int halign;
+    int valign;
+};
+
+struct fill_attributes
+{
+    int intstyle;
+    int hatch_index;
+    int pattern_index;
+    int color;
+};
 
 class WorkstationContext
 {
