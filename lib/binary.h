@@ -91,6 +91,7 @@ private:
 
     char m_cmdBuffer[hdr_long + max_long]{}; /* where we buffer output */
     char *m_cmdHdr{};                        /* the command header */
+    char *m_cmdData;                         /* the command data */
 };
 
 }        // namespace cgm

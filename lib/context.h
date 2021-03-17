@@ -51,7 +51,6 @@ struct cgm_context
     void *flush_buffer_context;
     void (*flush_buffer)(cgm_context *p, void *data);
     double mm;                            /* metric size in mm */
-    char *cmd_data;                       /* the command data */
     int cmd_index;                        /* index into the command data */
     int bfr_index;                        /* index into the buffer */
     int partition;                        /* which partition in the output */
