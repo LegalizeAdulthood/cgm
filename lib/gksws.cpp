@@ -34,6 +34,7 @@ public:
         : conId{},
         encoding{},
         xform{},
+        pline{},
         cgm_ctx{}
     {
     }
@@ -43,6 +44,7 @@ public:
     int conId;
     encode_enum encoding;
     norm_xform xform;            /* internal transformation */
+    line_attributes pline;       /* current polyline attributes */
     cgm_context cgm_ctx;
 };
 
@@ -270,9 +272,9 @@ static void setup_polyline_attributes( WorkstationContext* ctx, bool init )
 
     if (init)
     {
-        ctx->cgm_ctx.pline.type = 1;
-        ctx->cgm_ctx.pline.width = 1.0;
-        ctx->cgm_ctx.pline.color = 1;
+        ctx->pline.type = 1;
+        ctx->pline.width = 1.0;
+        ctx->pline.color = 1;
     }
     else
     {
@@ -286,20 +288,20 @@ static void setup_polyline_attributes( WorkstationContext* ctx, bool init )
                 newpline.type = max_std_linetype - newpline.type;
         }
 
-        if (newpline.type != ctx->cgm_ctx.pline.type)
+        if (newpline.type != ctx->pline.type)
         {
             ctx->writer->lineType(newpline.type);
-            ctx->cgm_ctx.pline.type = newpline.type;
+            ctx->pline.type = newpline.type;
         }
-        if (newpline.width != ctx->cgm_ctx.pline.width)
+        if (newpline.width != ctx->pline.width)
         {
             ctx->writer->lineWidth(newpline.width);
-            ctx->cgm_ctx.pline.width = newpline.width;
+            ctx->pline.width = newpline.width;
         }
-        if (newpline.color != ctx->cgm_ctx.pline.color)
+        if (newpline.color != ctx->pline.color)
         {
             ctx->writer->lineColor(newpline.color);
-            ctx->cgm_ctx.pline.color = newpline.color;
+            ctx->pline.color = newpline.color;
         }
     }
 }
