@@ -23,6 +23,7 @@ protected:
     int m_outputIndex{};             /* output buffer index */
     char m_output[max_buffer + 2]{}; /* output buffer */
     void *m_flushBufferCtx{};
+    void (*m_flushBuffer)(cgm_context *p, void *data){};
     cgm_context m_context;
 
 private:

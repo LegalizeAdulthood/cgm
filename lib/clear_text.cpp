@@ -42,7 +42,7 @@ void ClearTextMetafileWriter::cgmt_fb()
     {
         m_output[m_outputIndex++] = '\n';
         m_output[m_outputIndex] = '\0';
-        m_context.flush_buffer(&m_context, m_flushBufferCtx);
+        m_flushBuffer(&m_context, m_flushBufferCtx);
 
         m_outputIndex = 0;
         m_output[0] = '\0';

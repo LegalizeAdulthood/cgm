@@ -13,10 +13,9 @@ MetafileStreamWriter::MetafileStreamWriter(std::ostream &stream)
     m_fd{},
     m_useStream(true),
     m_flushBufferCtx(this),
+    m_flushBuffer{flushBufferCb},
     m_context{}
 {
-    m_context.flush_buffer = flushBufferCb;
-
     if (getenv("CGM_SCALE_MODE_METRIC") != nullptr)
         m_context.mm = 0.19685 / max_coord * 1000;
     else
@@ -28,10 +27,9 @@ MetafileStreamWriter::MetafileStreamWriter(int fd)
     m_fd(fd),
     m_useStream(false),
     m_flushBufferCtx(this),
+    m_flushBuffer{flushBufferCb},
     m_context{}
 {
-    m_context.flush_buffer = flushBufferCb;
-
     if (getenv("CGM_SCALE_MODE_METRIC") != nullptr)
         m_context.mm = 0.19685 / max_coord * 1000;
     else
