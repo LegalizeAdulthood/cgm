@@ -48,7 +48,7 @@ public:
     void polymarker(const std::vector<Point<int>> &points) override;
     void text(Point<int> point, TextFlag flag, const char *text) override;
     void polygon(const std::vector<Point<int>> &points) override;
-    void cellArray( Point<int> c1, Point<int> c2, Point<int> c3, int colorPrecision, int nx, int ny, const int* colors ) override;
+    void cellArray(Point<int> c1, Point<int> c2, Point<int> c3, int colorPrecision, int nx, int ny, const int *colors) override;
     void lineType(int value) override;
     void lineWidth(float value) override;
     void lineColor(int value) override;
@@ -72,14 +72,14 @@ public:
 
 private:
     void flushBuffer() override;
-    void outChar(char chr);
-    void cgmt_out_string(const char *string);
+    void appendBufferByte(char chr);
+    void writeString(const char *string);
     void startElement(int elemClass, int elemCode);
-    void cgmt_flush_cmd();
-    void cgmt_string(const char *cptr, int slen);
-    void cgmt_int(int xin);
-    void cgmt_real(double xin);
-    void cgmt_ipoint(int x, int y);
+    void flushElement();
+    void writeQuotedString(const char *cptr, int slen);
+    void writeSignedInt(int xin);
+    void writeReal(double xin);
+    void writeIntPoint(int x, int y);
 };
 
 }        // namespace cgm

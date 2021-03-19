@@ -47,8 +47,7 @@ void ClearTextMetafileWriter::flushBuffer()
     MetafileStreamWriter::flushBuffer();
 }
 
-/* Write a character to CGM clear text */
-void ClearTextMetafileWriter::outChar(char chr)
+void ClearTextMetafileWriter::appendBufferByte(char chr)
 {
     if (m_outputIndex >= cgmt_recl)
         flushBuffer();
@@ -57,8 +56,7 @@ void ClearTextMetafileWriter::outChar(char chr)
     m_output[m_outputIndex] = '\0';
 }
 
-/* Write string to CGM clear text */
-void ClearTextMetafileWriter::cgmt_out_string(const char *string)
+void ClearTextMetafileWriter::writeString(const char *string)
 {
     if ((int) (m_outputIndex + strlen(string)) >= cgmt_recl)
     {
@@ -71,43 +69,39 @@ void ClearTextMetafileWriter::cgmt_out_string(const char *string)
     m_outputIndex = m_outputIndex + static_cast<int>(strlen(string));
 }
 
-/* Start output command */
 void ClearTextMetafileWriter::startElement(int elemClass, int elemCode)
 {
-    cgmt_out_string(cgmt_cptr[elemClass][elemCode]);
+    writeString(cgmt_cptr[elemClass][elemCode]);
 }
 
-/* Flush output command */
-void ClearTextMetafileWriter::cgmt_flush_cmd()
+void ClearTextMetafileWriter::flushElement()
 {
     const char terminator = ';'; /* std. terminator character: ; or / */
-    outChar(terminator);
+    appendBufferByte(terminator);
     flushBuffer();
 }
 
-/* Write a CGM clear text string */
-void ClearTextMetafileWriter::cgmt_string(const char *cptr, int slen)
+void ClearTextMetafileWriter::writeQuotedString(const char *cptr, int slen)
 {
     int i;
 
-    outChar(' ');
-    outChar(quoteChar);
+    appendBufferByte(' ');
+    appendBufferByte(quoteChar);
 
     for (i = 0; i < slen; ++i)
     {
         if (cptr[i] == quoteChar)
         {
-            outChar(quoteChar);
+            appendBufferByte(quoteChar);
         }
 
-        outChar(cptr[i]);
+        appendBufferByte(cptr[i]);
     }
 
-    outChar(quoteChar);
+    appendBufferByte(quoteChar);
 }
 
-/* Write a signed integer variable */
-void ClearTextMetafileWriter::cgmt_int(int xin)
+void ClearTextMetafileWriter::writeSignedInt(int xin)
 {
     static char buf[max_pwrs + 2];
     int is_neg;
@@ -128,9 +122,9 @@ void ClearTextMetafileWriter::cgmt_int(int xin)
         *--cptr = digits[0];
 
         if ((int) (m_outputIndex + strlen(cptr)) < cgmt_recl)
-            outChar(' ');
+            appendBufferByte(' ');
 
-        cgmt_out_string(cptr); /* all done */
+        writeString(cptr); /* all done */
         return;
     }
 
@@ -145,27 +139,27 @@ void ClearTextMetafileWriter::cgmt_int(int xin)
         *--cptr = '-';
 
     if ((int) (m_outputIndex + strlen(cptr)) < cgmt_recl)
-        outChar(' ');
+        appendBufferByte(' ');
 
-    cgmt_out_string(cptr);
+    writeString(cptr);
 }
 
 /* Write a real variable */
-void ClearTextMetafileWriter::cgmt_real(double xin)
+void ClearTextMetafileWriter::writeReal(double xin)
 {
     char buffer[maxStrLen];
 
     sprintf(buffer, " %.6f", xin);
-    cgmt_out_string(buffer);
+    writeString(buffer);
 }
 
 /* Write an integer point */
-void ClearTextMetafileWriter::cgmt_ipoint(int x, int y)
+void ClearTextMetafileWriter::writeIntPoint(int x, int y)
 {
     char buffer[maxStrLen];
 
     sprintf(buffer, " %d,%d", x, y);
-    cgmt_out_string(buffer);
+    writeString(buffer);
 }
 
 void ClearTextMetafileWriter::beginMetafile(const char *identifier)
@@ -173,18 +167,18 @@ void ClearTextMetafileWriter::beginMetafile(const char *identifier)
     startElement(0, (int) B_Mf);
 
     if (*identifier)
-        cgmt_string(identifier, static_cast<int>(strlen(identifier)));
+        writeQuotedString(identifier, static_cast<int>(strlen(identifier)));
     else
-        cgmt_string(nullptr, 0);
+        writeQuotedString(nullptr, 0);
 
-    cgmt_flush_cmd();
+    flushElement();
 }
 
 void ClearTextMetafileWriter::endMetafile()
 {
     startElement(0, (int) E_Mf);
 
-    cgmt_flush_cmd();
+    flushElement();
 
     flushBuffer();
 }
@@ -194,43 +188,43 @@ void ClearTextMetafileWriter::beginPicture(char const *identifier)
     startElement(0, (int) B_Pic);
 
     if (*identifier)
-        cgmt_string(identifier, strlen(identifier));
+        writeQuotedString(identifier, strlen(identifier));
     else
-        cgmt_string(NULL, 0);
+        writeQuotedString(NULL, 0);
 
-    cgmt_flush_cmd();
+    flushElement();
 }
 
 void ClearTextMetafileWriter::beginPictureBody()
 {
     startElement(0, (int) B_Pic_Body);
 
-    cgmt_flush_cmd();
+    flushElement();
 }
 
 void ClearTextMetafileWriter::endPicture()
 {
     startElement(0, (int) E_Pic);
 
-    cgmt_flush_cmd();
+    flushElement();
 }
 
 void ClearTextMetafileWriter::metafileVersion(int value)
 {
     startElement(1, MfVersion);
 
-    cgmt_int(value);
+    writeSignedInt(value);
 
-    cgmt_flush_cmd();
+    flushElement();
 }
 
 void ClearTextMetafileWriter::metafileDescription(char const *value)
 {
     startElement(1, MfDescrip);
 
-    cgmt_string(value, strlen(value));
+    writeQuotedString(value, strlen(value));
 
-    cgmt_flush_cmd();
+    flushElement();
 }
 
 void ClearTextMetafileWriter::vdcType(VdcType type)
@@ -239,24 +233,24 @@ void ClearTextMetafileWriter::vdcType(VdcType type)
 
     if (type == VdcType::Integer)
     {
-        cgmt_out_string(" Integer");
+        writeString(" Integer");
     }
     else if (type == VdcType::Real)
     {
-        cgmt_out_string(" Real");
+        writeString(" Real");
     }
 
-    cgmt_flush_cmd();
+    flushElement();
 }
 
 void ClearTextMetafileWriter::intPrecisionClearText(int min, int max)
 {
     startElement(1, (int) IntPrec);
 
-    cgmt_int(min);
-    cgmt_int(max);
+    writeSignedInt(min);
+    writeSignedInt(max);
 
-    cgmt_flush_cmd();
+    flushElement();
 }
 
 void ClearTextMetafileWriter::intPrecisionBinary(int value)
@@ -268,11 +262,11 @@ void ClearTextMetafileWriter::realPrecisionClearText(float minReal, float maxRea
 {
     startElement(1, (int) RealPrec);
 
-    cgmt_real(static_cast<double>(minReal));
-    cgmt_real(static_cast<double>(maxReal));
-    cgmt_int(digits);
+    writeReal(static_cast<double>(minReal));
+    writeReal(static_cast<double>(maxReal));
+    writeSignedInt(digits);
 
-    cgmt_flush_cmd();
+    flushElement();
 }
 
 void ClearTextMetafileWriter::realPrecisionBinary(RealPrecision prec, int expWidth, int mantWidth)
@@ -284,10 +278,10 @@ void ClearTextMetafileWriter::indexPrecisionClearText(int min, int max)
 {
     startElement(1, (int) IndexPrec);
 
-    cgmt_int(min);
-    cgmt_int(max);
+    writeSignedInt(min);
+    writeSignedInt(max);
 
-    cgmt_flush_cmd();
+    flushElement();
 }
 
 void ClearTextMetafileWriter::indexPrecisionBinary(int value)
@@ -299,9 +293,9 @@ void ClearTextMetafileWriter::colorPrecisionClearText(int max)
 {
     startElement(1, (int) ColPrec);
 
-    cgmt_int(max);
+    writeSignedInt(max);
 
-    cgmt_flush_cmd();
+    flushElement();
 }
 
 void ClearTextMetafileWriter::colorPrecisionBinary(int value)
@@ -313,9 +307,9 @@ void ClearTextMetafileWriter::colorIndexPrecisionClearText(int max)
 {
     startElement(1, (int) CIndPrec);
 
-    cgmt_int(max);
+    writeSignedInt(max);
 
-    cgmt_flush_cmd();
+    flushElement();
 }
 
 void ClearTextMetafileWriter::colorIndexPrecisionBinary(int value)
@@ -327,42 +321,42 @@ void ClearTextMetafileWriter::maximumColorIndex(int max)
 {
     startElement(1, (int) MaxCInd);
 
-    cgmt_int(max);
+    writeSignedInt(max);
 
-    cgmt_flush_cmd();
+    flushElement();
 }
 
 void ClearTextMetafileWriter::colorValueExtent(int redMin, int redMax, int greenMin, int greenMax, int blueMin, int blueMax)
 {
     startElement(1, (int) CVExtent);
 
-    cgmt_int(redMin);
-    cgmt_int(greenMin);
-    cgmt_int(blueMin);
-    cgmt_int(redMax);
-    cgmt_int(greenMax);
-    cgmt_int(blueMax);
+    writeSignedInt(redMin);
+    writeSignedInt(greenMin);
+    writeSignedInt(blueMin);
+    writeSignedInt(redMax);
+    writeSignedInt(greenMax);
+    writeSignedInt(blueMax);
 
-    cgmt_flush_cmd();
+    flushElement();
 }
 
 void ClearTextMetafileWriter::metafileElementList()
 {
     startElement(1, (int) MfElList);
 
-    outChar(' ');
-    outChar(quoteChar);
+    appendBufferByte(' ');
+    appendBufferByte(quoteChar);
 
     for (int i = 2; i < 2 * n_melements; i += 2)
     {
-        cgmt_out_string(cgmt_cptr[element_list[i]][element_list[i + 1]]);
+        writeString(cgmt_cptr[element_list[i]][element_list[i + 1]]);
 
         if (i < 2 * (n_melements - 1))
-            outChar(' ');
+            appendBufferByte(' ');
     }
 
-    outChar(quoteChar);
-    cgmt_flush_cmd();
+    appendBufferByte(quoteChar);
+    flushElement();
 }
 
 void ClearTextMetafileWriter::fontList(std::vector<std::string> const &fonts)
@@ -374,14 +368,14 @@ void ClearTextMetafileWriter::fontList(std::vector<std::string> const &fonts)
     const int numFonts = static_cast<int>(fonts.size());
     for (int i = 0; i < numFonts; i++)
     {
-        cgmt_string(fonts[i].c_str(), static_cast<int>(fonts[i].size()));
+        writeQuotedString(fonts[i].c_str(), static_cast<int>(fonts[i].size()));
         if (i < numFonts - 1)
         {
-            outChar(',');
+            appendBufferByte(',');
         }
     }
 
-    cgmt_flush_cmd();
+    flushElement();
 }
 
 void ClearTextMetafileWriter::characterCodingAnnouncer(CharCodeAnnouncer value)
@@ -394,78 +388,78 @@ void ClearTextMetafileWriter::characterCodingAnnouncer(CharCodeAnnouncer value)
     };
     startElement(1, (int) CharAnnounce);
 
-    outChar(' ');
-    cgmt_out_string(announcerNames[static_cast<int>(value)]);
+    appendBufferByte(' ');
+    writeString(announcerNames[static_cast<int>(value)]);
 
-    cgmt_flush_cmd();
+    flushElement();
 }
 
 void ClearTextMetafileWriter::scalingMode(ScalingMode mode, float value)
 {
     startElement(2, (int) ScalMode);
 
-    cgmt_out_string(mode == ScalingMode::Metric ? " Metric" : " Abstract");
-    cgmt_real(static_cast<double>(value));
+    writeString(mode == ScalingMode::Metric ? " Metric" : " Abstract");
+    writeReal(static_cast<double>(value));
 
-    cgmt_flush_cmd();
+    flushElement();
 }
 
 void ClearTextMetafileWriter::colorSelectionMode(ColorMode mode)
 {
     startElement(2, (int) ColSelMode);
 
-    cgmt_out_string(mode == ColorMode::Indexed ? " Indexed" : " Direct");
+    writeString(mode == ColorMode::Indexed ? " Indexed" : " Direct");
 
-    cgmt_flush_cmd();
+    flushElement();
 }
 
 void ClearTextMetafileWriter::lineWidthSpecificationMode(SpecificationMode mode)
 {
     startElement(2, (int) LWidSpecMode);
 
-    cgmt_out_string(mode == SpecificationMode::Absolute ? " Absolute" : " Scaled");
+    writeString(mode == SpecificationMode::Absolute ? " Absolute" : " Scaled");
 
-    cgmt_flush_cmd();
+    flushElement();
 }
 
 void ClearTextMetafileWriter::markerSizeSpecificationMode(SpecificationMode mode)
 {
     startElement(2, (int) MarkSizSpecMode);
 
-    cgmt_out_string(mode == SpecificationMode::Absolute ? " Absolute" : " Scaled");
+    writeString(mode == SpecificationMode::Absolute ? " Absolute" : " Scaled");
 
-    cgmt_flush_cmd();
+    flushElement();
 }
 
 void ClearTextMetafileWriter::vdcExtent(int llx, int lly, int urx, int ury)
 {
     startElement(2, (int) cgm_class_2::vdcExtent);
 
-    cgmt_ipoint(llx, lly);
-    cgmt_ipoint(urx, ury);
+    writeIntPoint(llx, lly);
+    writeIntPoint(urx, ury);
 
-    cgmt_flush_cmd();
+    flushElement();
 }
 
 void ClearTextMetafileWriter::backgroundColor(int red, int green, int blue)
 {
     startElement(2, (int) BackCol);
 
-    cgmt_int(red);
-    cgmt_int(green);
-    cgmt_int(blue);
+    writeSignedInt(red);
+    writeSignedInt(green);
+    writeSignedInt(blue);
 
-    cgmt_flush_cmd();
+    flushElement();
 }
 
 void ClearTextMetafileWriter::vdcIntegerPrecisionClearText(int min, int max)
 {
     startElement(3, (int) vdcIntPrec);
 
-    cgmt_int(min);
-    cgmt_int(max);
+    writeSignedInt(min);
+    writeSignedInt(max);
 
-    cgmt_flush_cmd();
+    flushElement();
 }
 
 void ClearTextMetafileWriter::vdcIntegerPrecisionBinary(int value)
@@ -477,19 +471,19 @@ void ClearTextMetafileWriter::clipRectangle(int llx, int lly, int urx, int ury)
 {
     startElement(3, (int) ClipRect);
 
-    cgmt_ipoint(llx, lly);
-    cgmt_ipoint(urx, ury);
+    writeIntPoint(llx, lly);
+    writeIntPoint(urx, ury);
 
-    cgmt_flush_cmd();
+    flushElement();
 }
 
 void ClearTextMetafileWriter::clipIndicator(bool enabled)
 {
     startElement(3, (int) ClipIndic);
 
-    cgmt_out_string(enabled ? " On" : " Off");
+    writeString(enabled ? " On" : " Off");
 
-    cgmt_flush_cmd();
+    flushElement();
 }
 
 void ClearTextMetafileWriter::polyline(const std::vector<Point<int>> &points)
@@ -498,10 +492,10 @@ void ClearTextMetafileWriter::polyline(const std::vector<Point<int>> &points)
 
     for (const Point<int> &point : points)
     {
-        cgmt_ipoint(point.x, point.y);
+        writeIntPoint(point.x, point.y);
     }
 
-    cgmt_flush_cmd();
+    flushElement();
 }
 
 void ClearTextMetafileWriter::polymarker(const std::vector<Point<int>> &points)
@@ -510,23 +504,23 @@ void ClearTextMetafileWriter::polymarker(const std::vector<Point<int>> &points)
 
     for (const Point<int> &i : points)
     {
-        cgmt_ipoint(i.x, i.y);
+        writeIntPoint(i.x, i.y);
     }
 
-    cgmt_flush_cmd();
+    flushElement();
 }
 
 void ClearTextMetafileWriter::text(Point<int> point, TextFlag flag, const char *text)
 {
     startElement(4, (int) Text);
 
-    cgmt_ipoint(point.x, point.y);
+    writeIntPoint(point.x, point.y);
 
-    cgmt_out_string(flag == TextFlag::Final ? " Final" : " NotFinal");
+    writeString(flag == TextFlag::Final ? " Final" : " NotFinal");
 
-    cgmt_string(text, strlen(text));
+    writeQuotedString(text, strlen(text));
 
-    cgmt_flush_cmd();
+    flushElement();
 }
 
 void ClearTextMetafileWriter::polygon(const std::vector<Point<int>> &points)
@@ -535,22 +529,22 @@ void ClearTextMetafileWriter::polygon(const std::vector<Point<int>> &points)
 
     for (const Point<int> &i : points)
     {
-        cgmt_ipoint(i.x, i.y);
+        writeIntPoint(i.x, i.y);
     }
 
-    cgmt_flush_cmd();
+    flushElement();
 }
 
 void ClearTextMetafileWriter::cellArray(Point<int> c1, Point<int> c2, Point<int> c3, int colorPrecision, int nx, int ny, const int *colors)
 {
     startElement(4, (int) Cell_Array);
 
-    cgmt_ipoint(c1.x, c1.y);
-    cgmt_ipoint(c2.x, c2.y);
-    cgmt_ipoint(c3.x, c3.y);
-    cgmt_int(nx);
-    cgmt_int(ny);
-    cgmt_int(colorPrecision);
+    writeIntPoint(c1.x, c1.y);
+    writeIntPoint(c2.x, c2.y);
+    writeIntPoint(c3.x, c3.y);
+    writeSignedInt(nx);
+    writeSignedInt(ny);
+    writeSignedInt(colorPrecision);
 
     for (int iy = 0; iy < ny; iy++)
     {
@@ -559,77 +553,77 @@ void ClearTextMetafileWriter::cellArray(Point<int> c1, Point<int> c2, Point<int>
         for (int ix = 0; ix < nx; ix++)
         {
             const int c = colors[nx * iy + ix];
-            cgmt_int(c);
+            writeSignedInt(c);
 
             if (ix < nx - 1)
-                outChar(',');
+                appendBufferByte(',');
         }
     }
 
-    cgmt_flush_cmd();
+    flushElement();
 }
 
 void ClearTextMetafileWriter::lineType(int value)
 {
     startElement(5, (int) LType);
 
-    cgmt_int((int) value);
+    writeSignedInt((int) value);
 
-    cgmt_flush_cmd();
+    flushElement();
 }
 
 void ClearTextMetafileWriter::lineWidth(float value)
 {
     startElement(5, (int) LWidth);
 
-    cgmt_real(static_cast<double>(value));
+    writeReal(static_cast<double>(value));
 
-    cgmt_flush_cmd();
+    flushElement();
 }
 
 void ClearTextMetafileWriter::lineColor(int value)
 {
     startElement(5, (int) LColour);
 
-    cgmt_int(value);
+    writeSignedInt(value);
 
-    cgmt_flush_cmd();
+    flushElement();
 }
 
 void ClearTextMetafileWriter::markerType(int value)
 {
     startElement(5, (int) MType);
 
-    cgmt_int(value);
+    writeSignedInt(value);
 
-    cgmt_flush_cmd();
+    flushElement();
 }
 
 void ClearTextMetafileWriter::markerSize(float value)
 {
     startElement(5, (int) MSize);
 
-    cgmt_real(static_cast<double>(value));
+    writeReal(static_cast<double>(value));
 
-    cgmt_flush_cmd();
+    flushElement();
 }
 
 void ClearTextMetafileWriter::markerColor(int value)
 {
     startElement(5, (int) MColour);
 
-    cgmt_int(value);
+    writeSignedInt(value);
 
-    cgmt_flush_cmd();
+    flushElement();
 }
 
 void ClearTextMetafileWriter::textFontIndex(int value)
 {
     startElement(5, (int) TFIndex);
 
-    cgmt_int(value);
+    writeSignedInt(value);
 
-    cgmt_flush_cmd();
+    flushElement();
 }
 
 void ClearTextMetafileWriter::textPrecision(TextPrecision value)
@@ -639,67 +633,67 @@ void ClearTextMetafileWriter::textPrecision(TextPrecision value)
     switch (static_cast<int>(value))
     {
     case string:
-        cgmt_out_string(" String");
+        writeString(" String");
         break;
 
     case character:
-        cgmt_out_string(" Character");
+        writeString(" Character");
         break;
 
     case stroke:
-        cgmt_out_string(" Stroke");
+        writeString(" Stroke");
         break;
     }
 
-    cgmt_flush_cmd();
+    flushElement();
 }
 
 void ClearTextMetafileWriter::charExpansion(float value)
 {
     startElement(5, (int) CExpFac);
 
-    cgmt_real(static_cast<double>(value));
+    writeReal(static_cast<double>(value));
 
-    cgmt_flush_cmd();
+    flushElement();
 }
 
 void ClearTextMetafileWriter::charSpacing(float value)
 {
     startElement(5, (int) CSpace);
 
-    cgmt_real(static_cast<double>(value));
+    writeReal(static_cast<double>(value));
 
-    cgmt_flush_cmd();
+    flushElement();
 }
 
 void ClearTextMetafileWriter::textColor(int index)
 {
     startElement(5, (int) TColour);
 
-    cgmt_int(index);
+    writeSignedInt(index);
 
-    cgmt_flush_cmd();
+    flushElement();
 }
 
 void ClearTextMetafileWriter::charHeight(int value)
 {
     startElement(5, (int) CHeight);
 
-    cgmt_int(value);
+    writeSignedInt(value);
 
-    cgmt_flush_cmd();
+    flushElement();
 }
 
 void ClearTextMetafileWriter::charOrientation(int upX, int upY, int baseX, int baseY)
 {
     startElement(5, (int) COrient);
 
-    cgmt_int(upX);
-    cgmt_int(upY);
-    cgmt_int(baseX);
-    cgmt_int(baseY);
+    writeSignedInt(upX);
+    writeSignedInt(upY);
+    writeSignedInt(baseX);
+    writeSignedInt(baseY);
 
-    cgmt_flush_cmd();
+    flushElement();
 }
 
 void ClearTextMetafileWriter::textPath(TextPath value)
@@ -709,23 +703,23 @@ void ClearTextMetafileWriter::textPath(TextPath value)
     switch (static_cast<int>(value))
     {
     case right:
-        cgmt_out_string(" Right");
+        writeString(" Right");
         break;
 
     case left:
-        cgmt_out_string(" Left");
+        writeString(" Left");
         break;
 
     case up:
-        cgmt_out_string(" Up");
+        writeString(" Up");
         break;
 
     case down:
-        cgmt_out_string(" Down");
+        writeString(" Down");
         break;
     }
 
-    cgmt_flush_cmd();
+    flushElement();
 }
 
 void ClearTextMetafileWriter::textAlignment(HorizAlign horiz, VertAlign vert, float contHoriz, float contVert)
@@ -735,61 +729,61 @@ void ClearTextMetafileWriter::textAlignment(HorizAlign horiz, VertAlign vert, fl
     switch (static_cast<int>(horiz))
     {
     case normal_h:
-        cgmt_out_string(" NormHoriz");
+        writeString(" NormHoriz");
         break;
 
     case left_h:
-        cgmt_out_string(" Left");
+        writeString(" Left");
         break;
 
     case center_h:
-        cgmt_out_string(" Ctr");
+        writeString(" Ctr");
         break;
 
     case right_h:
-        cgmt_out_string(" Right");
+        writeString(" Right");
         break;
 
     case cont_h:
-        cgmt_out_string(" ContHoriz");
+        writeString(" ContHoriz");
         break;
     }
 
     switch (static_cast<int>(vert))
     {
     case normal_v:
-        cgmt_out_string(" NormVert");
+        writeString(" NormVert");
         break;
 
     case top_v:
-        cgmt_out_string(" Top");
+        writeString(" Top");
         break;
 
     case cap_v:
-        cgmt_out_string(" Cap");
+        writeString(" Cap");
         break;
 
     case half_v:
-        cgmt_out_string(" Half");
+        writeString(" Half");
         break;
 
     case base_v:
-        cgmt_out_string(" Base");
+        writeString(" Base");
         break;
 
     case bottom_v:
-        cgmt_out_string(" Bottom");
+        writeString(" Bottom");
         break;
 
     case cont_v:
-        cgmt_out_string(" ContVert");
+        writeString(" ContVert");
         break;
     }
 
-    cgmt_real(static_cast<double>(contHoriz));
-    cgmt_real(static_cast<double>(contVert));
+    writeReal(static_cast<double>(contHoriz));
+    writeReal(static_cast<double>(contVert));
 
-    cgmt_flush_cmd();
+    flushElement();
 }
 
 void ClearTextMetafileWriter::interiorStyle(InteriorStyle value)
@@ -799,65 +793,65 @@ void ClearTextMetafileWriter::interiorStyle(InteriorStyle value)
     switch (static_cast<int>(value))
     {
     case hollow:
-        cgmt_out_string(" Hollow");
+        writeString(" Hollow");
         break;
 
     case solid_i:
-        cgmt_out_string(" Solid");
+        writeString(" Solid");
         break;
 
     case pattern:
-        cgmt_out_string(" Pat");
+        writeString(" Pat");
         break;
 
     case hatch:
-        cgmt_out_string(" Hatch");
+        writeString(" Hatch");
         break;
 
     case empty:
-        cgmt_out_string(" Empty");
+        writeString(" Empty");
         break;
     }
 
-    cgmt_flush_cmd();
+    flushElement();
 }
 
 void ClearTextMetafileWriter::fillColor(int value)
 {
     startElement(5, (int) FillColour);
 
-    cgmt_int(value);
+    writeSignedInt(value);
 
-    cgmt_flush_cmd();
+    flushElement();
 }
 
 void ClearTextMetafileWriter::hatchIndex(int value)
 {
     startElement(5, (int) HatchIndex);
-    cgmt_int(value);
-    cgmt_flush_cmd();
+    writeSignedInt(value);
+    flushElement();
 }
 
 void ClearTextMetafileWriter::patternIndex(int value)
 {
     startElement(5, (int) PatIndex);
-    cgmt_int(value);
-    cgmt_flush_cmd();
+    writeSignedInt(value);
+    flushElement();
 }
 
 void ClearTextMetafileWriter::colorTable(int startIndex, std::vector<Color> const &colorTable)
 {
     startElement(5, (int) ColTab);
-    cgmt_int(startIndex);
+    writeSignedInt(startIndex);
 
     for (int i = startIndex; i < (startIndex + static_cast<int>(colorTable.size())); ++i)
     {
-        cgmt_int((int) (colorTable[(i - startIndex)].red * (max_colors - 1)));
-        cgmt_int((int) (colorTable[(i - startIndex)].green * (max_colors - 1)));
-        cgmt_int((int) (colorTable[(i - startIndex)].blue * (max_colors - 1)));
+        writeSignedInt((int) (colorTable[(i - startIndex)].red * (max_colors - 1)));
+        writeSignedInt((int) (colorTable[(i - startIndex)].green * (max_colors - 1)));
+        writeSignedInt((int) (colorTable[(i - startIndex)].blue * (max_colors - 1)));
     }
 
-    cgmt_flush_cmd();
+    flushElement();
 }
 
 }        // namespace cgm
