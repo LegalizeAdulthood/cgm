@@ -77,22 +77,22 @@ private:
         Final = 1
     };
 
-    void outByte(char chr);
+    void appendBufferByte(char chr);
     void startElement(int elemClass, int elemCode);
     void flushElement(Flush flag);
-    void cgmb_out_bc(int c);
-    void cgmb_out_bs(const char *cptr, int n);
-    void cgmb_string(const char *cptr, int slen);
-    void cgmb_gint(int xin, int precision);
-    void cgmb_uint(unsigned xin, int precision);
-    void cgmb_fixed(double xin);
-    void cgmb_float(double xin);
-    void cgmb_dcint(int xin);
-    void cgmb_vint(int xin);
-    void cgmb_sint(int xin);
-    void cgmb_xint(int xin);
-    void cgmb_cxint(int xin);
-    void cgmb_eint(int xin);
+    void writeByte(int c);
+    void writeByteRange(const char *cptr, int n);
+    void writeString(const char *cptr, int slen);
+    void writeSignedIntPrecision(int xin, int precision);
+    void writeUnsignedInt(unsigned xin, int precision);
+    void writeFixedPoint(double xin);
+    void writeFloatingPoint(double xin);
+    void writeDirectColor(int xin);
+    void writeVDCSignedInt(int xin);
+    void writeSignedInt(int xin);
+    void writeSignedIndex(int xin);
+    void writeColorIndex(int xin);
+    void writeIntFixedPoint(int xin);
 
     char m_cmdBuffer[hdr_long + max_long]{}; /* where we buffer output */
     char *m_cmdHdr{};                        /* the command header */
