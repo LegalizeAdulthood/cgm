@@ -92,7 +92,7 @@ private:
     void writeSignedInt(int xin);
     void writeSignedIndex(int xin);
     void writeColorIndex(int xin);
-    void writeIntFixedPoint(int xin);
+    void writeInt16(int xin);
 
     int m_intPrecision = 16;
     int m_colorPrecision = 8;

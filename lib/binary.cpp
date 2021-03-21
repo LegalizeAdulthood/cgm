@@ -112,7 +112,6 @@ void BinaryMetafileWriter::flushElement(Flush flag)
     ++m_partition;
 }
 
-/* Write one byte */
 void BinaryMetafileWriter::writeByte(int c)
 {
     if (m_cmdIndex >= max_long)
@@ -123,7 +122,6 @@ void BinaryMetafileWriter::writeByte(int c)
     m_cmdData[m_cmdIndex++] = c;
 }
 
-/* Write multiple bytes */
 void BinaryMetafileWriter::writeByteRange(const char *cptr, int n)
 {
     int to_do, space_left, i;
@@ -149,7 +147,6 @@ void BinaryMetafileWriter::writeByteRange(const char *cptr, int n)
     }
 }
 
-/* Write a CGM binary string */
 void BinaryMetafileWriter::writeString(const char *cptr, int slen)
 {
     int to_do;
@@ -207,7 +204,6 @@ void BinaryMetafileWriter::writeString(const char *cptr, int slen)
     }
 }
 
-/* Write a signed integer variable */
 void BinaryMetafileWriter::writeSignedIntPrecision(int xin, int precision)
 {
     char buffer[4]{};
@@ -229,7 +225,6 @@ void BinaryMetafileWriter::writeSignedIntPrecision(int xin, int precision)
     writeByteRange(buffer, no_out);
 }
 
-/* Write an unsigned integer variable */
 void BinaryMetafileWriter::writeUnsignedInt(unsigned int xin, int precision)
 {
     int i, no_out;
@@ -246,7 +241,6 @@ void BinaryMetafileWriter::writeUnsignedInt(unsigned int xin, int precision)
     writeByteRange((char *) buffer, no_out);
 }
 
-/* Write fixed point variable */
 void BinaryMetafileWriter::writeFixedPoint(double xin)
 {
     int exp_part, fract_part;
@@ -265,7 +259,6 @@ void BinaryMetafileWriter::writeFixedPoint(double xin)
     writeUnsignedInt(fract_part, real_prec_fract);
 }
 
-/* Write IEEE floating point variable */
 void BinaryMetafileWriter::writeFloatingPoint(double xin)
 {
     unsigned char arry[8];
@@ -366,38 +359,32 @@ void BinaryMetafileWriter::writeFloatingPoint(double xin)
     }
 }
 
-/* Write direct colour value */
 void BinaryMetafileWriter::writeDirectColor(int xin)
 {
     writeUnsignedInt(xin, m_colorPrecision);
 }
 
-/* Write a signed int at VDC integer precision */
 void BinaryMetafileWriter::writeVDCSignedInt(int xin)
 {
-    writeSignedIntPrecision(xin, m_intPrecision);
+    writeSignedIntPrecision(xin, 16);
 }
 
-/* Write a standard CGM signed int */
 void BinaryMetafileWriter::writeSignedInt(int xin)
 {
     writeSignedIntPrecision(xin, m_intPrecision);
 }
 
-/* Write a signed int at index precision */
 void BinaryMetafileWriter::writeSignedIndex(int xin)
 {
     writeSignedIntPrecision(xin, m_intPrecision);
 }
 
-/* Write an unsigned integer at colour index precision */
 void BinaryMetafileWriter::writeColorIndex(int xin)
 {
     writeUnsignedInt((unsigned) xin, m_colorIndexPrecision);
 }
 
-/* Write an integer at fixed (16 bit) precision */
-void BinaryMetafileWriter::writeIntFixedPoint(int xin)
+void BinaryMetafileWriter::writeInt16(int xin)
 {
     char byte1;
     unsigned char byte2;
@@ -495,7 +482,7 @@ void BinaryMetafileWriter::vdcType(VdcType type)
 {
     startElement(1, (int) cgm_class_1::vdcType);
 
-    writeIntFixedPoint((int) type);
+    writeInt16((int) type);
 
     flushElement(Flush::Final);
     flushBuffer();
@@ -647,7 +634,7 @@ void BinaryMetafileWriter::characterCodingAnnouncer(CharCodeAnnouncer value)
 {
     startElement(1, (int) CharAnnounce);
 
-    writeIntFixedPoint(static_cast<int>(value));
+    writeInt16(static_cast<int>(value));
 
     flushElement(Flush::Final);
     flushBuffer();
@@ -657,7 +644,7 @@ void BinaryMetafileWriter::scalingMode(ScalingMode mode, float value)
 {
     startElement(2, (int) ScalMode);
 
-    writeIntFixedPoint(static_cast<int>(mode));
+    writeInt16(static_cast<int>(mode));
     writeFloatingPoint(static_cast<double>(value));
 
     flushElement(Flush::Final);
@@ -668,7 +655,7 @@ void BinaryMetafileWriter::colorSelectionMode(ColorMode mode)
 {
     startElement(2, (int) ColSelMode);
 
-    writeIntFixedPoint(static_cast<int>(mode));
+    writeInt16(static_cast<int>(mode));
 
     flushElement(Flush::Final);
     flushBuffer();
@@ -678,7 +665,7 @@ void BinaryMetafileWriter::lineWidthSpecificationMode(SpecificationMode mode)
 {
     startElement(2, (int) LWidSpecMode);
 
-    writeIntFixedPoint(static_cast<int>(mode));
+    writeInt16(static_cast<int>(mode));
 
     flushElement(Flush::Final);
     flushBuffer();
@@ -688,7 +675,7 @@ void BinaryMetafileWriter::markerSizeSpecificationMode(SpecificationMode mode)
 {
     startElement(2, (int) MarkSizSpecMode);
 
-    writeIntFixedPoint(static_cast<int>(mode));
+    writeInt16(static_cast<int>(mode));
 
     flushElement(Flush::Final);
     flushBuffer();
@@ -751,7 +738,7 @@ void BinaryMetafileWriter::clipIndicator(bool enabled)
 {
     startElement(3, (int) ClipIndic);
 
-    writeIntFixedPoint(enabled ? 1 : 0);
+    writeInt16(enabled ? 1 : 0);
 
     flushElement(Flush::Final);
     flushBuffer();
@@ -792,7 +779,7 @@ void BinaryMetafileWriter::text(Point<int> point, TextFlag flag, const char *tex
     writeVDCSignedInt(point.x);
     writeVDCSignedInt(point.y);
 
-    writeIntFixedPoint(static_cast<int>(flag));
+    writeInt16(static_cast<int>(flag));
     writeString(text, strlen(text));
 
     flushElement(Flush::Final);
@@ -827,7 +814,7 @@ void BinaryMetafileWriter::cellArray(Point<int> c1, Point<int> c2, Point<int> c3
     writeSignedInt(nx);
     writeSignedInt(ny);
     writeSignedInt(colorPrecision);
-    writeIntFixedPoint(1);
+    writeInt16(1);
 
     for (int iy = 0; iy < ny; iy++)
     {
@@ -919,7 +906,7 @@ void BinaryMetafileWriter::textPrecision(TextPrecision value)
 {
     startElement(5, (int) TPrec);
 
-    writeIntFixedPoint(static_cast<int>(value));
+    writeInt16(static_cast<int>(value));
 
     flushElement(Flush::Final);
     flushBuffer();
@@ -982,7 +969,7 @@ void BinaryMetafileWriter::textPath(TextPath value)
 {
     startElement(5, (int) TPath);
 
-    writeIntFixedPoint(static_cast<int>(value));
+    writeInt16(static_cast<int>(value));
 
     flushElement(Flush::Final);
     flushBuffer();
@@ -992,8 +979,8 @@ void BinaryMetafileWriter::textAlignment(HorizAlign horiz, VertAlign vert, float
 {
     startElement(5, (int) TAlign);
 
-    writeIntFixedPoint(static_cast<int>(horiz));
-    writeIntFixedPoint(static_cast<int>(vert));
+    writeInt16(static_cast<int>(horiz));
+    writeInt16(static_cast<int>(vert));
     writeFixedPoint(static_cast<double>(contHoriz));
     writeFixedPoint(static_cast<double>(contVert));
 
@@ -1005,7 +992,7 @@ void BinaryMetafileWriter::interiorStyle(InteriorStyle value)
 {
     startElement(5, (int) IntStyle);
 
-    writeIntFixedPoint(static_cast<int>(value));
+    writeInt16(static_cast<int>(value));
 
     flushElement(Flush::Final);
     flushBuffer();
