@@ -2,8 +2,6 @@
 
 #define MAX_COLOR 1256  /* maximum number of predefined colors */
 
-#define cprec		    8		    /* bits used for color precision */
-#define cxprec  	    16		    /*     and color index precision */
 #define max_colors	    (01<<cprec)	    /* number of addressable colors */
 
 #define max_pbuffer	    512		    /* number of points in buffer */

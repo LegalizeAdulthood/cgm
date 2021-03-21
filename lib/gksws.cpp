@@ -27,6 +27,9 @@
 #define odd(number) ((number) &01)
 #define nint(a) ((int) ((a) + 0.5))
 
+#define cprec		    8		    /* bits used for color precision */
+#define cxprec  	    16		    /*     and color index precision */
+
 struct norm_xform
 {
     double a, b, c, d;
