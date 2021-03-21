@@ -505,14 +505,26 @@ TEST_CASE("binary encoding")
         REQUIRE(header(str) == OpCode{MetafileDescriptor, ColorIndexPrecision, 2});
         REQUIRE(i16(str, 2) == 8);
     }
+    SECTION("color index precision changes size of subsequent encoded indices")
+    {
+        writer->colorIndexPrecisionBinary(32);
+        writer->lineColor(655360);
+
+        const std::string str = stream.str();
+        REQUIRE(str.size() == headerLen*2 + 2 + 4);
+        REQUIRE(header(str) == OpCode{MetafileDescriptor, ColorIndexPrecision, 2});
+        REQUIRE(i16(str, 2) == 32);
+        REQUIRE(header(str, 4) == OpCode{Attribute, LineColor, 4});
+        REQUIRE(i32(str, 6) == 655360);
+    }
     SECTION("maximum color index")
     {
         writer->maximumColorIndex(63);
 
         const std::string str = stream.str();
         REQUIRE(str.size() == headerLen + 2);
-        REQUIRE(header(str) == OpCode{MetafileDescriptor, MaximumColorIndex, 2});
-        REQUIRE(i16(str, 2) == 63);
+        REQUIRE(header(str) == OpCode{MetafileDescriptor, MaximumColorIndex, 1});
+        REQUIRE(i8(str, 2) == 63);
     }
     SECTION("color value extent")
     {
@@ -835,8 +847,8 @@ TEST_CASE("binary encoding")
 
         const std::string str = stream.str();
         REQUIRE(str.size() == headerLen + 2);
-        REQUIRE(header(str) == OpCode{Attribute, LineColor, 2});
-        REQUIRE(i16(str, 2) == 6);
+        REQUIRE(header(str) == OpCode{Attribute, LineColor, 1});
+        REQUIRE(i8(str, 2) == 6);
     }
     // marker bundle index
     SECTION("marker type")
@@ -863,8 +875,8 @@ TEST_CASE("binary encoding")
 
         const std::string str = stream.str();
         REQUIRE(str.size() == headerLen + 2);
-        REQUIRE(header(str) == OpCode{Attribute, MarkerColor, 2});
-        REQUIRE(i16(str, 2) == 6);
+        REQUIRE(header(str) == OpCode{Attribute, MarkerColor, 1});
+        REQUIRE(i8(str, 2) == 6);
     }
     // text bundle index
     SECTION("text font index")
@@ -930,8 +942,8 @@ TEST_CASE("binary encoding")
 
         const std::string str = stream.str();
         REQUIRE(str.size() == headerLen + 2);
-        REQUIRE(header(str) == OpCode{Attribute, TextColor, 2});
-        REQUIRE(i16(str, 2) == 6);
+        REQUIRE(header(str) == OpCode{Attribute, TextColor, 1});
+        REQUIRE(i8(str, 2) == 6);
     }
     SECTION("character height")
     {
@@ -1128,8 +1140,8 @@ TEST_CASE("binary encoding")
         writer->fillColor(6);
 
         const std::string str = stream.str();
-        REQUIRE(header(str) == OpCode{Attribute, FillColor, 2});
-        REQUIRE(i16(str, 2) == 6);
+        REQUIRE(header(str) == OpCode{Attribute, FillColor, 1});
+        REQUIRE(i8(str, 2) == 6);
     }
     SECTION("hatch index")
     {
@@ -1159,17 +1171,17 @@ TEST_CASE("binary encoding")
     {
         // TODO: Colors should be specified as integers with suitable representation?
         std::vector<cgm::Color> colors{{0.0f, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f}};
-        writer->colorTable(6, colors);
+        writer->colorTable(0, colors);
 
         const std::string str = stream.str();
-        REQUIRE(str.size() == headerLen + 2 + 3*5 + pad1);
-        REQUIRE(header(str) == OpCode{Attribute, ColorTable, 2 + 3*5});
-        REQUIRE(i16(str, 2) == 6);
-        REQUIRE(u8(str, 4) == 0); REQUIRE(u8(str, 5) == 0); REQUIRE(u8(str, 6) == 0);
-        REQUIRE(u8(str, 7) == 255); REQUIRE(u8(str, 8) == 0); REQUIRE(u8(str, 9) == 0);
-        REQUIRE(u8(str, 10) == 0); REQUIRE(u8(str, 11) == 255); REQUIRE(u8(str, 12) == 0);
-        REQUIRE(u8(str, 13) == 0); REQUIRE(u8(str, 14) == 0); REQUIRE(u8(str, 15) == 255);
-        REQUIRE(u8(str, 16) == 255); REQUIRE(u8(str, 17) == 255); REQUIRE(u8(str, 18) == 255);
+        REQUIRE(str.size() == headerLen + 1 + 3*5);
+        REQUIRE(header(str) == OpCode{Attribute, ColorTable, 1 + 3*5});
+        REQUIRE(u8(str, 2) == 0);
+        REQUIRE(u8(str, 3) == 0); REQUIRE(u8(str, 4) == 0); REQUIRE(u8(str, 5) == 0);
+        REQUIRE(u8(str, 6) == 255); REQUIRE(u8(str, 7) == 0); REQUIRE(u8(str, 8) == 0);
+        REQUIRE(u8(str, 9) == 0); REQUIRE(u8(str, 10) == 255); REQUIRE(u8(str, 11) == 0);
+        REQUIRE(u8(str, 12) == 0); REQUIRE(u8(str, 13) == 0); REQUIRE(u8(str, 14) == 255);
+        REQUIRE(u8(str, 15) == 255); REQUIRE(u8(str, 16) == 255); REQUIRE(u8(str, 17) == 255);
     }
     // aspect source flags
     // escape

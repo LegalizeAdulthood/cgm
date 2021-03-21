@@ -393,7 +393,7 @@ void BinaryMetafileWriter::writeSignedIndex(int xin)
 /* Write an unsigned integer at colour index precision */
 void BinaryMetafileWriter::writeColorIndex(int xin)
 {
-    writeUnsignedInt((unsigned) xin, cxprec);
+    writeUnsignedInt((unsigned) xin, m_colorIndexPrecision);
 }
 
 /* Write an integer at fixed (16 bit) precision */
@@ -577,9 +577,15 @@ void BinaryMetafileWriter::colorIndexPrecisionClearText(int max)
 
 void BinaryMetafileWriter::colorIndexPrecisionBinary(int value)
 {
+    if (value != 8 && value != 16 && value != 24 && value != 32)
+    {
+        throw std::invalid_argument("Color index precision must be 8, 16, 24, or 32");
+    }
+
     startElement(1, (int) CIndPrec);
 
     writeSignedInt(value);
+    m_colorIndexPrecision = value;
 
     flushElement(Flush::Final);
     flushBuffer();

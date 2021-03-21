@@ -96,6 +96,7 @@ private:
 
     int m_intPrecision = 16;
     int m_colorPrecision = 8;
+    int m_colorIndexPrecision = 8;
 
     char m_cmdBuffer[hdr_long + max_long]{}; /* where we buffer output */
     char *m_cmdHdr{};                        /* the command header */
