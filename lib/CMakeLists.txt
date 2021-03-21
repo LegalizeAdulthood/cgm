@@ -19,3 +19,4 @@ add_library(cgm
     )
 target_include_directories(cgm PUBLIC include)
 target_include_directories(cgm PRIVATE .)
+source_group("Public Headers" FILES include/cgm/cgm.h include/cgm/builder.h)
