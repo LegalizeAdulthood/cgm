@@ -375,19 +375,19 @@ void BinaryMetafileWriter::writeDirectColor(int xin)
 /* Write a signed int at VDC integer precision */
 void BinaryMetafileWriter::writeVDCSignedInt(int xin)
 {
-    writeSignedIntPrecision(xin, 16);
+    writeSignedIntPrecision(xin, m_intPrecision);
 }
 
 /* Write a standard CGM signed int */
 void BinaryMetafileWriter::writeSignedInt(int xin)
 {
-    writeSignedIntPrecision(xin, 16);
+    writeSignedIntPrecision(xin, m_intPrecision);
 }
 
 /* Write a signed int at index precision */
 void BinaryMetafileWriter::writeSignedIndex(int xin)
 {
-    writeSignedIntPrecision(xin, 16);
+    writeSignedIntPrecision(xin, m_intPrecision);
 }
 
 /* Write an unsigned integer at colour index precision */
@@ -508,9 +508,15 @@ void BinaryMetafileWriter::intPrecisionClearText(int min, int max)
 
 void BinaryMetafileWriter::intPrecisionBinary(int value)
 {
+    if (value != 8 && value != 16 && value != 24 && value != 32)
+    {
+        throw std::invalid_argument("Integer precision can only be 8, 16, 24, or 32.");
+    }
+
     startElement(1, (int) IntPrec);
 
     writeSignedInt(value);
+    m_intPrecision = value;
 
     flushElement(Flush::Final);
     flushBuffer();

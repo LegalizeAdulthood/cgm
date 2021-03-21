@@ -94,6 +94,8 @@ private:
     void writeColorIndex(int xin);
     void writeIntFixedPoint(int xin);
 
+    int m_intPrecision = 16;
+
     char m_cmdBuffer[hdr_long + max_long]{}; /* where we buffer output */
     char *m_cmdHdr{};                        /* the command header */
     char *m_cmdData{};                       /* the command data */

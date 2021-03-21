@@ -219,10 +219,10 @@ std::ostream &operator<<(std::ostream &stream, OpCode value)
     return stream << '{' << value.classCode << ", " << value.opCode << ", " << value.paramLength << '}';
 }
 
-OpCode header(const std::string &str)
+OpCode header(const std::string &str, int offset = 0)
 {
-    const auto first = static_cast<unsigned char>(str[0]);
-    const auto second = static_cast<unsigned char>(str[1]);
+    const auto first = static_cast<unsigned char>(str[offset]);
+    const auto second = static_cast<unsigned char>(str[offset + 1]);
     return OpCode{
         first >> 4 & 0xF,
         (first & 0xF) << 3 | (second & 0xE0) >> 5,
@@ -250,6 +250,18 @@ int i16(const std::string &str, int offset)
     // This is x86 endian
     const char bytes[2]{str[offset+1], str[offset]};
     return *reinterpret_cast<const std::int16_t *>(bytes);
+}
+
+int i24(const std::string &str, int offset)
+{
+    const char bytes[4]{str[offset+2], str[offset+1], str[offset], 0};
+    return *reinterpret_cast<const std::int32_t *>(bytes);
+}
+
+int i32(const std::string &str, int offset)
+{
+    const char bytes[4]{str[offset+3], str[offset+2], str[offset+1], str[offset]};
+    return *reinterpret_cast<const std::int32_t *>(bytes);
 }
 
 float f32(const std::string &str, int offset)
@@ -419,6 +431,27 @@ TEST_CASE("binary encoding")
         REQUIRE(str.size() == headerLen + 2);
         REQUIRE(header(str) == OpCode{MetafileDescriptor, IntegerPrecision, 2});
         REQUIRE(i16(str, 2) == 32);
+    }
+    SECTION("integer precision changes size of subsequent encoded integers")
+    {
+        writer->intPrecisionBinary(32);
+        writer->intPrecisionBinary(8);
+        writer->intPrecisionBinary(16);
+        writer->intPrecisionBinary(24);
+        writer->intPrecisionBinary(32);
+
+        const std::string str = stream.str();
+        REQUIRE(str.size() == headerLen*5 + 2 + 4 + 2 + 2 + 4);
+        REQUIRE(header(str) == OpCode{MetafileDescriptor, IntegerPrecision, 2});
+        REQUIRE(i16(str, 2) == 32);
+        REQUIRE(header(str, 4) == OpCode{MetafileDescriptor, IntegerPrecision, 4});
+        REQUIRE(i32(str, 6) == 8);
+        REQUIRE(header(str, 10) == OpCode{MetafileDescriptor, IntegerPrecision, 1});
+        REQUIRE(i8(str, 12) == 16);
+        REQUIRE(header(str, 14) == OpCode{MetafileDescriptor, IntegerPrecision, 2});
+        REQUIRE(i16(str, 16) == 24);
+        REQUIRE(header(str, 18) == OpCode{MetafileDescriptor, IntegerPrecision, 3});
+        REQUIRE(i24(str, 20) == 32);
     }
     SECTION("real precision")
     {
