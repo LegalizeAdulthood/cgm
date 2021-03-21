@@ -103,6 +103,37 @@ enum class RealPrecision
     Fixed
 };
 
+// Predefined line types.
+enum LineType
+{
+    LT_Solid = 1,
+    LT_Dash = 2,
+    LT_Dot = 3,
+    LT_DashDot = 4,
+    LT_DashDotDot = 5
+};
+
+// Predefined marker types.
+enum MarkerType
+{
+    MT_Dot = 1,
+    MT_Plus = 2,
+    MT_Asterisk = 3,
+    MT_Circle = 4,
+    MT_Cross = 5
+};
+
+// Predefined hatch types.
+enum HatchType
+{
+    HT_HorizontalLines = 1,
+    HT_VerticalLines = 2,
+    HT_PositiveSlopeLines = 3,
+    HT_NegativeSlopeLines = 4,
+    HT_HorizontalVerticalCrossHatch = 5,
+    HT_PositiveNegativeSlopeCrossHatch = 6
+};
+
 template <typename T>
 struct Point
 {
