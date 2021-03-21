@@ -369,7 +369,7 @@ void BinaryMetafileWriter::writeFloatingPoint(double xin)
 /* Write direct colour value */
 void BinaryMetafileWriter::writeDirectColor(int xin)
 {
-    writeUnsignedInt(xin, cprec);
+    writeUnsignedInt(xin, m_colorPrecision);
 }
 
 /* Write a signed int at VDC integer precision */
@@ -564,6 +564,7 @@ void BinaryMetafileWriter::colorPrecisionBinary(int value)
     startElement(1, (int) ColPrec);
 
     writeSignedInt(value);
+    m_colorPrecision = value;
 
     flushElement(Flush::Final);
     flushBuffer();

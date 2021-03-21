@@ -482,6 +482,20 @@ TEST_CASE("binary encoding")
         REQUIRE(header(str) == OpCode{MetafileDescriptor, ColorPrecision, 2});
         REQUIRE(i16(str, 2) == 16);
     }
+    SECTION("color precision changes size of subsequent encoded colors")
+    {
+        writer->colorPrecisionBinary(16);
+        writer->backgroundColor(10, 20, 30);
+
+        const std::string str = stream.str();
+        REQUIRE(str.size() == headerLen*2 + 2 + 3*2);
+        REQUIRE(header(str) == OpCode{MetafileDescriptor, ColorPrecision, 2});
+        REQUIRE(i16(str, 2) == 16);
+        REQUIRE(header(str, 4) == OpCode{PictureDescriptor, BackgroundColor, 6});
+        REQUIRE(i16(str, 6) == 10);
+        REQUIRE(i16(str, 8) == 20);
+        REQUIRE(i16(str, 10) == 30);
+    }
     SECTION("color index precision")
     {
         writer->colorIndexPrecisionBinary(8);
