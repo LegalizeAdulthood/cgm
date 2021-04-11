@@ -1,6 +1,7 @@
 add_library(cgm
     include/cgm/cgm.h
     include/cgm/builder.h
+    include/cgm/mows.h
     binary.h
     binary.cpp
     clear_text.h

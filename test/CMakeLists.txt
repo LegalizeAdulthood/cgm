@@ -4,6 +4,7 @@ add_executable(test-cgm
     main.cpp
     Binary.cpp
     ClearText.cpp
+    MOWorkstation.cpp
     )
 target_link_libraries(test-cgm PUBLIC cgm Catch2::Catch2)
 
